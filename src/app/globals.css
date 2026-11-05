@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Readable defaults only. The design system arrives in Phase 2. */
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Tahoma,
+    Arial,
+    sans-serif;
+}

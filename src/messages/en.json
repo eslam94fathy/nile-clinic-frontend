@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "title": "Nile Clinic",
+    "description": "Clinic management system for staff."
+  },
+  "landing": {
+    "heading": "Nile Clinic",
+    "description": "Clinic management system for staff.",
+    "noscript": "The system status needs JavaScript to appear."
+  },
+  "status": {
+    "heading": "System status",
+    "checking": "Checking the system…",
+    "working": "The system is working.",
+    "unavailable": "The system is temporarily unavailable.",
+    "unreachable": "Cannot reach the system.",
+    "checkedAt": "Checked at {time}",
+    "checkAgain": "Check again"
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "description": "The page you are looking for doesn't exist.",
+    "home": "Go to the home page"
+  },
+  "language": {
+    "label": "Language",
+    "switch": "العربية"
+  },
+  "error": {
+    "heading": "Something went wrong",
+    "description": "The page couldn't be displayed. Please try again.",
+    "retry": "Try again"
+  }
+}

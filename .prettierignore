@@ -1,0 +1,14 @@
+.next
+node_modules
+pnpm-lock.yaml
+pnpm-workspace.yaml
+contracts
+src/lib/api/generated
+specs
+docs
+.specify
+.claude
+.idea
+playwright-report
+test-results
+*.md

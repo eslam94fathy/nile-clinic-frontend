@@ -1,0 +1,31 @@
+# dependencies
+/node_modules
+.pnpm-store/
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# next.js
+/.next/
+/out/
+/build
+
+# environment: only the placeholder example is shared
+.env*
+!.env.example
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# tooling and system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+*.pem

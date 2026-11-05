@@ -1,0 +1,16 @@
+# Architecture Decision Records
+
+One file per significant decision. **Proposed** means awaiting the project owner's approval;
+**Accepted** means approved. Superseded records are kept, with a link to their replacement.
+
+| ADR | Decision | Status |
+|---|---|---|
+| [0001](0001-authentication-bff.md) | Authenticate through a Next.js BFF with a sealed HttpOnly cookie | Accepted |
+| [0002](0002-native-fetch.md) | Native `fetch`, not Axios | Accepted |
+| [0003](0003-i18n-routing.md) | Locale in the URL with next-intl | Accepted |
+| [0004](0004-api-types-from-contracts.md) | Generate API types from the backend's OpenAPI contracts | Accepted |
+| [0005](0005-audit-safe-data-fetching.md) | Query policy that protects the audit trail | Accepted |
+| [0006](0006-cache-components.md) | Adopt Next.js Cache Components, with privacy rules | Accepted |
+
+To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
+Consequences.
