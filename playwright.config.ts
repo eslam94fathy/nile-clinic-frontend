@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
-import { appPort, backendControlUrl, backendPort } from "./e2e/support/ports";
+import {
+  appPort,
+  backendControlUrl,
+  backendPort,
+  previewOffPort,
+} from "./e2e/support/ports";
 
 // Runs against the production build (`pnpm test:e2e` builds first) and the fake backend. Tests
 // run one at a time, because they share the fake backend's mode.
@@ -29,6 +34,19 @@ export default defineConfig({
       env: {
         BACKEND_API_URL: `http://127.0.0.1:${backendPort}/api/v1`,
         CLINIC_TIMEZONE: "Africa/Cairo",
+        DESIGN_PREVIEW_ENABLED: "true",
+      },
+      reuseExistingServer: false,
+    },
+    {
+      // The same build with the design preview off, to prove it's private.
+      command: `node node_modules/next/dist/bin/next start -p ${previewOffPort}`,
+      url: `http://localhost:${previewOffPort}/ar`,
+      env: {
+        BACKEND_API_URL: `http://127.0.0.1:${backendPort}/api/v1`,
+        CLINIC_TIMEZONE: "Africa/Cairo",
+        // Explicit, or a developer's .env.local could turn it on and fail these tests.
+        DESIGN_PREVIEW_ENABLED: "false",
       },
       reuseExistingServer: false,
     },
