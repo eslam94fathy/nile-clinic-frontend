@@ -16,9 +16,11 @@ export function SystemStatusView({
   const canRetry = state === "unavailable" || state === "unreachable";
 
   return (
-    <section className="flex flex-col items-start gap-2 rounded border border-neutral-300 p-4">
+    <section className="flex flex-col items-start gap-2 rounded-lg border bg-card p-4 text-card-foreground">
       <p className="font-medium">{label}</p>
-      {detail ? <p className="text-sm text-neutral-700">{detail}</p> : null}
+      {detail ? (
+        <p className="text-sm text-muted-foreground">{detail}</p>
+      ) : null}
       {canRetry && retry ? (
         <CheckAgainButton
           label={retry.checkAgain}

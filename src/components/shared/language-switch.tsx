@@ -15,7 +15,7 @@ function SwitchLink({ label, query = "" }: { label: string; query?: string }) {
       href={query ? `${pathname}?${query}` : pathname}
       locale={target}
       lang={target}
-      className="underline"
+      className="inline-flex min-h-6 items-center text-primary underline underline-offset-4"
     >
       {label}
     </Link>

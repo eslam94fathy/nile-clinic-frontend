@@ -30,5 +30,17 @@
     "heading": "Something went wrong",
     "description": "The page couldn't be displayed. Please try again.",
     "retry": "Try again"
+  },
+  "shared": {
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "device": "Device"
+    },
+    "notices": {
+      "label": "Notifications",
+      "close": "Close notification"
+    }
   }
 }

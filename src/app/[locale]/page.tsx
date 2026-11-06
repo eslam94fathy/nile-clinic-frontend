@@ -17,7 +17,7 @@ export default async function LandingPage({
     <main className="mx-auto flex max-w-xl flex-col gap-6 p-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold">{t("heading")}</h1>
-        <p className="text-neutral-700">{t("description")}</p>
+        <p className="text-muted-foreground">{t("description")}</p>
       </div>
       {/* Stays in place while its content changes, so screen readers announce the result. */}
       <div id={SYSTEM_STATUS_REGION_ID} role="status" tabIndex={-1}>
