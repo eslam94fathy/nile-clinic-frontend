@@ -154,6 +154,9 @@ and static text, and dynamic content streams into `<Suspense>` boundaries. Conse
 - Without JavaScript, streamed content doesn't replace its fallback, and not-found pages are blank. The landing page has a
   `<noscript>` notice. This is acceptable for an internal application.
 - `next build` needs no runtime configuration and doesn't contact the backend.
+- The static shell can't know the query string, so the language switch gains it only after JavaScript runs. A click in that
+  brief moment still changes language and keeps the page, but drops the query. This is accepted: nothing is lost that the
+  person can't re-enter, and fixing it would make every page dynamic.
 
 ## Configuration
 
