@@ -9,7 +9,7 @@ What the frontend can rely on from the Nile Clinic API, verified from source rat
 | Stack | Laravel 13, Sanctum 4, MySQL, Docker Compose |
 | Base URL (local) | `http://localhost:<APP_PORT>/api/v1`. The backend's default is 8080, but this varies by machine, so check with `docker ps` |
 | Contracts | `specs/<feature>/contracts/*.openapi.yaml` in the backend repository (11 files) |
-| Verification | All **76** route definitions compared with all **76** contract operations: exact match. Policies and sampled API Resources were read directly. Live checks against the running API began in Phase 3 (2026-11-06, at the same commit). |
+| Verification | All **76** route definitions compared with all **76** contract operations: exact match. Policies and sampled API Resources were read directly. Live checks against the running API began in Phase 3 (2026-11-06, at the same commit). Phase 4 exercised every staff, specialty, doctor, scheduling, and fee operation on it, and found no difference from the contracts. |
 
 The backend also ships a Postman collection in `postman/`, with saved error examples.
 
@@ -126,8 +126,11 @@ So the frontend must not match on message text. It can branch only on status, th
 `patient_with_another_doctor`.
 
 Non-field `errors` keys seen in the contracts: `appointment`, `entry`, `queue`, `visit`, `encounter`,
-`charge`. Prescription errors use nested keys such as `prescriptions.0.dosage`; schedule errors use
-`periods.<index>`.
+`charge`. Removing time off that has ended uses `time_off`. Prescription errors use nested keys such as `prescriptions.0.dosage`.
+
+Schedule errors come under two kinds of key (`SetScheduleRequest`): format rules give `periods.<index>.start`, `.end`, and `.day`, and the
+rules between periods give `periods.<index>`. The second only runs when the first finds nothing. The index is the position in the
+request, including for overlaps, so send rows in the order shown. The last active administrator's refusal is `message` only, with no `errors`.
 
 ## Permission matrix
 
@@ -226,6 +229,13 @@ does not require a record.
 up to the balance. Payments and refunds are permanent. Cancelling needs a reason and no money held;
 the visit can then be charged again.
 
+**Schedules.** An empty `periods` is valid, and leaves `appointment_minutes` set, so a length alone doesn't mean there are hours.
+
+**Fees.** Above 0 and at most 100000. A fee can't be zero, and can't be removed once set.
+
+**Staff.** An administrator may deactivate or demote themselves, unless they're the last active one. Setting a password from the staff
+routes ends all that account's tokens, including the caller's own, so the application sends people to their account page instead.
+
 **Doctors.** Specialties are deactivated, never deleted; assigned ones stay. Specialties carry both
 `name_en` and `name_ar`, so pick by locale. A doctor counts as active only while the account is active
 with the doctor role.
@@ -291,7 +301,7 @@ Workable today, but worth knowing. Nothing has been changed in the backend.
 | # | Gap | Effect | Current approach |
 |---|---|---|---|
 | G1 | `/staff` has no name search | Finding a staff member in a long list | Filter by role and status, then page |
-| G2 | Nothing links a staff account to a doctor profile: `DoctorSummary` omits `user_id`, and `/staff` has no "has profile" filter | The create-doctor screen can't exclude accounts that already have a profile, and staff pages can't link to the doctor | Show doctor-role accounts and display the API's `422` |
+| G2 | Nothing links a staff account to a doctor profile: `DoctorSummary` omits `user_id`, and `/staff` has no "has profile" filter | The create-doctor screen can't exclude accounts that already have a profile, and staff pages can't link to the doctor | A paged table of doctor-role accounts, then the form; the API's `422` on `user_id` decides. A new doctor-role account goes straight to its form, the one time its id is known |
 | G3 | No dashboard or summary endpoint | Dashboards need several calls; receptionists and doctors have no reports | Compose from existing lists, showing only what they return |
 | G4 | No sort parameters | No sortable columns anywhere | Don't offer sorting; sorting one client page would mislead |
 | G5 | Throttle wait is only in message text | No countdown possible without parsing | Show the message as sent |

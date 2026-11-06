@@ -147,7 +147,7 @@ export function DoctorForm({
           <p>
             <UserText>{account.name}</UserText>
             {" · "}
-            <LtrText>{account.email}</LtrText>
+            <LtrText breakable>{account.email}</LtrText>
           </p>
           {errors.user_id?.message ? (
             <p

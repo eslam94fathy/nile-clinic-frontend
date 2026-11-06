@@ -33,7 +33,7 @@ export function AccountChooser({
     {
       id: "email",
       header: t("email"),
-      cell: (row) => <LtrText>{row.email}</LtrText>,
+      cell: (row) => <LtrText breakable>{row.email}</LtrText>,
     },
     {
       id: "choose",

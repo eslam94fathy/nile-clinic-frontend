@@ -44,7 +44,7 @@ export function StaffList({
     {
       id: "email",
       header: t("email"),
-      cell: (row) => <LtrText>{row.email}</LtrText>,
+      cell: (row) => <LtrText breakable>{row.email}</LtrText>,
     },
     { id: "role", header: t("role"), cell: (row) => roles(row.role) },
     {

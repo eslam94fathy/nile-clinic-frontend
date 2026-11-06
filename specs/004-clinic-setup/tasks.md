@@ -257,12 +257,12 @@
 
 ## Phase 12: Polish and Cross-Cutting
 
-- [ ] T062 [P] Add all new screens to `e2e/accessibility.spec.ts`, in both languages and directions, and fix what it finds
-- [ ] T063 [P] Add session-ending cases to `e2e/live/clinic-setup.spec.ts`: an administrator deactivating an account, setting its password, reactivating it (sign-in works again, and old sessions stay ended), and acting on their own account (SC-008, FR-010). Also a receptionist reading a doctor's page and being refused a forced change with `403` against the real API (constitution VIII)
-- [ ] T064 Check the new screens at tablet width in both directions, especially the schedule editor, and fix what's found
-- [ ] T065 Exercise every operation in [contracts/api-usage.md](contracts/api-usage.md) on the running API through the live tests, and record any difference from the contract (SC-002). A material difference stops the work and is reported
-- [ ] T066 [P] Write `docs/decisions/0011-server-reads-and-refresh.md` from research R1, and add it to `docs/decisions/README.md`
-- [ ] T067 [P] Update `docs/architecture.md`, `docs/tech-stack.md`, `docs/backend-integration.md`, `docs/frontend-blueprint.md`, `docs/development-guidelines.md`, `docs/roadmap.md` (My schedule belongs to this phase), and `specs/003-auth-app-shell/contracts/app-shell.md`, as listed in the plan
+- [X] T062 [P] Add all new screens to `e2e/accessibility.spec.ts`, in both languages and directions, and fix what it finds
+- [X] T063 [P] Add session-ending cases to `e2e/live/clinic-setup.spec.ts`: an administrator deactivating an account, setting its password, reactivating it (sign-in works again, and old sessions stay ended), and acting on their own account (SC-008, FR-010). Also a receptionist reading a doctor's page and being refused a forced change with `403` against the real API (constitution VIII)
+- [X] T064 Check the new screens at tablet width in both directions, especially the schedule editor, and fix what's found
+- [X] T065 Exercise every operation in [contracts/api-usage.md](contracts/api-usage.md) on the running API through the live tests, and record any difference from the contract (SC-002). A material difference stops the work and is reported
+- [X] T066 [P] Write `docs/decisions/0011-server-reads-and-refresh.md` from research R1, and add it to `docs/decisions/README.md`
+- [X] T067 [P] Update `docs/architecture.md`, `docs/tech-stack.md`, `docs/backend-integration.md`, `docs/frontend-blueprint.md`, `docs/development-guidelines.md`, `docs/roadmap.md` (My schedule belongs to this phase), and `specs/003-auth-app-shell/contracts/app-shell.md`, as listed in the plan
 - [ ] T068 Follow the by-hand steps in [quickstart.md](quickstart.md), and time the journey against SC-001
 - [ ] T069 Run `pnpm check` and `pnpm test:e2e:live`, record the observed results here, then run `/code-review` and resolve its findings
 - [ ] T070 Set the spec's status and update `docs/roadmap.md`, after the project owner accepts the phase

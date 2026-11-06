@@ -39,8 +39,8 @@ permissions map, the `Can` component, role navigation, `403`, `404`, doctor-with
 pagination `meta` on the live API. *Done when* each role signs in and sees only its navigation, the token
 is proven absent from browser-reachable places, and expired or deactivated sessions are handled.
 
-**4: Clinic setup.** Everything that must exist before booking. *Done when* an administrator can take a new
-doctor from account to bookable, with a fee.
+**4: Clinic setup.** Everything that must exist before booking, and the doctor's read-only "My schedule", as no other phase covers
+those endpoints. *Done when* an administrator can take a new doctor from account to bookable, with a fee.
 
 **5: Patients.** Search with Arabic-aware API matching, register, view, edit. Audited reads apply.
 

@@ -2,8 +2,8 @@
 
 > **Status: approved design.** Phase 1 built the foundation: locale routing, configuration, contracts, and tooling. Phase 2 built
 > the design system: see [Design system](#design-system).
-> Phase 3 built the BFF and authentication: see [Authentication and authorization](#authentication-and-authorization). **Client data fetching with
-> TanStack Query isn't built yet,** as nothing has needed it. Decisions are recorded in [docs/decisions/](decisions/README.md).
+> Phase 3 built the BFF and authentication: see [Authentication and authorization](#authentication-and-authorization). Phase 4 built clinic setup. **TanStack
+> Query isn't installed,** as nothing has needed it: see [ADR 0011](decisions/0011-server-reads-and-refresh.md). Decisions are recorded in [docs/decisions/](decisions/README.md).
 
 ## Overview
 
@@ -46,7 +46,7 @@ src/
 │   └── <feature>/                     # auth, staff, patients, appointments, queue, ...
 │       ├── api/                       # typed calls for this feature; the only network code
 │       ├── components/                # this feature's UI
-│       ├── hooks/                     # query and mutation hooks
+│       ├── hooks/                     # query hooks, from Phase 7
 │       ├── schemas/                   # Zod form schemas
 │       └── types.ts                   # names over generated API types
 ├── components/
@@ -87,9 +87,11 @@ package, so importing one into client code fails the build.
 Used for the shell, and for first loads where it helps. All such fetches are uncached (`no-store`), and each waits for `connection()`
 first, so that a link's prefetch can't reach the API ([ADR 0010](decisions/0010-session-and-guards.md)).
 
-**Reading and writing in a Client Component.** A feature hook calls TanStack Query, which calls the
-feature's API module, which calls `/api/backend/...` on the same origin. The proxy adds the bearer
-token and `Accept-Language`, then returns the status and body unchanged.
+**Changing data from a Client Component.** A form calls the feature's API module, which calls `/api/backend/...` on the same
+origin. The proxy adds the bearer token and `Accept-Language`, then returns the status and body unchanged. The form then calls
+`router.refresh()`, which also updates pages opened earlier and still mounted ([ADR 0011](decisions/0011-server-reads-and-refresh.md)).
+
+**Reading in a Client Component.** Planned for the queue's polling in Phase 7, with a feature hook over TanStack Query. Nothing does this yet.
 
 **Proxy rules**
 

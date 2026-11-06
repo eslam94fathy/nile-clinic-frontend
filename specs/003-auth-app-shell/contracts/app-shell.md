@@ -22,7 +22,7 @@ export default function Page() {
 
 ## `ScreenGate`
 
-Server Component. Props: `locale`, `path` (a key of the route table), and `children`.
+Server Component. Props: `locale`, `path` (a key of the route table), `children`, and optionally `capability`, added in Phase 4, which narrows the route for a page that fewer roles may use.
 
 | Situation | Renders |
 |---|---|

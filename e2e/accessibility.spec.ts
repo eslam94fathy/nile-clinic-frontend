@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { resetBackend, script, signIn } from "./support/auth";
+import { control, resetBackend, script, signIn } from "./support/auth";
 import { messages } from "./support/messages";
 import { backendControlUrl } from "./support/ports";
 
@@ -116,6 +116,106 @@ for (const locale of ["ar", "en"] as const) {
       test("no doctor profile", async ({ page }) => {
         await signIn(page, "newDoctor", locale);
         await expect(page.getByText(t.auth.noProfile.heading)).toBeVisible();
+
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      for (const [path, heading] of [
+        ["staff", t.staff.title],
+        ["staff/new", t.staff.createTitle],
+        ["staff/2", t.staff.detailsHeading],
+        ["specialties", t.specialties.title],
+        ["doctors", t.doctors.title],
+        ["doctors/new", t.doctors.chooseTitle],
+        ["doctors/1", t.doctors.profileHeading],
+        ["doctors/1/edit", t.doctors.editTitle],
+        ["doctors/1/schedule", t.scheduling.editorTitle],
+        ["fees", t.fees.title],
+      ] as const) {
+        test(`clinic setup: /${path}`, async ({ page }) => {
+          await control("clinic/setup?doctor=1&schedule=1&fee=350.10");
+          await signIn(page, "administrator", locale);
+          await page.goto(`/${locale}/${path}`);
+          await expect(page.getByRole("main")).toContainText(heading);
+
+          expect(await seriousIssues(page)).toEqual([]);
+        });
+      }
+
+      test("clinic setup: a doctor with nothing set, and time off listed", async ({
+        page,
+      }) => {
+        await control(
+          "clinic/time-off?doctor=1&start=2030-01-10&end=2030-01-12&reason=Synthetic",
+        );
+        await signIn(page, "administrator", locale);
+        await page.goto(`/${locale}/doctors/1?from=2030-01-01&to=2030-02-01`);
+        await expect(page.getByText(t.doctors.notBookable)).toBeVisible();
+
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("clinic setup: the charge warning", async ({ page }) => {
+        await control("clinic/setup?doctor=1&schedule=1");
+        await signIn(page, "administrator", locale);
+        await page.goto(`/${locale}/doctors/1`);
+        await expect(page.getByText(t.doctors.chargeWarning)).toBeVisible();
+
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("clinic setup: the editor, with errors showing", async ({
+        page,
+      }) => {
+        await signIn(page, "administrator", locale);
+        await page.goto(`/${locale}/doctors/1/schedule`);
+        const save = page.getByRole("button", { name: t.scheduling.save });
+        await expect(save).toBeEnabled();
+        await page
+          .getByRole("button", {
+            name: t.scheduling.addPeriodOn.replace("{day}", t.days.sunday),
+          })
+          .click();
+        await save.click();
+        await expect(page.getByText(t.scheduling.minutesRule)).toBeVisible();
+
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("clinic setup: forms with errors, and a dialog", async ({
+        page,
+      }) => {
+        await signIn(page, "administrator", locale);
+        await page.goto(`/${locale}/staff/new`);
+        const create = page.getByRole("button", { name: t.staff.create });
+        await expect(create).toBeEnabled();
+        await create.click();
+        await expect(page.getByText(t.staff.nameRequired)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/doctors/new?account=4`);
+        const profile = page.getByRole("button", {
+          name: t.doctors.create,
+          exact: true,
+        });
+        await expect(profile).toBeEnabled();
+        await profile.click();
+        await expect(
+          page.getByText(t.doctors.specialtiesRequired),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/staff/2`);
+        await page.getByRole("button", { name: t.staff.deactivate }).click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("clinic setup: my schedule", async ({ page }) => {
+        await control("clinic/setup?doctor=1&schedule=1");
+        await signIn(page, "doctor", locale);
+        await page.goto(`/${locale}/my/schedule`);
+        await expect(page.getByRole("main")).toContainText("09:00");
 
         expect(await seriousIssues(page)).toEqual([]);
       });
