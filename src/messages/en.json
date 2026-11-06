@@ -70,6 +70,15 @@
       "notFoundHeading": "Nothing to show here",
       "notFoundDescription": "This address doesn't lead to anything you can open."
     },
+    "form": {
+      "required": "(required)",
+      "noMedicalDetails": "Don't include medical details."
+    },
+    "confirm": {
+      "cancel": "Keep it",
+      "irreversible": "This can't be undone.",
+      "working": "Working…"
+    },
     "theme": {
       "label": "Theme",
       "light": "Light",

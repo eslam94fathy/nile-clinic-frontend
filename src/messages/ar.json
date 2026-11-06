@@ -70,6 +70,15 @@
       "notFoundHeading": "لا يوجد ما يمكن عرضه هنا",
       "notFoundDescription": "هذا العنوان لا يؤدي إلى أي شيء يمكنك فتحه."
     },
+    "form": {
+      "required": "(مطلوب)",
+      "noMedicalDetails": "لا تكتب أي تفاصيل طبية."
+    },
+    "confirm": {
+      "cancel": "تراجع",
+      "irreversible": "لا يمكن التراجع عن هذا الإجراء.",
+      "working": "جارٍ التنفيذ…"
+    },
     "theme": {
       "label": "المظهر",
       "light": "فاتح",
