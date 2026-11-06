@@ -60,7 +60,7 @@ export default async function LocaleLayout({
       <body className="min-h-dvh">
         <ThemeSync />
         <DirectionProvider dir={direction}>
-          {/* Client Components get their text as props, except error pages and shared components. */}
+          {/* Others get their text as props, or from `ScopedMessages` where a feature has a lot of it. */}
           <NextIntlClientProvider
             locale={locale}
             messages={{ brand, error, language, shared }}

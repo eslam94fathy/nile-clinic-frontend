@@ -69,7 +69,7 @@ export const APP_ROUTES = [
     capability: "manageDoctors",
     labelKey: "specialties",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "fees",
@@ -83,7 +83,7 @@ export const APP_ROUTES = [
     capability: "manageStaff",
     labelKey: "staff",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "reports",

@@ -94,7 +94,7 @@ test("a refused page's content isn't sent at all", async ({ page }) => {
   await signIn(page, "receptionist");
   const placeholder = messages.en.shell.placeholderHeading;
 
-  const response = await page.request.get("/en/staff");
+  const response = await page.request.get("/en/reports");
   const body = await response.text();
 
   expect(body).toContain(messages.en.shared.states.forbiddenHeading);
@@ -106,10 +106,10 @@ test("an allowed page from a later phase shows the placeholder", async ({
 }) => {
   await signIn(page, "administrator");
 
-  await page.goto("/en/staff");
+  await page.goto("/en/reports");
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    messages.en.shell.nav.staff,
+    messages.en.shell.nav.reports,
   );
   await expect(
     page.getByText(messages.en.shell.placeholderHeading),

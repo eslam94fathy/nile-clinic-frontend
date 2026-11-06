@@ -107,7 +107,7 @@ for (const locale of ["ar", "en"] as const) {
 
       test("placeholder", async ({ page }) => {
         await signIn(page, "administrator", locale);
-        await page.goto(`/${locale}/staff`);
+        await page.goto(`/${locale}/reports`);
         await expect(page.getByText(t.shell.placeholderHeading)).toBeVisible();
 
         expect(await seriousIssues(page)).toEqual([]);

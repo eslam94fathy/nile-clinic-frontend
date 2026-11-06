@@ -110,6 +110,31 @@ describe("ScreenGate", () => {
   });
 });
 
+describe("the capability prop", () => {
+  const narrowed = () =>
+    ScreenGate({
+      locale: "en",
+      path: "doctors",
+      capability: "manageDoctors",
+      children: <p>{CONTENT}</p>,
+    });
+
+  it("lets a role with the capability through", async () => {
+    signedInAs("administrator");
+    renderWithIntl(await narrowed());
+
+    expect(screen.getByText(CONTENT)).toBeTruthy();
+  });
+
+  it("refuses a role the route allows but the capability doesn't", async () => {
+    signedInAs("receptionist");
+    renderWithIntl(await narrowed());
+
+    expect(screen.getByText(shared.states.forbiddenHeading)).toBeTruthy();
+    expect(screen.queryByText(CONTENT)).toBeNull();
+  });
+});
+
 describe("a doctor's profile", () => {
   it.each(["dashboard", "my/queue"] as const)(
     "shows the no-profile state on %s when it's missing",

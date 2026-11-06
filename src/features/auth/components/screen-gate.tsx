@@ -6,6 +6,7 @@ import {
   findRoute,
   needsDoctorProfile,
 } from "@/lib/auth/app-routes";
+import { type Capability, can } from "@/lib/auth/permissions";
 import { getCurrentUser } from "../api/current-user";
 import { getDoctorProfileStatus } from "../api/doctor-profile";
 import { NoProfileState } from "./no-profile-state";
@@ -21,10 +22,13 @@ import { UnavailableState } from "./unavailable-state";
 export async function ScreenGate({
   locale,
   path,
+  capability,
   children,
 }: {
   locale: string;
   path: AppPath;
+  /** Narrows the route, for a page under it that fewer roles may use, such as a form. */
+  capability?: Capability;
   children: ReactNode;
 }) {
   const current = await getCurrentUser(locale);
@@ -33,7 +37,11 @@ export async function ScreenGate({
 
   const { role } = current.user;
   const route = findRoute(path);
-  if (!route || !canOpen(role, route)) {
+  if (
+    !route ||
+    !canOpen(role, route) ||
+    (capability !== undefined && !can(role, capability))
+  ) {
     return (
       <>
         <RoleSync role={role} />

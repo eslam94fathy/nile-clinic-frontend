@@ -42,7 +42,14 @@ const record = {
   finalized: "success",
 } satisfies Record<RecordStatus, StatusTone>;
 
-export const statusTones = { appointment, queue, charge, record };
+// Not an API enum: staff, specialties, and doctors each report this as a flag, shown here in words.
+const activity = {
+  active: "success",
+  deactivated: "muted",
+  inactive: "muted",
+} satisfies Record<string, StatusTone>;
+
+export const statusTones = { appointment, queue, charge, record, activity };
 
 export type StatusKind = keyof typeof statusTones;
 export type StatusValue<Kind extends StatusKind> =
