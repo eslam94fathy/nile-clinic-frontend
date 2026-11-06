@@ -252,6 +252,203 @@ test.describe("the opening count, from real search results", () => {
   });
 });
 
+test.describe("registering a patient", () => {
+  const f = m.patients.fields;
+  const form = m.patients.registerForm;
+
+  const field = (page: Page, label: string) =>
+    page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+
+  async function fillRequired(page: Page, name: string, phone: string) {
+    await page.goto("/en/patients/new");
+    await field(page, f.fullName).fill(name);
+    await field(page, f.dateOfBirth).fill("1990-04-12");
+    await field(page, f.sex).selectOption("female");
+    await field(page, f.phone).fill(phone);
+  }
+
+  const submit = (page: Page) =>
+    page.getByRole("button", { name: form.submit, exact: true }).click();
+
+  async function movedToRecord(page: Page): Promise<number> {
+    await expect(page).toHaveURL(/\/en\/patients\/\d+$/);
+    return Number(page.url().split("/").pop());
+  }
+
+  async function withPhone(phone: string): Promise<number> {
+    const response = await api(`patients?phone=${phone}`, { token });
+    expect(response.status).toBe(200);
+    return ((await response.json()) as { meta: { total: number } }).meta.total;
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await signInLive(page, admin());
+  });
+
+  test("required details only: one entry for registering, none for opening, until a reload", async ({
+    page,
+  }) => {
+    const name = `Synthetic Registered ${stamp()}`;
+    const phone = `010${uniqueDigits(8)}`;
+
+    await fillRequired(page, name, phone);
+    await submit(page);
+
+    const id = await movedToRecord(page);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(name);
+    await expect(reloadButton(page)).toBeVisible();
+    await expectOpenings(page, id, 0);
+    expect(await entries(id, "patient.registered")).toBe(1);
+
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(name);
+    await expectOpenings(page, id, 1);
+    expect(await entries(id, "patient.registered")).toBe(1);
+    expect(await withPhone(phone)).toBe(1);
+  });
+
+  test("every detail arrives as entered", async ({ page }) => {
+    const name = `مريض تجريبي ${stamp()}`;
+    const phone = `010${uniqueDigits(8)}`;
+    const nationalId = `2${uniqueDigits(13)}`;
+    const contactPhone = `011${uniqueDigits(8)}`;
+
+    await fillRequired(page, name, `${phone.slice(0, 3)} ${phone.slice(3)}`);
+    await field(page, f.nationalId).fill(arabicDigits(nationalId));
+    await field(page, f.address).fill("12 Synthetic St");
+    await page
+      .getByLabel(f.contactName, { exact: true })
+      .locator("visible=true")
+      .fill("Synthetic Guardian");
+    await page
+      .getByLabel(f.contactRelationship, { exact: true })
+      .locator("visible=true")
+      .fill("father");
+    await page
+      .getByLabel(f.contactPhone, { exact: true })
+      .locator("visible=true")
+      .fill(contactPhone);
+    await submit(page);
+
+    const id = await movedToRecord(page);
+    const main = page.getByRole("main");
+    await expect(main).toContainText(name);
+    await expect(main).toContainText("Synthetic Guardian");
+
+    const response = await api(`patients/${id}`, { token });
+    expect(response.status).toBe(200);
+    expect(((await response.json()) as { data: unknown }).data).toMatchObject({
+      full_name: name,
+      date_of_birth: "1990-04-12",
+      sex: "female",
+      phone,
+      national_id: nationalId,
+      address: "12 Synthetic St",
+      emergency_contact: {
+        name: "Synthetic Guardian",
+        relationship: "father",
+        phone: contactPhone,
+      },
+    });
+  });
+
+  test("a repeated national ID is refused on its field", async ({ page }) => {
+    const nationalId = `3${uniqueDigits(13)}`;
+    await newPatient({
+      national_id: nationalId,
+      phone: `010${uniqueDigits(8)}`,
+    });
+    const phone = `010${uniqueDigits(8)}`;
+
+    await fillRequired(page, `Synthetic Repeat ${stamp()}`, phone);
+    await field(page, f.nationalId).fill(nationalId);
+    await submit(page);
+
+    await expect(field(page, f.nationalId)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(page).toHaveURL(/\/en\/patients\/new$/);
+    expect(await withPhone(phone)).toBe(0);
+  });
+
+  test("a shared phone warns, and registering anyway succeeds", async ({
+    page,
+  }) => {
+    const phone = `010${uniqueDigits(8)}`;
+    const first = await newPatient({ phone });
+
+    await fillRequired(page, `Synthetic Sibling ${stamp()}`, phone);
+    await submit(page);
+
+    await expect(page.getByText(form.matchesTitle)).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: first.full_name }),
+    ).toBeVisible();
+    expect(await withPhone(phone)).toBe(1);
+
+    await page.getByRole("button", { name: form.registerAnyway }).click();
+
+    const id = await movedToRecord(page);
+    expect(id).not.toBe(first.id);
+    expect(await withPhone(phone)).toBe(2);
+    // Warning someone reads no record: the panel holds only list fields.
+    await expectOpenings(page, first.id, 0);
+  });
+
+  test("what the form accepts at its limits, the API accepts too", async () => {
+    const created = await newPatient({
+      full_name: "ن".repeat(255),
+      phone: `+1${uniqueDigits(14)}`,
+      address: "ع".repeat(500),
+      emergency_contact: {
+        name: "ن".repeat(255),
+        relationship: "ق".repeat(50),
+        phone: uniqueDigits(8),
+      },
+    });
+    expect(created.id).toBeGreaterThan(0);
+  });
+
+  test("the API's refusals use the keys the form has fields for", async () => {
+    const response = await api("patients", {
+      method: "POST",
+      token,
+      body: {
+        full_name: "",
+        date_of_birth: "2999-01-01",
+        sex: "other",
+        phone: "12",
+        national_id: "123",
+        address: "ع".repeat(501),
+        emergency_contact: {
+          name: "",
+          relationship: "",
+          phone: "12",
+        },
+      },
+    });
+
+    expect(response.status).toBe(422);
+    const { errors } = (await response.json()) as {
+      errors: Record<string, string[]>;
+    };
+    expect(Object.keys(errors).sort()).toEqual(
+      [
+        "address",
+        "date_of_birth",
+        "emergency_contact.name",
+        "emergency_contact.phone",
+        "emergency_contact.relationship",
+        "full_name",
+        "national_id",
+        "phone",
+        "sex",
+      ].sort(),
+    );
+  });
+});
+
 test.describe("the opening count, from the record's address", () => {
   test("only a person's own actions write an entry", async ({
     page,

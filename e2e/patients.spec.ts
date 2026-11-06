@@ -483,6 +483,277 @@ test.describe("a search's terms and results", () => {
   });
 });
 
+const formField = (page: Page, label: string) =>
+  page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+
+async function fillRequired(
+  page: Page,
+  locale: "ar" | "en",
+  { name, phone }: { name: string; phone: string },
+) {
+  const f = messages[locale].patients.fields;
+  await formField(page, f.fullName).fill(name);
+  await formField(page, f.dateOfBirth).fill("1990-04-12");
+  await formField(page, f.sex).selectOption("female");
+  await formField(page, f.phone).fill(phone);
+}
+
+const submitRegister = (page: Page, locale: "ar" | "en" = "en") =>
+  page
+    .getByRole("button", {
+      name: messages[locale].patients.registerForm.submit,
+      exact: true,
+    })
+    .click();
+
+/** The patient number the page moved to. */
+async function movedToRecord(page: Page, locale: "ar" | "en" = "en") {
+  await expect(page).toHaveURL(new RegExp(`/${locale}/patients/\\d+$`));
+  return Number(page.url().split("/").pop());
+}
+
+for (const locale of ["ar", "en"] as const) {
+  const t = messages[locale].patients;
+  const form = t.registerForm;
+
+  test.describe(`registering a patient, in ${locale}`, () => {
+    test.beforeEach(async ({ page }) => {
+      await signIn(page, "receptionist", locale);
+      await page.goto(`/${locale}/patients/new`);
+    });
+
+    test("says what's wrong before sending anything", async ({ page }) => {
+      await submitRegister(page, locale);
+
+      await expect(page.getByText(t.form.nameRequired)).toBeVisible();
+      await expect(page.getByText(t.form.dateRequired)).toBeVisible();
+      await expect(page.getByText(t.form.sexRequired)).toBeVisible();
+      await expect(page.getByText(t.form.phoneRule)).toBeVisible();
+      await settle(page);
+      expect(await callsTo("patients")).toBe(0);
+    });
+
+    test("shows the returned record, with no read of it", async ({ page }) => {
+      await fillRequired(page, locale, {
+        name: "Synthetic Newcomer",
+        phone: "010 0000-0040",
+      });
+      await submitRegister(page, locale);
+
+      const id = await movedToRecord(page, locale);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        "Synthetic Newcomer",
+      );
+      await expect(
+        page.getByText(form.registered.replace("{number}", String(id))),
+      ).toBeVisible();
+      await expect(page.getByRole("main")).toContainText("01000000040");
+      await settle(page);
+      expect(await callsTo(`patients/${id}`)).toBe(0);
+      expect(await openings(id)).toBe(0);
+
+      await page.reload();
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        "Synthetic Newcomer",
+      );
+      await expect.poll(() => openings(id)).toBe(1);
+    });
+
+    test("shows a repeated national ID on its field, keeping what was typed", async ({
+      page,
+    }) => {
+      await fillRequired(page, locale, {
+        name: "Synthetic Twin",
+        phone: "01000000041",
+      });
+      await formField(page, t.fields.nationalId).fill("29004120100001");
+      await submitRegister(page, locale);
+
+      await expect(
+        page.getByText("This national ID has already been taken."),
+      ).toBeVisible();
+      await expect(formField(page, t.fields.nationalId)).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
+      await expect(formField(page, t.fields.fullName)).toHaveValue(
+        "Synthetic Twin",
+      );
+      await expect(page).toHaveURL(new RegExp(`/${locale}/patients/new$`));
+    });
+
+    test("warns about a shared phone, and registers anyway when told to", async ({
+      page,
+    }) => {
+      await fillRequired(page, locale, {
+        name: "Synthetic Sibling",
+        phone: "01000000002",
+      });
+      await submitRegister(page, locale);
+
+      await expect(page.getByText(form.matchesTitle)).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Synthetic Patient Beta" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Synthetic Child Gamma" }),
+      ).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`/${locale}/patients/new$`));
+
+      await page.getByRole("button", { name: form.registerAnyway }).click();
+
+      const id = await movedToRecord(page, locale);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        "Synthetic Sibling",
+      );
+      // One check and one save: registering anyway doesn't check again.
+      expect(await callsTo("patients")).toBe(2);
+      expect(await openings(id)).toBe(0);
+    });
+
+    test("says when the check can't run, and offers both ways on", async ({
+      page,
+    }) => {
+      await script("GET patients", 500);
+      await fillRequired(page, locale, {
+        name: "Synthetic Unchecked",
+        phone: "01000000042",
+      });
+      await submitRegister(page, locale);
+
+      await expect(page.getByText(form.checkFailedTitle)).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`/${locale}/patients/new$`));
+
+      await page.getByRole("button", { name: form.tryAgain }).click();
+      await expect(page.getByText(form.checkFailedTitle)).toBeVisible();
+
+      await page.getByRole("button", { name: form.registerAnyway }).click();
+      await movedToRecord(page, locale);
+    });
+  });
+}
+
+test.describe("around registering", () => {
+  const t = messages.en.patients;
+  const form = t.registerForm;
+
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, "receptionist");
+  });
+
+  test("changing the phone removes the warning, and the next submit checks", async ({
+    page,
+  }) => {
+    await page.goto("/en/patients/new");
+    await fillRequired(page, "en", {
+      name: "Synthetic Changed",
+      phone: "01000000002",
+    });
+    await submitRegister(page);
+    await expect(page.getByText(form.matchesTitle)).toBeVisible();
+
+    await formField(page, t.fields.phone).fill("01000000043");
+
+    await expect(page.getByText(form.matchesTitle)).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: form.registerAnyway }),
+    ).toHaveCount(0);
+
+    await submitRegister(page);
+    await movedToRecord(page);
+    // Two checks, and one save.
+    expect(await callsTo("patients")).toBe(3);
+  });
+
+  test("opening a match and coming back keeps what was typed", async ({
+    page,
+  }) => {
+    await page.goto("/en/patients/new");
+    await fillRequired(page, "en", {
+      name: "Synthetic Kept",
+      phone: "01000000002",
+    });
+    await formField(page, t.fields.address).fill("7 Synthetic Lane");
+    await submitRegister(page);
+
+    await page.getByRole("link", { name: "Synthetic Patient Beta" }).click();
+    await expect(page).toHaveURL(/\/en\/patients\/2$/);
+    await expect.poll(() => openings(2)).toBe(1);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/patients\/new$/);
+    await expect(formField(page, t.fields.fullName)).toHaveValue(
+      "Synthetic Kept",
+    );
+    await expect(formField(page, t.fields.address)).toHaveValue(
+      "7 Synthetic Lane",
+    );
+    await expect(page.getByText(form.matchesTitle)).toBeVisible();
+  });
+
+  test("the form is empty when returned to, and back doesn't reach it", async ({
+    page,
+  }) => {
+    await page.goto("/en/patients");
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: t.register })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/en\/patients\/new$/);
+    await fillRequired(page, "en", {
+      name: "Synthetic Emptied",
+      phone: "01000000044",
+    });
+    await submitRegister(page);
+    await movedToRecord(page);
+
+    // The form was replaced in history, as it isn't somewhere to go back to.
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: t.register })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/en\/patients\/new$/);
+    await expect(formField(page, t.fields.fullName)).toHaveValue("");
+    await expect(formField(page, t.fields.phone)).toHaveValue("");
+    await expect(formField(page, t.fields.sex)).toHaveValue("");
+  });
+
+  test("a held search gains the new patient", async ({ page }) => {
+    await page.goto("/en/patients");
+    await searchField(page, t.fields.fullName).fill("Synthetic Fresh");
+    await submitSearch(page);
+    await expect(page.getByText(t.search.emptyTitle)).toBeVisible();
+
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: t.register })
+      .last()
+      .click();
+    await expect(page).toHaveURL(/\/en\/patients\/new$/);
+    await fillRequired(page, "en", {
+      name: "Synthetic Fresh Arrival",
+      phone: "01000000045",
+    });
+    await submitRegister(page);
+    await movedToRecord(page);
+
+    await page.goBack();
+
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(searchField(page, t.fields.fullName)).toHaveValue(
+      "Synthetic Fresh",
+    );
+    await expect(
+      page.getByRole("link", { name: "Synthetic Fresh Arrival" }),
+    ).toBeVisible();
+  });
+});
+
 test.describe("a long name and address", () => {
   for (const width of [768, 390]) {
     test(`wrap at ${width}px, in both directions`, async ({ page }) => {

@@ -2,10 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  DataTable,
-  type DataTableColumn,
-} from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import {
   FilterBar,
   type FilterDefinition,
@@ -13,9 +10,6 @@ import {
 } from "@/components/shared/filter-bar";
 import { FormError } from "@/components/shared/form/form-error";
 import { EmptyState } from "@/components/shared/states/empty-state";
-import { ClinicDate } from "@/components/shared/values/clinic-date";
-import { LtrText } from "@/components/shared/values/ltr-text";
-import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
 import { ApiFailureState } from "@/features/auth/public";
 import type { ApiError } from "@/lib/api/api-error";
@@ -24,8 +18,8 @@ import { Link } from "@/lib/i18n/navigation";
 import { type PatientPage, searchPatients } from "../api/patients";
 import { changeCount } from "../opening";
 import { normalizeNationalId, normalizePhone } from "../schemas/patient";
-import type { PatientSearchTerms, PatientSummary } from "../types";
-import { PatientLink } from "./patient-link";
+import type { PatientSearchTerms } from "../types";
+import { usePatientColumns } from "./patient-columns";
 
 type Answer =
   | { kind: "none" }
@@ -72,6 +66,7 @@ export function PatientSearch() {
   const locale = useLocale();
   const t = useTranslations("patients");
   const tAuth = useTranslations("auth");
+  const columns = usePatientColumns();
   const [answer, setAnswer] = useState<Answer>({ kind: "none" });
   const [needsTerm, setNeedsTerm] = useState(false);
   const newest = useRef(0);
@@ -153,38 +148,6 @@ export function PatientSearch() {
       label: t("fields.nationalId"),
       hint: t("search.wholeValueHint"),
       inAddress: false,
-    },
-  ];
-
-  const columns: DataTableColumn<PatientSummary>[] = [
-    {
-      id: "number",
-      header: t("fields.number"),
-      cell: (patient) => <LtrText>{patient.id}</LtrText>,
-    },
-    {
-      id: "name",
-      header: t("fields.fullName"),
-      cell: (patient) => (
-        <PatientLink id={patient.id}>
-          <UserText>{patient.full_name}</UserText>
-        </PatientLink>
-      ),
-    },
-    {
-      id: "sex",
-      header: t("fields.sex"),
-      cell: (patient) => t(`sex.${patient.sex}`),
-    },
-    {
-      id: "dateOfBirth",
-      header: t("fields.dateOfBirth"),
-      cell: (patient) => <ClinicDate value={patient.date_of_birth} />,
-    },
-    {
-      id: "phone",
-      header: t("fields.phone"),
-      cell: (patient) => <LtrText>{patient.phone}</LtrText>,
     },
   ];
 
