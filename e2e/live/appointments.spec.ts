@@ -695,6 +695,11 @@ test.describe("each role, against the real API", () => {
     );
     for (const [path, method, body] of [
       ["appointments?from=2026-11-01&to=2026-11-02", "GET", undefined],
+      [
+        "appointments",
+        "POST",
+        { patient_id: mine.id, doctor_id: booking, date, start: slot.start },
+      ],
       [`appointments/${own.id}`, "GET", undefined],
       [`appointments/${own.id}/cancel`, "POST", {}],
       [`appointments/${own.id}/no-show`, "POST", undefined],

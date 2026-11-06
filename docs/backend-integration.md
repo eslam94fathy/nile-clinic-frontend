@@ -258,6 +258,20 @@ From the source only, not exercised, because the frontend never does these (`Pat
 - An empty `PATCH` is `422` under the key `fields`.
 - **`GET /patients` with no filters lists everyone,** so the frontend never sends it with no term.
 
+**Appointments, confirmed on the running API** (2026-11-07, commit `dff2dca`, by `e2e/live/appointments.spec.ts`):
+
+- List rows hold exactly `id`, `date`, `start`, `end`, `status`, `outside_availability`, `doctor`, and `patient`, with the patient as `id`, `full_name`, and `phone`.
+- Reading a list or an appointment writes no audit entry, for staff or doctors. Booking, rescheduling, cancelling, and no-show each write one entry of their own, and no `patient.opened`.
+- `GET /patients?id=N` writes no `patient.opened`, so it's the way to show a patient without opening them.
+- Free times leave out the doctor's bookings, but not the patient's, so a time can be offered and still be refused with `409` `patient_busy`.
+- Two simultaneous bookings of one time give one `201` and one `409` `slot_booked`.
+- A time not on offer is `422` under `start`. A range over 92 days is `422` under `to`. A no-show before the start is `422` under `appointment`. A cancellation after the start is refused too, and nothing changes.
+- Time off covering a booking sets `outside_availability`, and the `outside_availability=1` filter finds it. Rescheduling clears both.
+- Cancelling frees the time, and returns a reason exactly as written, including in Arabic.
+- A doctor gets `403` on every `/appointments` route, sees no phone in their own, and gets `404` for another doctor's.
+
+From the source only, not exercised: `422` under `date`, `patient_id`, `doctor_id`, and `note` when booking, and under `reason` when cancelling. The fake backend covers how each appears.
+
 **"No medical details" fields.** The API asks that time-off reason, appointment note, and charge
 reasons hold no medical details. Time-off reasons are readable by all staff. These fields need a
 visible hint.
