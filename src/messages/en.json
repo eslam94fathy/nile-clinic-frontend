@@ -32,6 +32,7 @@
     "retry": "Try again"
   },
   "shared": {
+    "noValue": "No value",
     "theme": {
       "label": "Theme",
       "light": "Light",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatInstant } from "./instant";
+import { formatInstant, parseInstant } from "./instant";
 
 // 22:30 UTC is 00:30 the next day in Cairo in November, and 17:30 in New York.
 const instant = new Date("2026-11-05T22:30:00Z");
@@ -20,5 +20,42 @@ describe("formatInstant", () => {
 
     expect(arabic).toMatch(/[؀-ۿ]/);
     expect(arabic).not.toBe(formatInstant(instant, "en", "Africa/Cairo"));
+  });
+});
+
+describe("parseInstant", () => {
+  it("reads the backend's two spellings as the same moment", () => {
+    const offset = parseInstant("2026-11-05T14:22:31+00:00");
+    const micro = parseInstant("2026-11-05T14:22:31.000000Z");
+
+    expect(offset?.getTime()).toBe(Date.UTC(2026, 10, 5, 14, 22, 31));
+    expect(micro?.getTime()).toBe(offset?.getTime());
+  });
+
+  it("keeps a real offset", () => {
+    expect(parseInstant("2026-11-05T16:22:31+02:00")?.toISOString()).toBe(
+      "2026-11-05T14:22:31.000Z",
+    );
+  });
+
+  it.each([
+    "2026-11-05",
+    "2026-11-05T14:22:31",
+    "not a date",
+    "2026-13-45T14:22:31Z",
+    "2026-02-31T10:00:00.000Z",
+    "2026-04-31T10:00:00Z",
+    "2026-11-05T25:00:00Z",
+    "",
+    null,
+    undefined,
+  ])("gives nothing for %s", (value) => {
+    expect(parseInstant(value)).toBeNull();
+  });
+});
+
+describe("digits", () => {
+  it("are Western in Arabic", () => {
+    expect(formatInstant(instant, "ar", "Africa/Cairo")).not.toMatch(/[٠-٩]/);
   });
 });
