@@ -49,7 +49,7 @@ Evidence comes from the backend at commit `dff2dca`, and from a spike on 2026-11
 | Ctrl+click: the new tab reads | 3 |
 | Back in the first tab, where no mark was left | 3 |
 
-**ADR 0005 and ADR 0006**: both say an audited read mustn't start from a *bare* `useEffect`. This effect isn't bare, as it's guarded by a ref and the mark. The rule's concern, effects re-running when a page is shown again, is exactly what the measurements above test. A permanent live test keeps them. **Not measured**: development mode. React's Strict Mode should keep the ref across its repeat run, so the guard should also answer ADR 0005's development concern, but that's expected rather than observed. It's to be checked once by hand during implementation, and the result recorded here. The live test covers production builds only.
+**ADR 0005 and ADR 0006**: both say an audited read mustn't start from a *bare* `useEffect`. This effect isn't bare, as it's guarded by a ref and the mark. The rule's concern, effects re-running when a page is shown again, is exactly what the measurements above test. A permanent live test keeps them. **Development mode, observed on `next dev`** (task T023): first opening 1 entry, away and back still 1. Strict Mode's repeat run keeps the ref, which a unit test also checks directly, so this answers ADR 0005's development concern. The permanent live test covers production builds only.
 
 ## R3. Showing the record after registering
 

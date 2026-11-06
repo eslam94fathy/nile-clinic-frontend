@@ -27,7 +27,7 @@ Rules that follow:
    [ADR 0010](0010-session-and-guards.md): every server read waits for `connection()`, which keeps it out of the shell.
 4. **Hidden routes re-run effects when shown again.** An audited read must never be triggered from a bare `useEffect`.
    `refetchOnMount: false` and `staleTime: Infinity` from ADR 0005 cover this, and Phase 5 must test it, including going back
-   to a patient page.
+   to a patient page. Phase 5 did, and [ADR 0012](0012-audited-reads-in-the-browser.md) records the result.
 5. **Sign-out must not leave hidden patient screens mounted.** Sign-out performs a full page navigation, which clears them,
    and Phase 3 must test this.
 

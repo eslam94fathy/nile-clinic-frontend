@@ -26,7 +26,7 @@ export const APP_ROUTES = [
     capability: "managePatients",
     labelKey: "patients",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "appointments",

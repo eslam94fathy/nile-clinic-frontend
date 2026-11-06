@@ -1,4 +1,4 @@
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   messagesByLocale,
@@ -48,6 +48,31 @@ describe("ApiFailureState", () => {
       screen.getByRole("button", { name: shared.states.retry }),
     ).toBeTruthy();
     expect(endSession).not.toHaveBeenCalled();
+  });
+
+  it("retries through the caller, when given a way, and doesn't reload", () => {
+    const onRetry = vi.fn();
+    renderWithIntl(
+      <ApiFailureState
+        error={{ status: 500, message: "Failed.", fieldErrors: {} }}
+        onRetry={onRetry}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: shared.states.retry }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers no retry on 403 or 404, whatever it's given", () => {
+    renderWithIntl(
+      <ApiFailureState
+        error={{ status: 404, fieldErrors: {} }}
+        onRetry={vi.fn()}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: shared.states.retry }),
+    ).toBeNull();
   });
 
   it("shows general text when nothing answered", () => {

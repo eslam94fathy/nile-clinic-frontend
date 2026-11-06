@@ -24,9 +24,9 @@ export function useFormSubmit<Values extends FieldValues>({
   const [working, setWorking] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
 
-  async function submit(
-    call: () => Promise<ApiResult<unknown>>,
-    onSuccess: (data: unknown) => void,
+  async function submit<Data>(
+    call: () => Promise<ApiResult<Data>>,
+    onSuccess: (data: Data) => void,
   ) {
     if (inFlight.current) return;
     inFlight.current = true;

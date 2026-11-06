@@ -45,6 +45,52 @@ const type = (label: string, value: string) =>
 const apply = () =>
   fireEvent.click(screen.getByRole("button", { name: text.apply }));
 
+describe("private searches", () => {
+  const search: FilterDefinition[] = [
+    { name: "phone", label: "Phone", type: "text", inAddress: false },
+  ];
+
+  it("shows an error on its field", () => {
+    renderWithIntl(
+      <FilterBar filters={search} errors={{ phone: "The phone is bad." }} />,
+    );
+    const field = screen.getByLabelText("Phone");
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByRole("alert").textContent).toBe("The phone is bad.");
+  });
+
+  it("asks the browser not to remember a private filter", () => {
+    renderWithIntl(<FilterBar filters={search} />);
+    expect(screen.getByLabelText("Phone").getAttribute("autocomplete")).toBe(
+      "off",
+    );
+  });
+
+  it("leaves a filter in the address as it was", () => {
+    renderWithIntl(<FilterBar filters={filters} />);
+    expect(
+      screen.getByLabelText("Date").getAttribute("autocomplete"),
+    ).toBeNull();
+  });
+
+  it("can name its button", () => {
+    renderWithIntl(<FilterBar filters={search} applyLabel="Search" />);
+    expect(screen.getByRole("button", { name: "Search" })).toBeTruthy();
+  });
+
+  it("tells a reset from an empty search", () => {
+    const onApply = vi.fn();
+    const onReset = vi.fn();
+    renderWithIntl(
+      <FilterBar filters={search} onApply={onApply} onReset={onReset} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: text.reset }));
+    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(onApply).not.toHaveBeenCalled();
+  });
+});
+
 describe("FilterBar", () => {
   it("writes applied filters to the address", () => {
     renderWithIntl(<FilterBar filters={filters} />);
