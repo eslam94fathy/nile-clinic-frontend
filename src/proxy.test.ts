@@ -57,57 +57,151 @@ describe("addresses without a supported language", () => {
   });
 });
 
-describe("addresses with a supported language", () => {
-  it.each(["/ar", "/en", "/en/anything"])("does not redirect %s", (path) => {
-    const response = proxy(request(path));
-    expect(response.headers.get("location")).toBeNull();
-    expect(response.status).toBe(200);
+const WITH_SESSION = { cookie: "nile_session=sealed-value" };
+
+const rewriteOf = (path: string, headers?: Record<string, string>) =>
+  proxy(request(path, headers)).headers.get("x-middleware-rewrite");
+
+describe("a language with no page", () => {
+  it.each(["ar", "en"])("sends /%s to sign-in with no session", (locale) => {
+    expect(redirectOf(`/${locale}`)).toEqual({
+      status: 307,
+      to: `http://clinic.test/${locale}/sign-in`,
+    });
+  });
+
+  it.each(["ar", "en"])("sends /%s to the landing page with one", (locale) => {
+    expect(redirectOf(`/${locale}`, WITH_SESSION).to).toBe(
+      `http://clinic.test/${locale}/dashboard`,
+    );
+  });
+});
+
+describe("signed-in addresses with no session", () => {
+  it.each([
+    ["/ar/dashboard", "http://clinic.test/ar/sign-in?return=%2Fdashboard"],
+    ["/en/queue", "http://clinic.test/en/sign-in?return=%2Fqueue"],
+    ["/en/my/queue", "http://clinic.test/en/sign-in?return=%2Fmy%2Fqueue"],
+  ])("sends %s to sign-in, in its language", (path, to) => {
+    expect(redirectOf(path)).toEqual({ status: 307, to });
+  });
+
+  it("drops the query, which could hold patient details", () => {
+    expect(redirectOf("/en/patients?search=Synthetic").to).toBe(
+      "http://clinic.test/en/sign-in?return=%2Fpatients",
+    );
+  });
+
+  it("gives no return address for a page that writes an audit entry", () => {
+    expect(redirectOf("/en/patients/5").to).toBe(
+      "http://clinic.test/en/sign-in",
+    );
+    expect(redirectOf("/en/audit").to).toBe("http://clinic.test/en/sign-in");
+  });
+});
+
+describe("signed-in addresses with a session", () => {
+  it.each(["/ar/dashboard", "/en/queue", "/en/my/queue", "/en/patients/5"])(
+    "lets %s through, for its page to decide",
+    (path) => {
+      expect(redirectOf(path, WITH_SESSION).to).toBeNull();
+      expect(rewriteOf(path, WITH_SESSION)).toBeNull();
+    },
+  );
+});
+
+describe("unknown addresses", () => {
+  it.each(["/en/anything", "/ar/missing/page", "/ar/%E0%A4%A"])(
+    "shows %s the public not-found page with no session",
+    (path) => {
+      const locale = path.slice(1, 3);
+      expect(redirectOf(path).to).toBeNull();
+      expect(rewriteOf(path)).toBe(
+        `http://clinic.test/${locale}/address-not-found`,
+      );
+    },
+  );
+
+  it("lets one through with a session, for the framed not-found state", () => {
+    expect(rewriteOf("/en/anything", WITH_SESSION)).toBeNull();
+  });
+});
+
+describe("public addresses", () => {
+  it.each(["/ar/sign-in", "/en/sign-in", "/en/address-not-found"])(
+    "lets %s through with no session",
+    (path) => {
+      expect(redirectOf(path).to).toBeNull();
+      expect(rewriteOf(path)).toBeNull();
+    },
+  );
+
+  it.each(["/en/sign-in/x", "/en/address-not-found/x"])(
+    "treats the deeper %s as unknown",
+    (path) => {
+      expect(rewriteOf(path)).toBe("http://clinic.test/en/address-not-found");
+    },
+  );
+
+  it("lets sign-in through with a session, for the page to decide", () => {
+    expect(redirectOf("/en/sign-in", WITH_SESSION).to).toBeNull();
   });
 });
 
 describe("the design preview address", () => {
-  const rewriteOf = (path: string) =>
-    proxy(request(path)).headers.get("x-middleware-rewrite");
-
   it.each(["/ar/design-preview", "/en/design-preview", "/ar/design-preview/x"])(
-    "sends %s to an unknown address when the setting is unset",
+    "treats %s as unknown when the setting is unset, with no session",
     (path) => {
-      const target = rewriteOf(path);
-      expect(target).toBe(`http://clinic.test/${path.slice(1, 3)}/__unknown`);
+      expect(rewriteOf(path)).toBe(
+        `http://clinic.test/${path.slice(1, 3)}/address-not-found`,
+      );
     },
   );
+
+  it("treats it as unknown with a session too", () => {
+    expect(rewriteOf("/ar/design-preview", WITH_SESSION)).toBe(
+      "http://clinic.test/ar/__unknown",
+    );
+  });
 
   it.each([
     "/ar/design%2Dpreview",
     "/ar/%64esign-preview",
     "/ar/design%2dpreview",
   ])("also catches the encoded %s", (path) => {
-    expect(rewriteOf(path)).toBe("http://clinic.test/ar/__unknown");
-  });
-
-  it("doesn't fail on a malformed address", () => {
-    expect(rewriteOf("/ar/%E0%A4%A")).toBeNull();
+    expect(rewriteOf(path)).toBe("http://clinic.test/ar/address-not-found");
+    expect(rewriteOf(path, WITH_SESSION)).toBe(
+      "http://clinic.test/ar/__unknown",
+    );
   });
 
   it("does the same when the setting is false", () => {
     vi.stubEnv("DESIGN_PREVIEW_ENABLED", "false");
     expect(rewriteOf("/ar/design-preview")).toBe(
-      "http://clinic.test/ar/__unknown",
+      "http://clinic.test/ar/address-not-found",
     );
   });
 
   it("drops the query", () => {
     expect(rewriteOf("/ar/design-preview?a=1")).toBe(
-      "http://clinic.test/ar/__unknown",
+      "http://clinic.test/ar/address-not-found",
     );
   });
 
   it("passes through when the setting is true", () => {
     vi.stubEnv("DESIGN_PREVIEW_ENABLED", "true");
     expect(rewriteOf("/ar/design-preview")).toBeNull();
+    expect(redirectOf("/ar/design-preview").to).toBeNull();
   });
 
-  it("doesn't catch a similar address", () => {
-    expect(rewriteOf("/ar/design-previewx")).toBeNull();
+  it("treats a deeper address as unknown even when the setting is true", () => {
+    vi.stubEnv("DESIGN_PREVIEW_ENABLED", "true");
+    expect(rewriteOf("/ar/design-preview/x")).toBe(
+      "http://clinic.test/ar/address-not-found",
+    );
+  });
+
+  it("doesn't catch a similar address when there's a session", () => {
+    expect(rewriteOf("/ar/design-previewx", WITH_SESSION)).toBeNull();
   });
 });

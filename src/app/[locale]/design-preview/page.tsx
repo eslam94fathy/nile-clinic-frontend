@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { PublicHeader } from "@/components/shared/public-header";
 import { LoadingState } from "@/components/shared/states/loading-state";
 import { PreviewPage } from "@/features/design-preview/components/preview-page";
 import { getEnv } from "@/lib/config/env";
@@ -26,8 +27,11 @@ export default async function DesignPreviewPage({
   setRequestLocale(locale);
 
   return (
-    <Suspense fallback={<LoadingState />}>
-      <Gate locale={locale} />
-    </Suspense>
+    <>
+      <PublicHeader />
+      <Suspense fallback={<LoadingState />}>
+        <Gate locale={locale} />
+      </Suspense>
+    </>
   );
 }

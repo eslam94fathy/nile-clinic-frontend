@@ -5,6 +5,10 @@ import ar from "@/messages/ar.json";
 import en from "@/messages/en.json";
 import ErrorPage from "./error";
 
+vi.mock("@/components/shared/public-header", () => ({
+  PublicHeader: () => null,
+}));
+
 afterEach(cleanup);
 
 it.each([
