@@ -30,5 +30,170 @@
     "heading": "Something went wrong",
     "description": "The page couldn't be displayed. Please try again.",
     "retry": "Try again"
+  },
+  "shared": {
+    "noValue": "No value",
+    "status": {
+      "unknown": "Unknown status",
+      "appointment": {
+        "scheduled": "Scheduled",
+        "cancelled": "Cancelled",
+        "no_show": "No-show",
+        "checked_in": "Checked in",
+        "completed": "Completed"
+      },
+      "queue": {
+        "waiting": "Waiting",
+        "with_doctor": "With doctor",
+        "seen": "Seen",
+        "left": "Left"
+      },
+      "charge": {
+        "none": "No charge",
+        "unpaid": "Unpaid",
+        "partially_paid": "Part paid",
+        "paid": "Paid",
+        "cancelled": "Cancelled"
+      },
+      "record": {
+        "none": "No record",
+        "draft": "Draft",
+        "finalized": "Finalized"
+      }
+    },
+    "states": {
+      "loading": "Loading…",
+      "errorHeading": "This couldn't be loaded",
+      "retry": "Try again",
+      "forbiddenHeading": "You don't have access to this",
+      "forbiddenDescription": "Your role doesn't include this. If you need it, ask an administrator.",
+      "notFoundHeading": "Nothing to show here",
+      "notFoundDescription": "This address doesn't lead to anything you can open."
+    },
+    "table": {
+      "pagination": "Pages",
+      "summary": "Page {page} of {lastPage}, {total, plural, one {{count} result} other {{count} results}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "filters": {
+      "label": "Filters",
+      "apply": "Apply filters",
+      "reset": "Reset"
+    },
+    "form": {
+      "required": "(required)",
+      "noMedicalDetails": "Don't include medical details."
+    },
+    "confirm": {
+      "cancel": "Keep it",
+      "irreversible": "This can't be undone.",
+      "working": "Working…"
+    },
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "device": "Device"
+    },
+    "notices": {
+      "label": "Notifications",
+      "close": "Close notification"
+    }
+  },
+  "preview": {
+    "sentinel": "design-preview-sentinel-7f3a91",
+    "title": "Design system preview",
+    "description": "Every shared component and state. All names, numbers, and notes here are made up for testing.",
+    "values": {
+      "heading": "Clinic values",
+      "money": "Money",
+      "moneyNegative": "Negative money",
+      "moneyLarge": "Very large money",
+      "moneyNull": "Money with no value",
+      "moneyMalformed": "Malformed money",
+      "date": "Clinic date",
+      "dateMalformed": "Malformed date",
+      "time": "Wall-clock time",
+      "timeEndOfDay": "End of day",
+      "instantLong": "Recorded moment, with microseconds",
+      "instantOffset": "Same moment, with an offset",
+      "phone": "Phone number",
+      "nationalId": "National ID",
+      "userTextLatin": "Stored Latin name",
+      "userTextArabic": "Stored Arabic name",
+      "browserHeading": "The same values, rendered in the browser",
+      "sentenceHeading": "Inside a sentence",
+      "sentence": "A balance of <money></money> is due on <date></date> at <time></time>. Call <phone></phone> to confirm."
+    },
+    "statuses": {
+      "heading": "Status badges",
+      "appointment": "Appointment",
+      "queue": "Queue",
+      "charge": "Charge",
+      "record": "Medical record",
+      "unknown": "A status this version doesn't know"
+    },
+    "states": {
+      "heading": "Shared states",
+      "emptyNothingYet": "No visits yet today",
+      "emptyNothingYetDescription": "Add a walk-in to start the list.",
+      "emptyNoMatches": "No visits match these filters",
+      "emptyNoMatchesDescription": "Change or reset the filters.",
+      "action": "Add walk-in",
+      "reset": "Reset filters",
+      "errorMessage": "The clinic system didn't respond."
+    },
+    "list": {
+      "heading": "List with filters",
+      "caption": "Sample visits",
+      "loadingCaption": "Sample visits, loading",
+      "emptyCaption": "Sample visits, empty",
+      "errorCaption": "Sample visits, failed",
+      "loadingHeading": "Table while loading",
+      "emptyHeading": "Table with no rows",
+      "errorHeading": "Table after an error",
+      "number": "No.",
+      "patient": "Patient",
+      "phone": "Phone",
+      "doctor": "Doctor",
+      "time": "Time",
+      "visit": "Visit",
+      "charge": "Charge",
+      "balance": "Balance",
+      "filterStatus": "Visit status",
+      "filterAll": "All",
+      "filterDate": "Date",
+      "filterSearch": "Patient search",
+      "filterSearchHint": "This filter stays out of the page address.",
+      "appliedSearch": "Applied patient search: {value}"
+    },
+    "form": {
+      "heading": "Form parts",
+      "formError": "This charge has already been paid.",
+      "reason": "Cancellation reason",
+      "reasonError": "Enter a reason to cancel this charge.",
+      "name": "Patient name",
+      "nameHint": "As written on their ID.",
+      "phone": "Phone number",
+      "method": "Payment method",
+      "methodCash": "Cash",
+      "methodCard": "Card",
+      "methodWallet": "Wallet",
+      "note": "Appointment note"
+    },
+    "actions": {
+      "heading": "Confirmation and notices",
+      "open": "Cancel charge",
+      "openFailing": "Cancel charge, which fails",
+      "title": "Cancel this charge?",
+      "description": "The visit can be charged again afterwards.",
+      "confirm": "Cancel charge",
+      "failure": "The charge couldn't be cancelled, as it has payments.",
+      "success": "Charge cancelled",
+      "showSuccess": "Show success notice",
+      "showFailure": "Show failure notice",
+      "failureNotice": "The payment couldn't be recorded."
+    }
   }
 }

@@ -48,6 +48,23 @@ describe("parseEnv", () => {
     expect(!result.ok && result.problems.join()).toContain("CLINIC_TIMEZONE");
   });
 
+  it.each([
+    ["unset", {}, undefined],
+    ["true", { DESIGN_PREVIEW_ENABLED: "true" }, "true"],
+    ["false", { DESIGN_PREVIEW_ENABLED: "false" }, "false"],
+  ])("accepts a preview setting that is %s", (_label, source, expected) => {
+    const result = parseEnv({ ...valid, ...source });
+    expect(result.ok && result.env.DESIGN_PREVIEW_ENABLED).toBe(expected);
+  });
+
+  it("rejects any other preview setting, naming it without its value", () => {
+    const result = parseEnv({ ...valid, DESIGN_PREVIEW_ENABLED: "secret-yes" });
+    expect(result.ok).toBe(false);
+    const problems = !result.ok ? result.problems.join() : "";
+    expect(problems).toContain("DESIGN_PREVIEW_ENABLED");
+    expect(problems).not.toContain("secret");
+  });
+
   it("never includes a setting's value in its messages", () => {
     const result = parseEnv({
       BACKEND_API_URL: "secret-looking-value",

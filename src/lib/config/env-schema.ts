@@ -39,6 +39,9 @@ const envSchema = z.object({
     .string({ error: "must be a valid IANA time zone" })
     .refine(isTimeZone, "must be a valid IANA time zone")
     .default("Africa/Cairo"),
+  DESIGN_PREVIEW_ENABLED: z
+    .enum(["true", "false"], { error: "must be true or false" })
+    .optional(),
 });
 
 export type ServerEnv = z.output<typeof envSchema>;

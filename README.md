@@ -4,8 +4,8 @@ Internal staff application for the Nile Clinic management system, for administra
 and doctors. Arabic and English, RTL and LTR. It is a frontend for the existing
 [Laravel API](https://github.com/eslam94fathy/nile-clinic); there is no patient portal.
 
-> **Status: Phase 1 foundation.** The application currently has a landing page that reports whether the
-> backend is reachable, and no business screens. See the [roadmap](docs/roadmap.md).
+> **Status: Phase 2 design system.** The application currently has a landing page that reports whether the
+> backend is reachable, a private design system preview, and no business screens. See the [roadmap](docs/roadmap.md).
 
 ## Prerequisites
 
@@ -40,6 +40,7 @@ Settings are server-side only, are validated at startup, and stop the app with a
 |---|---|---|
 | `BACKEND_API_URL` | Yes | Backend address, including `/api/v1`. The port is the backend's `APP_PORT`, which differs per machine: its default is 8080, but if something else holds that port, it will be different. Check with `docker ps`. |
 | `CLINIC_TIMEZONE` | No | Must match the backend's `CLINIC_TIMEZONE`. Default `Africa/Cairo`. |
+| `DESIGN_PREVIEW_ENABLED` | No | `true` shows every shared component at `/ar/design-preview` and `/en/design-preview`, with made-up data. Leave it unset in production, where the address then behaves like any unknown one. |
 
 ## Commands
 
@@ -52,6 +53,7 @@ Settings are server-side only, are validated at startup, and stop the app with a
 | `pnpm format`, `pnpm format:check` | Prettier: write, or verify |
 | `pnpm check:i18n` | Translation files have identical keys |
 | `pnpm check:styles` | No physical direction styles, such as `ml-4` |
+| `pnpm check:contrast` | Design tokens meet WCAG contrast in both themes, and components use no raw colors |
 | `pnpm test:unit` | Unit and component tests |
 | `pnpm test:e2e` | Builds, then end-to-end tests against a fake backend |
 | `pnpm test:e2e:live` | Builds, then end-to-end tests against **the real backend** from `.env.local` |

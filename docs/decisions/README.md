@@ -11,6 +11,8 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0004](0004-api-types-from-contracts.md) | Generate API types from the backend's OpenAPI contracts | Accepted |
 | [0005](0005-audit-safe-data-fetching.md) | Query policy that protects the audit trail | Accepted |
 | [0006](0006-cache-components.md) | Adopt Next.js Cache Components, with privacy rules | Accepted |
+| [0007](0007-design-system-foundation.md) | shadcn on Radix, native selects, own theme code, pinned fonts, two-gate preview | Accepted |
+| [0008](0008-visual-direction.md) | Visual direction "Still water", with Western digits in Arabic | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.

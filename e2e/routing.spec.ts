@@ -69,7 +69,11 @@ test.describe("language switch", () => {
   test("keeps the query string", async ({ page }) => {
     await page.goto("/ar?filter=1&page=2");
 
-    await page.getByRole("link", { name: messages.ar.language.switch }).click();
+    // The static shell can't know the query, so the link gains it once JavaScript has run. A click
+    // before that drops the query, which is a known limit: see "Rendering" in docs/architecture.md.
+    const link = page.getByRole("link", { name: messages.ar.language.switch });
+    await expect(link).toHaveAttribute("href", /\/en\?filter=1&page=2$/);
+    await link.click();
 
     await expect(page).toHaveURL(/\/en\?filter=1&page=2$/);
   });

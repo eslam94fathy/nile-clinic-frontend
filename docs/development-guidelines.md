@@ -39,6 +39,15 @@ work from memory or from these docs alone.
 - Don't edit `components/ui` for one screen; wrap it in `components/shared` or in the feature instead.
 - Extract shared code on the second real use, not the first.
 
+## Design tokens
+
+- Use token classes (`bg-primary`, `text-muted-foreground`, `bg-status-success`). Raw colors and palette utilities such as
+  `bg-neutral-500` fail `pnpm check:contrast`.
+- Change token values in `app/globals.css` and [ADR 0008](decisions/0008-visual-direction.md) together. Keep them solid hex, except
+  `overlay`. A new text and background pair goes in the list in `scripts/check-contrast.mjs`.
+- After `shadcn add`, run `pnpm format`, and read the notes in [the tech stack](tech-stack.md#installed-phase-2).
+- Long values in tables wrap and aren't truncated. Phone numbers and IDs use `LtrText`, which never breaks across lines.
+
 ## Naming
 
 | Thing | Convention | Example |
@@ -90,7 +99,7 @@ work from memory or from these docs alone.
 
 ## Dates, times, money
 
-- Use `lib/format` and its display components only.
+- Show values through `Money`, `ClinicDate`, `ClinicTime`, and `Instant` only, which use `lib/format`. Pass `Instant` the clinic's time zone.
 - Never call `new Date('2026-11-08')` on a clinic date: it's parsed as UTC, and can show the wrong day.
 - Never convert wall-clock times, and handle `24:00`.
 - Money stays a string. Format with `Intl.NumberFormat`, which accepts decimal strings. Never use

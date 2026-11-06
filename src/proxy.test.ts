@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import proxy from "./proxy";
 
 function request(path: string, headers: Record<string, string> = {}) {
@@ -62,5 +62,52 @@ describe("addresses with a supported language", () => {
     const response = proxy(request(path));
     expect(response.headers.get("location")).toBeNull();
     expect(response.status).toBe(200);
+  });
+});
+
+describe("the design preview address", () => {
+  const rewriteOf = (path: string) =>
+    proxy(request(path)).headers.get("x-middleware-rewrite");
+
+  it.each(["/ar/design-preview", "/en/design-preview", "/ar/design-preview/x"])(
+    "sends %s to an unknown address when the setting is unset",
+    (path) => {
+      const target = rewriteOf(path);
+      expect(target).toBe(`http://clinic.test/${path.slice(1, 3)}/__unknown`);
+    },
+  );
+
+  it.each([
+    "/ar/design%2Dpreview",
+    "/ar/%64esign-preview",
+    "/ar/design%2dpreview",
+  ])("also catches the encoded %s", (path) => {
+    expect(rewriteOf(path)).toBe("http://clinic.test/ar/__unknown");
+  });
+
+  it("doesn't fail on a malformed address", () => {
+    expect(rewriteOf("/ar/%E0%A4%A")).toBeNull();
+  });
+
+  it("does the same when the setting is false", () => {
+    vi.stubEnv("DESIGN_PREVIEW_ENABLED", "false");
+    expect(rewriteOf("/ar/design-preview")).toBe(
+      "http://clinic.test/ar/__unknown",
+    );
+  });
+
+  it("drops the query", () => {
+    expect(rewriteOf("/ar/design-preview?a=1")).toBe(
+      "http://clinic.test/ar/__unknown",
+    );
+  });
+
+  it("passes through when the setting is true", () => {
+    vi.stubEnv("DESIGN_PREVIEW_ENABLED", "true");
+    expect(rewriteOf("/ar/design-preview")).toBeNull();
+  });
+
+  it("doesn't catch a similar address", () => {
+    expect(rewriteOf("/ar/design-previewx")).toBeNull();
   });
 });

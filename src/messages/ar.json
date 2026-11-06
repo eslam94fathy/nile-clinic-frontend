@@ -30,5 +30,170 @@
     "heading": "حدث خطأ ما",
     "description": "تعذّر عرض الصفحة. يرجى المحاولة مرة أخرى.",
     "retry": "إعادة المحاولة"
+  },
+  "shared": {
+    "noValue": "لا توجد قيمة",
+    "status": {
+      "unknown": "حالة غير معروفة",
+      "appointment": {
+        "scheduled": "مجدول",
+        "cancelled": "ملغى",
+        "no_show": "لم يحضر",
+        "checked_in": "تم تسجيل الوصول",
+        "completed": "مكتمل"
+      },
+      "queue": {
+        "waiting": "في الانتظار",
+        "with_doctor": "مع الطبيب",
+        "seen": "تم الكشف",
+        "left": "غادر"
+      },
+      "charge": {
+        "none": "بلا رسوم",
+        "unpaid": "غير مدفوع",
+        "partially_paid": "مدفوع جزئيًا",
+        "paid": "مدفوع",
+        "cancelled": "ملغى"
+      },
+      "record": {
+        "none": "لا يوجد سجل",
+        "draft": "مسودة",
+        "finalized": "نهائي"
+      }
+    },
+    "states": {
+      "loading": "جارٍ التحميل…",
+      "errorHeading": "تعذّر التحميل",
+      "retry": "إعادة المحاولة",
+      "forbiddenHeading": "ليس لديك صلاحية الوصول إلى هذا",
+      "forbiddenDescription": "دورك لا يشمل هذا. إذا كنت تحتاج إليه، فاطلبه من أحد المسؤولين.",
+      "notFoundHeading": "لا يوجد ما يمكن عرضه هنا",
+      "notFoundDescription": "هذا العنوان لا يؤدي إلى أي شيء يمكنك فتحه."
+    },
+    "table": {
+      "pagination": "الصفحات",
+      "summary": "صفحة {page} من {lastPage}، {total, plural, zero {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {{count} نتائج} many {{count} نتيجة} other {{count} نتيجة}}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "filters": {
+      "label": "عوامل التصفية",
+      "apply": "تطبيق التصفية",
+      "reset": "إعادة الضبط"
+    },
+    "form": {
+      "required": "(مطلوب)",
+      "noMedicalDetails": "لا تكتب أي تفاصيل طبية."
+    },
+    "confirm": {
+      "cancel": "تراجع",
+      "irreversible": "لا يمكن التراجع عن هذا الإجراء.",
+      "working": "جارٍ التنفيذ…"
+    },
+    "theme": {
+      "label": "المظهر",
+      "light": "فاتح",
+      "dark": "داكن",
+      "device": "حسب الجهاز"
+    },
+    "notices": {
+      "label": "الإشعارات",
+      "close": "إغلاق الإشعار"
+    }
+  },
+  "preview": {
+    "sentinel": "design-preview-sentinel-7f3a91",
+    "title": "معاينة نظام التصميم",
+    "description": "كل المكوّنات المشتركة وحالاتها. جميع الأسماء والأرقام والملاحظات هنا مختلَقة لأغراض الاختبار.",
+    "values": {
+      "heading": "قيم العيادة",
+      "money": "مبلغ",
+      "moneyNegative": "مبلغ سالب",
+      "moneyLarge": "مبلغ كبير جدًا",
+      "moneyNull": "مبلغ بلا قيمة",
+      "moneyMalformed": "مبلغ بصيغة خاطئة",
+      "date": "تاريخ العيادة",
+      "dateMalformed": "تاريخ بصيغة خاطئة",
+      "time": "وقت العيادة",
+      "timeEndOfDay": "نهاية اليوم",
+      "instantLong": "لحظة مسجّلة بأجزاء من الثانية",
+      "instantOffset": "اللحظة نفسها بفارق توقيت",
+      "phone": "رقم الهاتف",
+      "nationalId": "الرقم القومي",
+      "userTextLatin": "اسم محفوظ بحروف لاتينية",
+      "userTextArabic": "اسم محفوظ بالعربية",
+      "browserHeading": "القيم نفسها معروضة في المتصفح",
+      "sentenceHeading": "داخل جملة",
+      "sentence": "يُستحق مبلغ <money></money> في <date></date> الساعة <time></time>. اتصل بالرقم <phone></phone> للتأكيد."
+    },
+    "statuses": {
+      "heading": "شارات الحالة",
+      "appointment": "الموعد",
+      "queue": "قائمة الانتظار",
+      "charge": "الحساب",
+      "record": "السجل الطبي",
+      "unknown": "حالة لا يعرفها هذا الإصدار"
+    },
+    "states": {
+      "heading": "الحالات المشتركة",
+      "emptyNothingYet": "لا توجد زيارات اليوم حتى الآن",
+      "emptyNothingYetDescription": "أضف حالة بدون موعد لبدء القائمة.",
+      "emptyNoMatches": "لا توجد زيارات تطابق هذه التصفية",
+      "emptyNoMatchesDescription": "غيّر التصفية أو أعد ضبطها.",
+      "action": "إضافة حالة بدون موعد",
+      "reset": "إعادة ضبط التصفية",
+      "errorMessage": "لم يستجب نظام العيادة."
+    },
+    "list": {
+      "heading": "قائمة مع تصفية",
+      "caption": "زيارات نموذجية",
+      "loadingCaption": "زيارات نموذجية، جارٍ التحميل",
+      "emptyCaption": "زيارات نموذجية، فارغة",
+      "errorCaption": "زيارات نموذجية، تعذّر التحميل",
+      "loadingHeading": "الجدول أثناء التحميل",
+      "emptyHeading": "جدول بلا صفوف",
+      "errorHeading": "الجدول بعد حدوث خطأ",
+      "number": "الرقم",
+      "patient": "المريض",
+      "phone": "الهاتف",
+      "doctor": "الطبيب",
+      "time": "الوقت",
+      "visit": "الزيارة",
+      "charge": "الحساب",
+      "balance": "المتبقي",
+      "filterStatus": "حالة الزيارة",
+      "filterAll": "الكل",
+      "filterDate": "التاريخ",
+      "filterSearch": "البحث عن مريض",
+      "filterSearchHint": "لا تظهر هذه التصفية في عنوان الصفحة.",
+      "appliedSearch": "البحث المطبَّق عن مريض: {value}"
+    },
+    "form": {
+      "heading": "أجزاء النماذج",
+      "formError": "تم دفع هذا الحساب بالفعل.",
+      "reason": "سبب الإلغاء",
+      "reasonError": "اكتب سببًا لإلغاء هذا الحساب.",
+      "name": "اسم المريض",
+      "nameHint": "كما هو مكتوب في بطاقته.",
+      "phone": "رقم الهاتف",
+      "method": "طريقة الدفع",
+      "methodCash": "نقدًا",
+      "methodCard": "بطاقة",
+      "methodWallet": "محفظة",
+      "note": "ملاحظة الموعد"
+    },
+    "actions": {
+      "heading": "التأكيد والإشعارات",
+      "open": "إلغاء الحساب",
+      "openFailing": "إلغاء الحساب، مع فشل العملية",
+      "title": "هل تريد إلغاء هذا الحساب؟",
+      "description": "يمكن احتساب الزيارة مرة أخرى بعد ذلك.",
+      "confirm": "إلغاء الحساب",
+      "failure": "تعذّر إلغاء الحساب لأنه يتضمن مدفوعات.",
+      "success": "تم إلغاء الحساب",
+      "showSuccess": "عرض إشعار النجاح",
+      "showFailure": "عرض إشعار الفشل",
+      "failureNotice": "تعذّر تسجيل الدفعة."
+    }
   }
 }

@@ -8,7 +8,7 @@ foundations that later work relies on.
 |---|---|---|---|---|
 | 0 | Discovery and architecture | **Done** (approved 2026-11-05) | | all |
 | 1 | Project foundation | **Done** (accepted 2026-11-06, [spec](../specs/001-project-foundation/spec.md)) | 0 | `/health` |
-| 2 | Design system | Not started | 1 | |
+| 2 | Design system | **Awaiting acceptance** ([spec](../specs/002-design-system/spec.md)) | 1 | |
 | 3 | Authentication and app shell | Not started | 2 | Auth |
 | 4 | Clinic setup: staff, specialties, doctors, schedules, fees | Not started | 3 | Staff, Doctors, Scheduling, fee endpoints |
 | 5 | Patients | Not started | 3 | Patients |
@@ -35,7 +35,7 @@ with RTL, shared components, and a private preview route. *Done when* every shar
 demonstrated in both directions and themes, with accessibility checks passing.
 
 **3: Authentication and app shell.** BFF, sealed session, sign-in, sign-out, session expiry, proxy,
-permissions map, role navigation, `403`, `404`, doctor-without-profile, and change password. Also confirms
+permissions map, the `Can` component, role navigation, `403`, `404`, doctor-without-profile, and change password. Also confirms
 pagination `meta` on the live API. *Done when* each role signs in and sees only its navigation, the token
 is proven absent from browser-reachable places, and expired or deactivated sessions are handled.
 
@@ -55,13 +55,15 @@ it gets a dedicated privacy review.
 
 **10: Reports.** Four reports; charting library decided here.
 
-**11: Audit log.** Cursor paging, filters, search on explicit submit, because each search is recorded.
+**11: Audit log.** Cursor paging with a `CursorPager` component, filters, search on explicit submit, because each search is recorded.
 
 **12: Role dashboards.** Composed from the modules above, so these come last. Until then `/dashboard` is a
 simple landing page.
 
 **13: Hardening.** Full journeys per role and locale, accessibility and security review, security headers,
-performance, deployment documentation, and the pre-production items below.
+performance, deployment documentation, and the pre-production items below. A Content Security Policy must allow the fixed theme
+script by hash or nonce ([ADR 0007](decisions/0007-design-system-foundation.md)). Also check for any shared component that still has
+no real consumer, and remove it (the exception recorded in the Phase 2 plan).
 
 ## Decisions on open questions
 

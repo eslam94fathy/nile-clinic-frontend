@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; no screens are built yet.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system exists, and no feature screens are built yet.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -96,45 +96,52 @@ that it can't be undone, and that corrections become addenda.
 
 Established in Phase 2, before feature screens.
 
-**Direction.** Calm and clinical; dense enough for a front desk; high legibility in both scripts; light
-and dark themes (Q5 in the roadmap). Final visual direction is proposed in Phase 2 for approval.
+**Direction.** "Still water": deep river teal on a cool, quiet ground, with open ruled rows and light and dark themes. Approved
+in [ADR 0008](decisions/0008-visual-direction.md), which holds the token values.
 
-**Tokens.** Semantic CSS variables: surfaces, text, borders, primary, plus status tokens. Spacing,
-radius, and type scales come from Tailwind's theme.
+**Tokens.** Semantic CSS variables: surfaces, text, borders, primary, plus status tokens, which `pnpm check:contrast` enforces.
+Spacing, radius, and type scales come from Tailwind's theme.
 
 **Status.** One mapping per enum, used everywhere, always with a text label and never color alone.
 
 | Tone | Appointment | Queue | Charge | Record |
 |---|---|---|---|---|
-| Neutral | `scheduled` | `waiting` | | `none` |
+| Neutral | `scheduled` | `waiting` | `none` (visit lists) | `none` |
 | Active | `checked_in` | `with_doctor` | `partially_paid` | `draft` |
 | Success | `completed` | `seen` | `paid` | `finalized` |
 | Warning | `no_show` | `left` | `unpaid` | |
 | Muted | `cancelled` | | `cancelled` | |
 
-**Typography.** A pairing that works for Arabic and Latin, chosen in Phase 2, self-hosted with `next/font`.
+**Typography.** IBM Plex Sans and IBM Plex Sans Arabic, self-hosted with `next/font`.
+
+**Dates and times.** Clinic dates and wall-clock times appear literally as sent, such as `2026-11-08` and `09:20`. Moments in time use a
+localized format in the clinic's time zone, so the two kinds look different by design.
 
 **Bidirectional content**
 
 - Phone numbers, national IDs, money, and codes are wrapped to stay left-to-right inside Arabic text.
 - User-written text such as names and clinical notes uses `dir="auto"`.
 - Directional icons mirror in RTL; icons that aren't directional don't.
-- Numeral style in Arabic (Western `123` or Eastern `١٢٣`) is one setting in `lib/format`, decided in Phase 2.
+- Digits in Arabic are Western (`123`), set in one place in `lib/format` ([ADR 0008](decisions/0008-visual-direction.md)).
 
-**Shared components** (built only when needed)
+**Shared components.** Built in Phase 2, and all demonstrated at the private `/design-preview`. Their contract is in
+[the Phase 2 spec](../specs/002-design-system/contracts/shared-components.md).
 
 | Component | Purpose |
 |---|---|
 | `PageHeader` | Title, description, actions |
-| `DataTable` | Server-paginated table with loading, empty, and error states |
-| `CursorPager` | Audit log only, because it has no total |
-| `FilterBar` | Filters synced to the URL |
+| `DataTable` | Server-paginated table with loading, empty, and error states; cards on narrow screens |
+| `FilterBar` | Filters applied on submit. Each filter must state whether it goes in the URL |
 | `StatusBadge` | The mapping above |
-| `EmptyState`, `ErrorState`, `ForbiddenState` | Consistent states |
+| `LoadingState`, `EmptyState`, `ErrorState`, `ForbiddenState`, `NotFoundState` | Consistent states |
 | `ConfirmDialog` | Destructive and irreversible actions |
-| `FormField` wrappers | Label, hint, error; including the "no medical details" hint |
-| `Money`, `ClinicDate`, `ClinicTime`, `Instant` | One correct display for each kind of value |
-| `Can` | Role-based visibility |
+| `FormField`, `FormError` | Label, hint, error; including the "no medical details" hint |
+| `Notices` | Success and failure messages |
+| `Money`, `ClinicDate`, `ClinicTime`, `Instant`, `LtrText`, `UserText` | One correct display for each kind of value |
+| `ThemeSwitch` | Light, dark, or following the device |
+
+Still to come, in the phase that needs each: `Can` for role-based visibility (Phase 3), and `CursorPager` for the audit log, the
+only list with no total (Phase 11).
 
 **Lists.** Filters and page live in the URL so that they survive reload and the back button, with one
 exception: patient details must not be put in the URL by the frontend beyond what search requires.

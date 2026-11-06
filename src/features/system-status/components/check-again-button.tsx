@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { useLayoutEffect, useRef, useTransition } from "react";
 import { SYSTEM_STATUS_REGION_ID } from "../types";
 
@@ -26,17 +27,18 @@ export function CheckAgainButton({
   }, []);
 
   return (
-    <button
+    <Button
       ref={button}
+      variant="outline"
       type="button"
       // Not `disabled`, which would drop keyboard focus from the button.
       aria-disabled={isPending}
       onClick={() => {
         if (!isPending) startTransition(() => router.refresh());
       }}
-      className="rounded border border-neutral-500 px-3 py-1 aria-disabled:opacity-70"
+      className="aria-disabled:opacity-70"
     >
       {isPending ? pendingLabel : label}
-    </button>
+    </Button>
   );
 }
