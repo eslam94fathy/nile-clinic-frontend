@@ -16,6 +16,14 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const REGISTRATION = /^[A-Za-z0-9]{1,30}$/;
 const AMOUNT = /^\d+(\.\d{1,2})?$/;
 const NOW = "2026-02-01T10:00:00.000000Z";
+const APPOINTMENT_STATUSES = [
+  "scheduled",
+  "cancelled",
+  "no_show",
+  "checked_in",
+  "completed",
+];
+const SLOT_UNAVAILABLE = "This time is not an available slot for this doctor.";
 
 const minutes = (time) => {
   const [hours, mins] = time.split(":").map(Number);
@@ -138,6 +146,7 @@ function freshClinic() {
       },
     ],
     patientOpenings: new Map(),
+    appointments: [],
   };
 }
 
@@ -352,7 +361,7 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     message: "This is the last active administrator.",
   };
 
-  function slotsFor(doctor, from, to) {
+  function slotsFor(doctor, from, to, { includeBooked = false } = {}) {
     const saved = clinic.schedules.get(doctor.id);
     if (!saved || !isActiveDoctor(doctor)) return [];
 
@@ -390,7 +399,12 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
               minutes(entry.start_time) < end &&
               minutes(entry.end_time) > start,
           );
-          if (!blocked) {
+          const booked = clinic.appointments.some(
+            (appointment) =>
+              appointment.doctor_id === doctor.id &&
+              overlaps(appointment, date, clock(start), clock(end)),
+          );
+          if (!blocked && (includeBooked || !booked)) {
             slots.push({ date, start: clock(start), end: clock(end) });
           }
         }
@@ -564,7 +578,372 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     return errors;
   }
 
+  // Appointments. Refusals use the keys in BookingService, AppointmentService, and their form requests.
+  const doctorOfAppointment = (appointment) =>
+    clinic.doctors.find(({ id }) => id === appointment.doctor_id);
+  const patientOfAppointment = (appointment) =>
+    clinic.patients.find(({ id }) => id === appointment.patient_id);
+  const appointmentSummary = (appointment) => {
+    const patient = patientOfAppointment(appointment);
+    return {
+      id: appointment.id,
+      date: appointment.date,
+      start: appointment.start,
+      end: appointment.end,
+      status: appointment.status,
+      outside_availability: appointment.outside_availability,
+      doctor: reference(doctorOfAppointment(appointment)),
+      patient: {
+        id: patient.id,
+        full_name: patient.full_name,
+        phone: patient.phone,
+      },
+    };
+  };
+  const appointmentBody = (appointment) => ({
+    ...appointmentSummary(appointment),
+    note: appointment.note,
+    booked_by: appointment.booked_by,
+    booked_at: appointment.booked_at,
+    rescheduled_by: appointment.rescheduled_by,
+    rescheduled_at: appointment.rescheduled_at,
+    status_changed_by: appointment.status_changed_by,
+    status_changed_at: appointment.status_changed_at,
+    cancellation_reason: appointment.cancellation_reason,
+  });
+  const ownSummary = (appointment) => {
+    const patient = patientOfAppointment(appointment);
+    return {
+      id: appointment.id,
+      date: appointment.date,
+      start: appointment.start,
+      end: appointment.end,
+      status: appointment.status,
+      outside_availability: appointment.outside_availability,
+      patient: {
+        id: patient.id,
+        full_name: patient.full_name,
+        sex: patient.sex,
+        date_of_birth: patient.date_of_birth,
+      },
+    };
+  };
+  const hasStarted = ({ date, start }) =>
+    `${date} ${start}` <= `${clinicToday()} ${clinicClock()}`;
+  const overlaps = (a, date, start, end) =>
+    a.status === "scheduled" &&
+    a.date === date &&
+    minutes(a.start) < minutes(end) &&
+    minutes(a.end) > minutes(start);
+  const staffRef = ({ id, name }) => ({ id, name });
+  const LATER = "2026-02-02T10:00:00.000000Z";
+
+  const withAppointment = (handler) =>
+    reception((request, response, me, match, query) => {
+      const appointment = clinic.appointments.find(
+        ({ id }) => id === Number(match[1]),
+      );
+      return appointment
+        ? handler(request, response, me, appointment, query)
+        : send(response, 404, { message: "No appointment was found." });
+    });
+
+  function listRangeErrors(query) {
+    const from = query.get("from");
+    const to = query.get("to");
+    if (!DATE.test(from ?? "")) {
+      return { from: ["The from date is not valid."] };
+    }
+    if (!DATE.test(to ?? "") || to < from) {
+      return { to: ["The to date is not valid."] };
+    }
+    if (dayNumber(to) - dayNumber(from) + 1 > 92) {
+      return { to: ["The date range can be at most 92 days."] };
+    }
+    return null;
+  }
+
+  const inOrder = (a, b) =>
+    a.date.localeCompare(b.date) ||
+    a.start.localeCompare(b.start) ||
+    a.id - b.id;
+
+  function statusError(query) {
+    const status = query.get("status");
+    return status && !APPOINTMENT_STATUSES.includes(status)
+      ? { status: ["The status is not valid."] }
+      : null;
+  }
+
+  // The same order as the backend: is it an offered slot (422), then the doctor (409), then the patient (409).
+  function refuseTime(response, doctor, patientId, date, start, exceptId) {
+    const wrong = {};
+    if (!DATE.test(date ?? "")) wrong.date = ["The date is not valid."];
+    if (!START.test(start ?? "")) wrong.start = ["The start is not valid."];
+    if (Object.keys(wrong).length > 0) {
+      refuse(response, wrong);
+      return null;
+    }
+
+    const notAvailable = { start: [SLOT_UNAVAILABLE] };
+    if (
+      date < clinicToday() ||
+      dayNumber(date) > dayNumber(clinicToday()) + 90
+    ) {
+      refuse(response, notAvailable);
+      return null;
+    }
+    const slot = slotsFor(doctor, date, date, { includeBooked: true }).find(
+      (row) => row.start === start,
+    );
+    if (!slot) {
+      refuse(response, notAvailable);
+      return null;
+    }
+
+    const others = clinic.appointments.filter(({ id }) => id !== exceptId);
+    if (
+      others.some(
+        (other) =>
+          other.doctor_id === doctor.id &&
+          overlaps(other, date, slot.start, slot.end),
+      )
+    ) {
+      send(response, 409, {
+        message: "This slot is already booked.",
+        reason: "slot_booked",
+      });
+      return null;
+    }
+    if (
+      others.some(
+        (other) =>
+          other.patient_id === patientId &&
+          overlaps(other, date, slot.start, slot.end),
+      )
+    ) {
+      send(response, 409, {
+        message: "This patient already has an appointment at this time.",
+        reason: "patient_busy",
+      });
+      return null;
+    }
+    return slot;
+  }
+
+  const NOT_CHANGEABLE = {
+    appointment: ["This appointment can no longer be changed."],
+  };
+
   const routes = [
+    // Appointments
+    [
+      "GET",
+      /^appointments$/,
+      reception((_request, response, _me, _match, query) => {
+        const errors = listRangeErrors(query) ?? statusError(query);
+        if (errors) return refuse(response, errors);
+
+        const doctor = query.get("doctor_id");
+        const patient = query.get("patient_id");
+        const status = query.get("status");
+        const outside = query.get("outside_availability");
+        if (patient && !/^[1-9]\d*$/.test(patient)) {
+          return refuse(response, {
+            patient_id: ["The patient number is not valid."],
+          });
+        }
+        const rows = clinic.appointments
+          .filter(
+            (row) =>
+              row.date >= query.get("from") &&
+              row.date <= query.get("to") &&
+              (!doctor || row.doctor_id === Number(doctor)) &&
+              (!patient || row.patient_id === Number(patient)) &&
+              (!status || row.status === status) &&
+              (outside === null ||
+                row.outside_availability === (outside === "1")),
+          )
+          .sort(inOrder)
+          .map(appointmentSummary);
+        return paginate(response, rows, query, "appointments");
+      }),
+    ],
+    [
+      "POST",
+      /^appointments$/,
+      reception(async (request, response, me) => {
+        const body = await readJson(request);
+        const errors = {};
+        if (!Number.isInteger(body.patient_id)) {
+          errors.patient_id = ["The patient number is required."];
+        }
+        if (!Number.isInteger(body.doctor_id)) {
+          errors.doctor_id = ["The doctor is required."];
+        }
+        if (typeof body.note === "string" && body.note.length > 500) {
+          errors.note = ["The note can be at most 500 characters."];
+        }
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+
+        const patient = clinic.patients.find(
+          ({ id }) => id === body.patient_id,
+        );
+        if (!patient) {
+          return refuse(response, {
+            patient_id: ["No patient was found with this patient number."],
+          });
+        }
+        const doctor = clinic.doctors.find(({ id }) => id === body.doctor_id);
+        if (!doctor) {
+          return refuse(response, { doctor_id: ["No doctor was found."] });
+        }
+        const slot = refuseTime(
+          response,
+          doctor,
+          patient.id,
+          body.date,
+          body.start,
+        );
+        if (!slot) return undefined;
+
+        const appointment = {
+          id: nextId++,
+          doctor_id: doctor.id,
+          patient_id: patient.id,
+          date: body.date,
+          start: slot.start,
+          end: slot.end,
+          status: "scheduled",
+          outside_availability: false,
+          note: body.note ?? null,
+          booked_by: staffRef(me),
+          booked_at: NOW,
+          rescheduled_by: null,
+          rescheduled_at: null,
+          status_changed_by: null,
+          status_changed_at: null,
+          cancellation_reason: null,
+        };
+        clinic.appointments.push(appointment);
+        return send(response, 201, { data: appointmentBody(appointment) });
+      }),
+    ],
+    [
+      "GET",
+      /^appointments\/(\d+)$/,
+      withAppointment((_request, response, _me, appointment) =>
+        send(response, 200, { data: appointmentBody(appointment) }),
+      ),
+    ],
+    [
+      "POST",
+      /^appointments\/(\d+)\/reschedule$/,
+      withAppointment(async (request, response, me, appointment) => {
+        const body = await readJson(request);
+        if (appointment.status !== "scheduled" || hasStarted(appointment)) {
+          return refuse(response, NOT_CHANGEABLE);
+        }
+        const slot = refuseTime(
+          response,
+          doctorOfAppointment(appointment),
+          appointment.patient_id,
+          body.date,
+          body.start,
+          appointment.id,
+        );
+        if (!slot) return undefined;
+
+        appointment.date = body.date;
+        appointment.start = slot.start;
+        appointment.end = slot.end;
+        appointment.outside_availability = false;
+        appointment.rescheduled_by = staffRef(me);
+        appointment.rescheduled_at = LATER;
+        return send(response, 200, { data: appointmentBody(appointment) });
+      }),
+    ],
+    [
+      "POST",
+      /^appointments\/(\d+)\/cancel$/,
+      withAppointment(async (request, response, me, appointment) => {
+        const body = await readJson(request);
+        if (typeof body.reason === "string" && body.reason.length > 255) {
+          return refuse(response, {
+            reason: ["The reason can be at most 255 characters."],
+          });
+        }
+        if (appointment.status !== "scheduled" || hasStarted(appointment)) {
+          return refuse(response, NOT_CHANGEABLE);
+        }
+        appointment.status = "cancelled";
+        appointment.outside_availability = false;
+        appointment.status_changed_by = staffRef(me);
+        appointment.status_changed_at = LATER;
+        appointment.cancellation_reason = body.reason ?? null;
+        return send(response, 200, { data: appointmentBody(appointment) });
+      }),
+    ],
+    [
+      "POST",
+      /^appointments\/(\d+)\/no-show$/,
+      withAppointment((_request, response, me, appointment) => {
+        if (appointment.status !== "scheduled") {
+          return refuse(response, NOT_CHANGEABLE);
+        }
+        if (!hasStarted(appointment)) {
+          return refuse(response, {
+            appointment: ["This appointment has not started yet."],
+          });
+        }
+        appointment.status = "no_show";
+        appointment.status_changed_by = staffRef(me);
+        appointment.status_changed_at = LATER;
+        return send(response, 200, { data: appointmentBody(appointment) });
+      }),
+    ],
+    [
+      "GET",
+      /^doctors\/me\/appointments$/,
+      ownDoctor((_request, response, _me, doctor, query) => {
+        const errors = listRangeErrors(query) ?? statusError(query);
+        if (errors) return refuse(response, errors);
+
+        const status = query.get("status");
+        const rows = clinic.appointments
+          .filter(
+            (row) =>
+              row.doctor_id === doctor.id &&
+              row.date >= query.get("from") &&
+              row.date <= query.get("to") &&
+              (!status || row.status === status),
+          )
+          .sort(inOrder)
+          .map(ownSummary);
+        return paginate(response, rows, query, "doctors/me/appointments");
+      }),
+    ],
+    [
+      "GET",
+      /^doctors\/me\/appointments\/(\d+)$/,
+      (request, response, me, match, query) =>
+        ownDoctor((_request, innerResponse, _me, doctor) => {
+          const appointment = clinic.appointments.find(
+            (row) => row.id === Number(match[1]) && row.doctor_id === doctor.id,
+          );
+          return appointment
+            ? send(innerResponse, 200, {
+                data: {
+                  ...ownSummary(appointment),
+                  note: appointment.note,
+                  booked_at: appointment.booked_at,
+                },
+              })
+            : send(innerResponse, 404, {
+                message: "No appointment was found.",
+              });
+        })(request, response, me, match, query),
+    ],
     [
       "GET",
       /^patients$/,
@@ -1260,6 +1639,84 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
             set_by: { id: 1, name: "Synthetic Admin" },
           });
         }
+        send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/second-doctor": {
+        const doctor = addDoctor(4, "Specialist", null, [2]);
+        clinic.schedules.set(doctor.id, {
+          appointment_minutes: 20,
+          periods: WORKING_WEEK,
+          updated_at: NOW,
+        });
+        send(response, 200, { id: doctor.id });
+        return true;
+      }
+      case "/__control/clinic/appointment": {
+        const start = query.get("start") ?? "09:00";
+        const days = Number(query.get("days") ?? 1);
+        const status = query.get("status") ?? "scheduled";
+        const changed = status !== "scheduled";
+        const appointment = {
+          id: nextId++,
+          doctor_id: Number(query.get("doctor") ?? 1),
+          patient_id: Number(query.get("patient") ?? 2),
+          date: dateOf(dayNumber(clinicToday()) + days),
+          start,
+          end: query.get("end") ?? clock(minutes(start) + 20),
+          status,
+          outside_availability: query.get("outside") === "1",
+          note: query.get("note"),
+          booked_by:
+            query.get("no_booker") === "1"
+              ? null
+              : { id: 2, name: "Synthetic Reception" },
+          booked_at: NOW,
+          rescheduled_by: null,
+          rescheduled_at: null,
+          status_changed_by: changed
+            ? { id: 2, name: "Synthetic Reception" }
+            : null,
+          status_changed_at: changed ? LATER : null,
+          cancellation_reason: query.get("reason"),
+        };
+        clinic.appointments.push(appointment);
+        send(response, 200, {
+          id: appointment.id,
+          date: appointment.date,
+          start: appointment.start,
+        });
+        return true;
+      }
+      case "/__control/clinic/take-time": {
+        // Someone else takes this time, after the screen has read the free times.
+        const start = query.get("start");
+        clinic.appointments.push({
+          id: nextId++,
+          doctor_id: Number(query.get("doctor") ?? 1),
+          patient_id: Number(query.get("patient") ?? 3),
+          date: query.get("date"),
+          start,
+          end: clock(minutes(start) + 20),
+          status: "scheduled",
+          outside_availability: false,
+          note: null,
+          booked_by: { id: 2, name: "Synthetic Reception" },
+          booked_at: NOW,
+          rescheduled_by: null,
+          rescheduled_at: null,
+          status_changed_by: null,
+          status_changed_at: null,
+          cancellation_reason: null,
+        });
+        send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/change-appointment": {
+        const appointment = clinic.appointments.find(
+          ({ id }) => id === Number(query.get("id")),
+        );
+        appointment.status = query.get("status");
         send(response, 200, {});
         return true;
       }

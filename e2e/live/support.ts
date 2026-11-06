@@ -9,6 +9,19 @@ export type LiveAccounts = {
   newDoctor: LiveAccount;
   /** Used up by the tests that end sessions. */
   disposable: LiveAccount;
+  /** Doctors whose schedules only the appointment tests touch. */
+  bookingDoctor: LiveAccount;
+  secondDoctor: LiveAccount;
+  noShowDoctor: LiveAccount;
+};
+
+/** Those doctors' profile ids, which differ from their account ids. */
+export type LiveDoctors = {
+  booking: number;
+  second: number;
+  noShow: number;
+  bookingName: string;
+  secondName: string;
 };
 
 function requireEnv(name: string): string {
@@ -21,6 +34,10 @@ export const apiUrl = () => requireEnv("BACKEND_API_URL").replace(/\/+$/, "");
 
 export function liveAccounts(): LiveAccounts {
   return JSON.parse(requireEnv("LIVE_ACCOUNTS")) as LiveAccounts;
+}
+
+export function liveDoctors(): LiveDoctors {
+  return JSON.parse(requireEnv("LIVE_DOCTORS")) as LiveDoctors;
 }
 
 export async function api(

@@ -33,7 +33,7 @@ export const APP_ROUTES = [
     capability: "manageAppointments",
     labelKey: "appointments",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "queue",
@@ -111,7 +111,7 @@ export const APP_ROUTES = [
     capability: "readOwnAppointments",
     labelKey: "myAppointments",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "my/visits",

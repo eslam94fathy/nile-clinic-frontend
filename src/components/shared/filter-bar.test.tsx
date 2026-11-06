@@ -210,3 +210,66 @@ describe("FilterBar", () => {
     expect(missing.name).toBe("search");
   });
 });
+
+describe("a filter with a default", () => {
+  const dated: FilterDefinition[] = [
+    {
+      name: "from",
+      label: "From",
+      type: "text",
+      inAddress: true,
+      defaultValue: "2026-11-07",
+    },
+  ];
+
+  it("shows the default when the address has none", () => {
+    renderWithIntl(<FilterBar filters={dated} />);
+    expect(screen.getByLabelText<HTMLInputElement>("From").value).toBe(
+      "2026-11-07",
+    );
+  });
+
+  it("prefers the address", () => {
+    query = "from=2026-01-01";
+    renderWithIntl(<FilterBar filters={dated} />);
+    expect(screen.getByLabelText<HTMLInputElement>("From").value).toBe(
+      "2026-01-01",
+    );
+  });
+
+  it("restores the default on reset", () => {
+    query = "from=2026-01-01";
+    renderWithIntl(<FilterBar filters={dated} />);
+    fireEvent.click(screen.getByRole("button", { name: text.reset }));
+    expect(screen.getByLabelText<HTMLInputElement>("From").value).toBe(
+      "2026-11-07",
+    );
+    expect(push).toHaveBeenCalledWith("/visits");
+  });
+
+  it("follows a default that changes", () => {
+    const { rerender } = renderWithIntl(<FilterBar filters={dated} />);
+    rerender(
+      <NextIntlClientProvider
+        locale="en"
+        messages={messagesByLocale.en}
+        timeZone="Africa/Cairo"
+      >
+        <FilterBar
+          filters={[
+            {
+              name: "from",
+              label: "From",
+              type: "text",
+              inAddress: true,
+              defaultValue: "2026-12-25",
+            },
+          ]}
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByLabelText<HTMLInputElement>("From").value).toBe(
+      "2026-12-25",
+    );
+  });
+});

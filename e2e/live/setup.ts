@@ -4,6 +4,7 @@ import {
   api,
   type LiveAccount,
   type LiveAccounts,
+  type LiveDoctors,
 } from "./support";
 
 // Creates this run's synthetic accounts through the API. There's no delete, so teardown deactivates them.
@@ -54,7 +55,60 @@ export default async function setup() {
     doctor: await createStaff("doctor", "doctor"),
     newDoctor: await createStaff("newdoctor", "doctor"),
     disposable: await createStaff("disposable", "receptionist"),
+    // Unique names, so that a test can find this run's doctor among any left by a run that was interrupted.
+    bookingDoctor: await createStaff(`bookingdoctor${stamp}`, "doctor"),
+    secondDoctor: await createStaff(`seconddoctor${stamp}`, "doctor"),
+    noShowDoctor: await createStaff(`noshowdoctor${stamp}`, "doctor"),
   };
+
+  async function createDoctor(account: LiveAccount): Promise<number> {
+    const response = await api("doctors", {
+      method: "POST",
+      token,
+      body: {
+        user_id: account.id,
+        title: "Dr",
+        specialty_ids: [specialtyId],
+      },
+    });
+    if (response.status !== 201) {
+      throw new Error(`Creating a doctor gave status ${response.status}.`);
+    }
+    return ((await response.json()) as { data: { id: number } }).data.id;
+  }
+
+  // Hours on every day, so that free times exist whatever day the suite runs.
+  async function setHours(doctorId: number) {
+    const response = await api(`doctors/${doctorId}/schedule`, {
+      method: "PUT",
+      token,
+      body: {
+        appointment_minutes: 20,
+        periods: [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ].map((day) => ({ day, start: "09:00", end: "17:00" })),
+      },
+    });
+    if (response.status !== 200) {
+      throw new Error(`Setting hours gave status ${response.status}.`);
+    }
+  }
+
+  const doctors: LiveDoctors = {
+    booking: await createDoctor(accounts.bookingDoctor),
+    second: await createDoctor(accounts.secondDoctor),
+    noShow: await createDoctor(accounts.noShowDoctor),
+    bookingName: `Synthetic Live bookingdoctor${stamp}`,
+    secondName: `Synthetic Live seconddoctor${stamp}`,
+  };
+  await setHours(doctors.booking);
+  await setHours(doctors.second);
 
   const profile = await api("doctors", {
     method: "POST",
@@ -73,4 +127,5 @@ export default async function setup() {
 
   process.env.LIVE_ACCOUNTS = JSON.stringify(accounts);
   process.env.LIVE_SPECIALTY_ID = String(specialtyId);
+  process.env.LIVE_DOCTORS = JSON.stringify(doctors);
 }

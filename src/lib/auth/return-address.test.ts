@@ -75,4 +75,14 @@ describe("safeReturnAddress", () => {
   ])("refuses the audited page %s", (raw) => {
     expect(safeReturnAddress(raw)).toBeNull();
   });
+
+  it("returns to an appointment page, with no patient number", () => {
+    expect(safeReturnAddress("/en/appointments?patient_id=12")).toBe(
+      "/appointments",
+    );
+    expect(safeReturnAddress("/en/appointments/new?patient_id=12")).toBe(
+      "/appointments/new",
+    );
+    expect(safeReturnAddress("/en/appointments/5")).toBe("/appointments/5");
+  });
 });

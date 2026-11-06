@@ -49,6 +49,20 @@ export async function findByPhone(
   );
 }
 
+/**
+ * One patient's list fields, by the list read, which isn't audited. This is how to show who's chosen. Never
+ * use `readPatient` for that, as it writes an opening nobody asked for.
+ */
+export async function findPatientById(
+  id: number,
+  locale: string,
+): Promise<ApiResult<PatientPage>> {
+  return checkResult(
+    await browserApi(`patients${toQuery({ id })}`, { locale }),
+    listSchema,
+  );
+}
+
 /** Each successful call writes a permanent `patient.opened` entry. Only ever call it for a person's action. */
 export async function readPatient(
   id: number,

@@ -325,6 +325,140 @@ for (const locale of ["ar", "en"] as const) {
         expect(await seriousIssues(page)).toEqual([]);
       });
 
+      test("appointments: the list, with states and refusals", async ({
+        page,
+      }) => {
+        const a = t.appointments;
+        await control("clinic/appointment?days=0&start=09:00&outside=1");
+        await control("clinic/appointment?days=0&start=10:00&status=cancelled");
+        await signIn(page, "receptionist", locale);
+
+        await page.goto(`/${locale}/appointments`);
+        await expect(page.getByRole("row")).toHaveCount(3);
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/appointments?status=no_show`);
+        await expect(
+          page.getByText(a.empty.filteredTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(
+          `/${locale}/appointments?from=2026-01-01&to=2026-12-31`,
+        );
+        await expect(
+          page.getByText("The date range can be at most 92 days."),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/appointments?patient_id=2`);
+        await expect(page.getByText(a.patientFilter.heading)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/appointments`);
+        await page.getByRole("button", { name: a.patientFilter.open }).click();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("appointments: booking, at each step and refused", async ({
+        page,
+      }) => {
+        const a = t.appointments;
+        await control("clinic/setup?schedule=1");
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/appointments/new?patient_id=9999`);
+        await expect(page.getByText(a.booking.patientMissing)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/appointments/new?patient_id=2`);
+        const choose = page
+          .getByRole("button", { name: t.doctors.chooser.choose })
+          .locator("visible=true")
+          .first();
+        await expect(choose).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await choose.click();
+        const radio = page.getByRole("radio").first();
+        await expect(radio).toBeAttached();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.locator("label", { has: radio }).click();
+        const name = (await radio.getAttribute("aria-label")) ?? "";
+        const [date = "", start = ""] = name.replace(/[,،]/u, "").split(" ");
+        await control(`clinic/take-time?date=${date}&start=${start}`);
+        await page
+          .getByRole("button", { name: a.booking.submit, exact: true })
+          .click();
+        await expect(
+          page.getByText("This slot is already booked."),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("appointments: a page, moving, and both dialogs", async ({
+        page,
+      }) => {
+        const a = t.appointments;
+        await control("clinic/setup?schedule=1");
+        const upcoming = (await control(
+          "clinic/appointment?days=2&start=09:00&outside=1&note=First%20visit",
+        )) as { id: number };
+        const passed = (await control(
+          "clinic/appointment?days=-1&start=09:00&patient=3",
+        )) as { id: number };
+        await signIn(page, "receptionist", locale);
+
+        await page.goto(`/${locale}/appointments/${upcoming.id}`);
+        await expect(page.getByText(a.outsideNotice.title)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.getByRole("button", { name: a.actions.reschedule }).click();
+        await expect(page.getByRole("radio").first()).toBeAttached();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.getByRole("button", { name: a.reschedule.keep }).click();
+        await page.getByRole("button", { name: a.actions.cancel }).click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        await page
+          .getByRole("alertdialog")
+          .getByLabel(a.cancel.reasonLabel)
+          .fill("x".repeat(256));
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: a.cancel.confirm })
+          .click();
+        await expect(page.getByText(a.cancel.reasonTooLong)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/appointments/${passed.id}`);
+        await page.getByRole("button", { name: a.actions.noShow }).click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("appointments: a doctor's own pages", async ({ page }) => {
+        const a = t.appointments;
+        const { id } = (await control(
+          "clinic/appointment?days=0&start=09:00&outside=1&note=First%20visit",
+        )) as { id: number };
+        await signIn(page, "doctor", locale);
+
+        await page.goto(`/${locale}/my/appointments`);
+        await expect(page.getByRole("row")).toHaveCount(2);
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/my/appointments/${id}`);
+        await expect(page.getByText(a.own.outsideDescription)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/my/appointments?status=no_show`);
+        await expect(
+          page.getByText(a.own.emptyFilteredTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
       test("API failing", async ({ page }) => {
         await signIn(page, "doctor", locale);
         await script("auth/me", 500);
