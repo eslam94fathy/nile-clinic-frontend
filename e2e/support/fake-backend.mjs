@@ -2,6 +2,7 @@
 // browser-level interception can't reach, so tests control this process over HTTP. All data is synthetic.
 import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
+import { createClinic } from "./fake-clinic.mjs";
 
 const port = Number(process.env.PORT ?? 3111);
 const healthy = { status: "ok", checks: { database: "ok" } };
@@ -156,24 +157,30 @@ const routes = {
       ? send(response, 200, { data: { id: me.id, title: "Dr" } })
       : send(response, 404, { message: "Not found." });
   },
-  "GET staff": (_request, response) => {
-    const here = `http://127.0.0.1:${port}/api/v1/staff`;
-    send(response, 200, {
-      data: accounts.map(publicUser),
-      links: { first: `${here}?page=1`, last: here, prev: null, next: null },
-      meta: {
-        current_page: 1,
-        from: 1,
-        last_page: 1,
-        links: [{ url: here, label: "1", page: 1, active: true }],
-        path: here,
-        per_page: 15,
-        to: 4,
-        total: 4,
-      },
-    });
-  },
 };
+
+const clinic = createClinic({
+  send,
+  readJson,
+  accounts: () => accounts,
+  endSessions: (accountId) => {
+    for (const [token, id] of tokens) {
+      if (id === accountId) tokens.delete(token);
+    }
+  },
+  port,
+});
+
+function findRoute(method, endpoint) {
+  const exact = routes[`${method} ${endpoint}`];
+  if (exact) return { handler: exact };
+
+  for (const [routeMethod, pattern, handler] of clinic.routes) {
+    const match = routeMethod === method && pattern.exec(endpoint);
+    if (match) return { handler, match };
+  }
+  return null;
+}
 
 function control(pathname, query, response) {
   const find = () => accounts.find(({ email }) => email === query.get("email"));
@@ -181,6 +188,7 @@ function control(pathname, query, response) {
   switch (pathname) {
     case "/__control/reset":
       accounts = freshAccounts();
+      clinic.reset();
       tokens = new Map();
       scripted = new Map();
       calls = {};
@@ -204,12 +212,15 @@ function control(pathname, query, response) {
       const account = find();
       if (query.has("role")) account.role = query.get("role");
       if (query.has("name")) account.name = query.get("name");
+      if (query.has("active"))
+        account.is_active = query.get("active") === "true";
       if (query.has("profile")) {
         account.hasProfile = query.get("profile") === "true";
       }
       return send(response, 200, {});
     }
     default:
+      if (clinic.control(pathname, query, response)) return undefined;
       return send(response, 404, {});
   }
 }
@@ -242,22 +253,24 @@ createServer(async (request, response) => {
   }
 
   const endpoint = pathname.slice("/api/v1/".length);
-  const route = routes[`${request.method} ${endpoint}`];
+  const route = findRoute(request.method, endpoint);
   if (!route) return send(response, 404, { message: "Not found" });
 
   calls[endpoint] = (calls[endpoint] ?? 0) + 1;
 
-  const status = scripted.get(endpoint);
+  // "PUT doctors/1/fee" scripts one method, and "doctors/1/fee" scripts them all.
+  const status =
+    scripted.get(`${request.method} ${endpoint}`) ?? scripted.get(endpoint);
   if (status === -1) return request.socket.destroy();
   if (status) {
     return send(response, status, { message: `Scripted ${status}.` });
   }
 
-  if (endpoint === "auth/sign-in") return route(request, response);
+  if (endpoint === "auth/sign-in") return route.handler(request, response);
 
   const me = currentAccount(request);
   if (!me) {
     return send(response, 401, { message: UNAUTHENTICATED[language(request)] });
   }
-  return route(request, response, me);
+  return route.handler(request, response, me, route.match, searchParams);
 }).listen(port, "127.0.0.1");

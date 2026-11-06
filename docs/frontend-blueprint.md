@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system and app shell exist, and no feature screens are built yet.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system, app shell, and clinic setup exist.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -21,9 +21,10 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/sign-in` | public | Sign in; "forgot password" points to an administrator | `POST /auth/sign-in` |
 | `/dashboard` | A R D | Role-specific home | see below |
 | `/account` | A R D | Own profile, change password | `GET /auth/me`, `PUT /auth/password` |
-| `/staff`, `/staff/[id]` | A | Accounts, deactivate, set password | `/staff*` |
+| `/staff`, `/staff/new`, `/staff/[id]` | A | Accounts, deactivate, set password | `/staff*` |
 | `/specialties` | A | Catalog in both languages | `/specialties*` |
 | `/doctors` | A R | Browse doctors | `GET /doctors` |
+| `/doctors/new`, `/doctors/[id]/edit`, `/doctors/[id]/schedule` | A | Create and edit a profile, set hours | `/doctors*`, `/staff`, `/schedule` |
 | `/doctors/[id]` | A R | Profile, schedule, time off, fee. Read-only for R | `/doctors/{id}`, `/schedule`, `/time-off`, `/fee` |
 | `/fees` | A R | All fees | `GET /fees` |
 | `/patients`, `/patients/[id]` | A R | Search, register, view, edit | `/patients*` |
@@ -140,7 +141,7 @@ localized format in the clinic's time zone, so the two kinds look different by d
 | `Money`, `ClinicDate`, `ClinicTime`, `Instant`, `LtrText`, `UserText` | One correct display for each kind of value |
 | `ThemeSwitch` | Light, dark, or following the device |
 
-Phase 3 added `Can` for role-based visibility, in `features/app-shell`. Its first consumers come in Phase 4. Still to come: `CursorPager` for the
+Phase 3 added `Can` for role-based visibility, in `features/app-shell`, and Phase 4 gave it consumers. Phase 4 also added `ConfirmedAction`, a button that asks first, calls the API, and refreshes. Still to come: `CursorPager` for the
 audit log, the only list with no total (Phase 11).
 
 **Lists.** Filters and page live in the URL so that they survive reload and the back button, with one

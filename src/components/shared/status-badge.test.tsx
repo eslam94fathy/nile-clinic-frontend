@@ -28,6 +28,9 @@ const expected: [StatusKind, string, string][] = [
   ["record", "none", "neutral"],
   ["record", "draft", "active"],
   ["record", "finalized", "success"],
+  ["activity", "active", "success"],
+  ["activity", "deactivated", "muted"],
+  ["activity", "inactive", "muted"],
 ];
 
 // Some cases pass a runtime string, which is exactly what the type can't check.

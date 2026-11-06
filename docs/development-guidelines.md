@@ -76,6 +76,9 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Set `built: true` on the page's row in `lib/auth/app-routes.ts`.
 - Reach the API from the server only through `lib/api/server-api.ts`, as it's what keeps prefetching away from the API. From the client, only through `lib/api/browser-api.ts`.
 - A new page that writes an audit entry when opened goes in `lib/auth/return-address.ts`.
+- A page under a route that fewer roles may use passes `capability` to `ScreenGate`, so nothing of it is sent to the others.
+- A failed read shows `ApiFailureState`. Inside one section of a page, it stays in that section.
+- Features share reads within a render through `cache()`. Client Components with a lot of text get it from `ScopedMessages`, which sends only the namespaces named.
 
 ## Proxy and caching
 
@@ -89,6 +92,9 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Zod checks shape and required fields for fast feedback. Rules needing server knowledge belong to the
   API: uniqueness, slots, balances, permissions.
 - On `422`, map each `errors` key to its field, including nested keys, and show the rest at form level.
+- Use `useFormSubmit`, and `router.refresh()` after a change. A form that moves on calls `router.push()`, then `router.refresh()` ([ADR 0011](decisions/0011-server-reads-and-refresh.md)).
+- Visited pages stay mounted but hidden. A form that moves on calls `reset()`, and any password field uses `useClearOnLeave`.
+- Give a field holding an existing value a `defaultValue`, so that it's there before hydration.
 - Disable submit while pending, and until hydration, using `useHydrated`. Use `method="post"` on any form with a field that must stay out of the address, or the browser can submit it by itself as GET before React is ready.
 - Show backend messages as sent. Never compare message text in code.
 
@@ -144,7 +150,8 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 | Critical journey | Playwright, per role, in Arabic and English |
 | Audited read | Test proves that focus and re-render don't refetch |
 
-- Use accessible queries (`getByRole`) rather than test ids.
+- Use accessible queries (`getByRole`) rather than test ids. After a soft navigation, `getByLabel` can also find a hidden page's field, so add `.locator("visible=true")`.
+- In Arabic, "الرسوم" is Charges and "سعر الكشف" is a doctor's fee. Keep them apart.
 - The backend is called from the server, so Playwright can't intercept it. End-to-end tests control `e2e/support/fake-backend.mjs`
   instead, and `pnpm test:e2e:live` covers the real API.
 - Test data is synthetic, and is clearly fake.

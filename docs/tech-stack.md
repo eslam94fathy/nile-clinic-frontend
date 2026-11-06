@@ -71,7 +71,7 @@ Added by the phase that needs them; versions were checked on 2026-11-05.
 
 | Package | Checked | Why it is needed | Added in |
 |---|---|---|---|
-| `@tanstack/react-query` | 5.106.1 | Client caching, invalidation, and polling. The queue has to poll, and many screens mutate then refresh. Phase 3 had no client query, so it waits for the first | First client query |
+| `@tanstack/react-query` | 5.106.1 | Polling, with its audit-safe query policy. The queue has to poll. Phase 4 found that screens that read on the server and then refresh don't need it ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) | Phase 7 |
 
 ## Rejected or deferred
 
