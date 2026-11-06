@@ -7,10 +7,87 @@
     "name": "مركز النيل الطبي",
     "tagline": "NILE CLINIC"
   },
-  "landing": {
-    "heading": "مركز النيل الطبي",
-    "description": "نظام إدارة العيادة للموظفين.",
-    "noscript": "يتطلب عرض حالة النظام تفعيل JavaScript."
+  "auth": {
+    "signIn": {
+      "heading": "تسجيل الدخول",
+      "description": "نظام إدارة العيادة للموظفين.",
+      "noscript": "يحتاج هذا التطبيق إلى JavaScript ليعمل.",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "submit": "تسجيل الدخول",
+      "working": "جارٍ تسجيل الدخول…",
+      "forgotPassword": "هل نسيت كلمة المرور؟ اطلب من أحد المسؤولين تعيين كلمة مرور جديدة.",
+      "sessionEnded": "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.",
+      "emailRequired": "أدخل بريدك الإلكتروني.",
+      "passwordRequired": "أدخل كلمة المرور."
+    },
+    "account": {
+      "title": "حسابي",
+      "description": "بياناتك وكلمة المرور.",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "passwordHeading": "تغيير كلمة المرور",
+      "currentPassword": "كلمة المرور الحالية",
+      "newPassword": "كلمة المرور الجديدة",
+      "confirmPassword": "أعد كتابة كلمة المرور الجديدة",
+      "passwordHint": "من 12 إلى 72 حرفًا.",
+      "submit": "تغيير كلمة المرور",
+      "working": "جارٍ التغيير…",
+      "success": "تم تغيير كلمة المرور. وانتهت أي جلسات أخرى على حسابك.",
+      "currentRequired": "أدخل كلمة المرور الحالية.",
+      "lengthRule": "استخدم من 12 إلى 72 حرفًا.",
+      "mismatch": "كلمتا المرور الجديدتان غير متطابقتين."
+    },
+    "signOut": {
+      "label": "تسجيل الخروج",
+      "working": "جارٍ تسجيل الخروج…",
+      "failure": "تعذّر تسجيل الخروج لأنه لا يمكن الوصول إلى التطبيق. يرجى المحاولة مرة أخرى."
+    },
+    "noProfile": {
+      "heading": "لم يتم إعداد ملفك كطبيب بعد",
+      "description": "اطلب من أحد المسؤولين إنشاءه. لا تزال صفحة حسابك تعمل."
+    },
+    "errors": {
+      "general": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "unavailable": "نظام العيادة لا يستجيب الآن. ما زلت مسجلًا للدخول.",
+      "refused": "جاء هذا الطلب من خارج التطبيق، لذا تم رفضه.",
+      "noSession": "لم تقم بتسجيل الدخول.",
+      "emailAndPasswordRequired": "أدخل بريدك الإلكتروني وكلمة المرور."
+    }
+  },
+  "shell": {
+    "navigation": "التنقل الرئيسي",
+    "menu": "القائمة",
+    "account": "حسابي",
+    "welcomeHeading": "مرحبًا، <name></name>",
+    "welcomeDescription": "دورك في النظام: {role}. استخدم القائمة للتنقل.",
+    "placeholderHeading": "غير متاح بعد",
+    "placeholderDescription": "هذا الجزء من التطبيق قيد الإنشاء.",
+    "nav": {
+      "dashboard": "لوحة التحكم",
+      "patients": "المرضى",
+      "appointments": "المواعيد",
+      "queue": "قائمة الانتظار",
+      "billing": "الفواتير",
+      "charges": "الرسوم",
+      "doctors": "الأطباء",
+      "specialties": "التخصصات",
+      "fees": "أسعار الكشف",
+      "staff": "الموظفون",
+      "reports": "التقارير",
+      "audit": "سجل التدقيق",
+      "myQueue": "قائمة انتظاري",
+      "myAppointments": "مواعيدي",
+      "myVisits": "زياراتي",
+      "mySchedule": "جدولي",
+      "account": "حسابي"
+    }
+  },
+  "roles": {
+    "administrator": "مسؤول",
+    "receptionist": "موظف استقبال",
+    "doctor": "طبيب"
   },
   "status": {
     "heading": "حالة النظام",
