@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft
+**Status**: Accepted
 
 **Input**: User description: "Start Phase 3" of `docs/roadmap.md`: BFF, sealed session, sign-in, sign-out, session expiry, proxy, permissions map, the `Can` component, role navigation, `403`, `404`, doctor-without-profile, and change password. Also confirms pagination `meta` on the live API. Done when each role signs in and sees only its navigation, the token is proven absent from browser-reachable places, and expired or deactivated sessions are handled.
 

@@ -9,7 +9,7 @@ foundations that later work relies on.
 | 0 | Discovery and architecture | **Done** (approved 2026-11-05) | | all |
 | 1 | Project foundation | **Done** (accepted 2026-11-06, [spec](../specs/001-project-foundation/spec.md)) | 0 | `/health` |
 | 2 | Design system | **Done** (accepted 2026-11-06, [spec](../specs/002-design-system/spec.md)) | 1 | |
-| 3 | Authentication and app shell | **Built, awaiting acceptance** ([spec](../specs/003-auth-app-shell/spec.md)) | 2 | Auth |
+| 3 | Authentication and app shell | **Done** (accepted 2026-11-06, [spec](../specs/003-auth-app-shell/spec.md)) | 2 | Auth |
 | 4 | Clinic setup: staff, specialties, doctors, schedules, fees | Not started | 3 | Staff, Doctors, Scheduling, fee endpoints |
 | 5 | Patients | Not started | 3 | Patients |
 | 6 | Appointments | Not started | 4, 5 | Appointments, slots |
