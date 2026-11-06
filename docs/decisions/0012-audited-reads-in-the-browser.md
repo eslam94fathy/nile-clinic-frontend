@@ -1,6 +1,6 @@
 # ADR 0012: Audited reads in the browser
 
-**Status:** Proposed. The project owner accepts it with Phase 5.
+**Status:** Accepted, by the project owner with Phase 5, 2026-11-06
 
 Decided during Phase 5 planning, and measured with a production spike against the real backend. See
 [research](../../specs/005-patients/research.md), R1 to R4. This changes part of [ADR 0005](0005-audit-safe-data-fetching.md),

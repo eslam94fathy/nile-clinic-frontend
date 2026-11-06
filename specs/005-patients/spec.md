@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-06
 
-**Status**: Approved
+**Status**: Accepted
 
 **Input**: User description: "Start Phase 5" of `docs/roadmap.md`: patients. Search with Arabic-aware API matching, register, view, edit. Audited reads apply. Administrators and receptionists only; doctors have no access to patient management.
 
