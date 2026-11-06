@@ -13,7 +13,7 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0006](0006-cache-components.md) | Adopt Next.js Cache Components, with privacy rules | Accepted |
 | [0007](0007-design-system-foundation.md) | shadcn on Radix, native selects, own theme code, pinned fonts, two-gate preview | Accepted |
 | [0008](0008-visual-direction.md) | Visual direction "Still water", with Western digits in Arabic | Accepted |
-| [0009](0009-brand-assets.md) | Brand assets, with the logo drawn inline | Proposed |
+| [0009](0009-brand-assets.md) | Brand assets, with the logo drawn inline | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.
