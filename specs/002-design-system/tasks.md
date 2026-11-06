@@ -215,7 +215,7 @@ description: "Task list for the design system"
 - [X] T067 Run `pnpm check`, and record the actual output in Evidence (SC-010)
 - [ ] T068 Carry out the by-hand checks in [quickstart.md](quickstart.md), asking the owner to do those requiring human judgment of how Arabic reads, and record who checked what in Evidence. Report anything not done as not done
 - [X] T069 Run `/code-review` on the branch and resolve the findings
-- [ ] T070 **Ask the owner to accept the phase.** Only then mark the phase Done in `docs/roadmap.md` and set the spec's status to Accepted
+- [X] T070 **Ask the owner to accept the phase.** Only then mark the phase Done in `docs/roadmap.md` and set the spec's status to Accepted
 
 ---
 
@@ -270,3 +270,4 @@ Actual observed results, filled in during implementation.
 | T067 | Final `pnpm check` (2026-11-06, after the review's fixes) | **Passed**, exit 0 in 145 s. Unit: 298 passed in 20 files. E2E: 121 passed. An earlier repeat of the whole e2e suite passed 228 of 228, and the filter tests, changed last, passed 10 of 10 |
 | T068 | By-hand checks | **Partly done.** Claude viewed screenshots: Arabic light and English dark at 1280 px, and Arabic at 600 px, and zoomed in on a negative Arabic amount, phone numbers, and filters. **Not done, for the owner:** how Arabic reads to a native reader; the dark and light sheets not viewed (Arabic dark, English light); 200% browser zoom; system grayscale; system reduced motion by eye; and a date field in a real Arabic browser, as the test browser showed `mm/dd/yyyy`. Checked only in Chromium |
 | T069 | `/code-review` at high effort | 10 findings, all fixed, each with a test: destructive confirm button showed the primary color; a private filter could reach the address if submitted before JavaScript loaded; the filter form remounted, losing focus and typed text; the theme switch did nothing with blocked storage; an encoded preview address got past the proxy's 404, though the second gate still withheld its content; repeated form errors collided on their React key; the same address was pushed again; a developer's `.env.local` could turn on the "preview off" test server; notices kept English labels on Arabic pages; impossible dates in instants rolled forward. The first fix for the form remount dropped text typed before JavaScript loaded, which a browser test caught, so the fields stayed uncontrolled |
+| T070 | Owner's acceptance | **Accepted by the owner on 2026-11-06**, after merging PR #1, keeping 48 px rows. The owner didn't report results for the by-hand checks listed under T068, so T068 stays open and those checks are recorded as unconfirmed, not as passed |

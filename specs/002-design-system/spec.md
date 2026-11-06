@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft
+**Status**: Accepted
 
 **Input**: User description: "Start Phase 2" of `docs/roadmap.md`, expanded from the roadmap and the Design system section of `docs/frontend-blueprint.md`: a visual direction for the owner's approval, tokens, Arabic and Latin typography, an accessible component foundation with right-to-left support, shared components, and a private preview. Done when every shared component is demonstrated in both directions and themes, with accessibility checks passing.
 
