@@ -11,7 +11,7 @@ foundations that later work relies on.
 | 2 | Design system | **Done** (accepted 2026-11-06, [spec](../specs/002-design-system/spec.md)) | 1 | |
 | 3 | Authentication and app shell | **Done** (accepted 2026-11-06, [spec](../specs/003-auth-app-shell/spec.md)) | 2 | Auth |
 | 4 | Clinic setup: staff, specialties, doctors, schedules, fees | **Done** (accepted 2026-11-06, [spec](../specs/004-clinic-setup/spec.md)) | 3 | Staff, Doctors, Scheduling, fee endpoints |
-| 5 | Patients | Not started | 3 | Patients |
+| 5 | Patients | In progress ([spec](../specs/005-patients/spec.md), [plan](../specs/005-patients/plan.md)) | 3 | Patients |
 | 6 | Appointments | Not started | 4, 5 | Appointments, slots |
 | 7 | Queue: reception and doctor | Not started | 6 | Queues |
 | 8 | Medical encounters | Not started | 7 | Encounters |
