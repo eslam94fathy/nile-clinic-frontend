@@ -184,6 +184,7 @@ Administrators and receptionists have the same appointment access. Doctors have 
 - A patient with two appointments on one day: this is allowed if they don't overlap.
 - A chosen patient, or a patient number in the address, that doesn't exist or isn't a valid number: the screen says no patient was found, and offers the search. The record isn't read to find out.
 - The connection fails while booking, so the outcome is unknown: the screen says it can't tell whether the booking was saved, and offers a link to that patient's appointments before trying again. Submitting again can't double-book, as the API would refuse it as a conflict.
+- The connection fails while rescheduling, cancelling, or marking a no-show, so the outcome is unknown: the screen says it can't tell whether the change was saved, and refreshes, so the page shows the appointment's real state.
 - An audit entry can't be saved: the API answers `500` and the action did not happen. A general error appears, and the application doesn't claim otherwise.
 - Midnight during booking, or a computer in another time zone: "today" and "has started" use the clinic's clock, and the API decides. Dates and times are shown as sent, including an end of `24:00`.
 - A seven-day view that would pass the 90-day limit: the view stops at the limit, and no later week is offered.

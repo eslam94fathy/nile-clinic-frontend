@@ -53,7 +53,7 @@ The other main concern is that a time can be taken at any moment, and that free 
 
 1. **Foundations.** Types and schemas, the pure functions, the API modules, `clinicNow`, the shared changes, and the fake backend's appointments.
 2. **Page shells and access.** All five pages with `ScreenGate`, `built: true`, and messages. Role access can be tested from here on.
-3. **List.** Filters, defaults, views, states. Everything else links to or from it.
+3. **List.** Filters, defaults, states. Everything else links to or from it. The "Needing a move" view follows with outside availability, once rescheduling and cancelling exist to act on it.
 4. **Appointment's page, showing.** All details and states, with `offeredActions`.
 5. **Choosers.** The patient search hook extraction first, with `PatientSearch`'s tests unchanged. Then `PatientChooser`, `ChosenPatient`, `DoctorChooser`, `FreeTimes`.
 6. **Booking.** The form, refusals, unknown outcome, and the patient's page links. The list's patient filter.
@@ -142,7 +142,8 @@ e2e/
 ├── support/fake-clinic.mjs           # Gains appointments
 └── live/
     ├── appointments.spec.ts          # The whole journey, audit counts, real no-show
-    └── setup.ts                      # Gains a dedicated synthetic doctor
+    ├── setup.ts                      # Gains dedicated synthetic doctors
+    └── support.ts                    # Their accounts in `LiveAccounts`
 ```
 
 **Structure Decision**: One new feature, matching the backend's module. Choosers and free times belong to the feature that owns their data, and are exposed through `public.ts`, as `PatientLink` already is. `app/` pages import each feature's server read directly, as the doctors pages do.

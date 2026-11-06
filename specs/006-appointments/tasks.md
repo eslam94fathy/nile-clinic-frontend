@@ -61,6 +61,11 @@
 
 - [ ] T013 Extend `e2e/support/fake-clinic.mjs` with appointments, following its existing style: `GET,POST /appointments`, `GET /appointments/{id}`, `POST .../reschedule`, `/cancel`, `/no-show`, `GET /doctors/me/appointments`, `/{id}`, and `GET /patients?id=N` if it isn't already handled. Booked times leave `slots`. Appointments can be seeded with a passed start and with `outside_availability`. It answers `409` with `slot_booked` and `patient_busy`, `422` under `start` and `appointment`, and counts `GET /patients/{id}`
 
+
+### Live fixtures
+
+- [ ] T059 Add dedicated synthetic doctors to `e2e/live/setup.ts`, with their accounts in the `LiveAccounts` type in `e2e/live/support.ts`, and deactivated by teardown as the others are: `bookingDoctor` and `secondDoctor`, each with 20-minute appointments and 09:00 to 17:00 hours on all seven days, so that free times exist whatever day the suite runs, and `noShowDoctor`, with no hours until T044 sets them. T023, T035, T039, T041, T044, T047, and T050 use these. Added by `/speckit-analyze`, so its number is out of sequence: it runs here, before Phase 3
+
 ---
 
 ## Phase 3: User Story 8 - Roles and refusals (P1)
@@ -70,7 +75,7 @@
 **Independent test**: Sign in as each role and open every address. Staff addresses refuse a doctor with no read, and doctors' addresses refuse staff.
 
 - [ ] T014 [US8] Write failing cases in `e2e/appointments.spec.ts` for US8: a doctor at `/appointments`, `/appointments/new`, and `/appointments/1`, and staff at `/my/appointments` and `/my/appointments/1`, each get the "not allowed" state with no appointment request. Each role's navigation shows the right entry and no placeholder text
-- [ ] T015 [US8] Create shell pages `src/app/[locale]/(app)/appointments/page.tsx`, `new/page.tsx`, `[id]/page.tsx`, and `my/appointments/page.tsx`, `my/appointments/[id]/page.tsx`, each with `Suspense` and `ScreenGate` (paths `appointments` and `my/appointments`), `setRequestLocale`, and a `PageHeader`. Tab titles hold no patient detail. Add first messages under `appointments` in both message files (FR-029, FR-030)
+- [ ] T015 [US8] Create shell pages `src/app/[locale]/(app)/appointments/page.tsx`, `src/app/[locale]/(app)/appointments/new/page.tsx`, `src/app/[locale]/(app)/appointments/[id]/page.tsx`, `src/app/[locale]/(app)/my/appointments/page.tsx`, and `src/app/[locale]/(app)/my/appointments/[id]/page.tsx`, each with `Suspense` and `ScreenGate` (paths `appointments` and `my/appointments`), `setRequestLocale`, and a `PageHeader`. Tab titles hold no patient detail. Add first messages under `appointments` in both message files (FR-029, FR-030)
 - [ ] T016 [US8] Set `built: true` on `appointments` and `my/appointments` in `src/lib/auth/app-routes.ts`, and update `src/lib/auth/app-routes.test.ts` (FR-029)
 
 **Checkpoint**: T014 passes, and later phases' placeholders are unchanged.
@@ -106,16 +111,16 @@
 - [ ] T024 [US1] Extract `src/features/patients/use-patient-search.ts` from `src/features/patients/components/patient-search.tsx`, covering request ordering, the fallback from a page that no longer exists, `403`, and repeating after a change. `patient-search.test.tsx` and `e2e/patients.spec.ts` must pass **unchanged** (research R3)
 - [ ] T025 [P] [US1] Add `findPatientById(id, locale)` to `src/features/patients/api/patients.ts`, sending `GET /patients?id=N`, with a test asserting that the path is never `patients/{id}` (FR-003, research R2)
 - [ ] T026 [US1] Write failing tests, then implement `src/features/patients/components/patient-chooser.tsx` with its test: the four labelled fields, using the hook; the same keys and rules as search; rows with list fields and a "Choose" button, and no link to a record; an empty result offers "Register a new patient"; `onChoose(patient)`; no browser autofill; search terms gone once a patient is chosen (FR-002, FR-003, FR-010, FR-038, FR-040)
-- [ ] T027 [US1] Write failing tests, then implement `src/features/patients/components/chosen-patient.tsx` with its test: reads with `findPatientById` once for a number, shows number, name, and phone, and handles reading, failed with retry, and not found; a value that isn't a number makes no request. Export `PatientChooser` and `ChosenPatient` from `src/features/patients/public.ts` (FR-003)
-- [ ] T028 [P] [US1] Write failing tests, then add `searchActiveDoctors(terms, page, locale)` to `src/features/doctors/api/doctors.ts`, with `is_active=1`, and implement `src/features/doctors/components/doctor-chooser.tsx` with its test: name field and specialty select, sent to the API with no matching of its own; a first page on mounting; API paging; `specialtyName`; all states; `onChoose(doctor)`. Create `src/features/doctors/public.ts` (FR-004, research R4)
-- [ ] T029 [P] [US1] Write failing tests, then implement `src/features/scheduling/free-time-window.ts` with its test: `freeTimeWindow(from, today)` gives `from`, `to` at `min(from + 6, today + 90)`, and `previous` and `next`, each absent past a limit, and `previous` never before today (FR-005, research R5)
+- [ ] T027 [US1] Write failing tests, then implement `src/features/patients/components/chosen-patient.tsx` with its test: reads with `findPatientById` once for a number, shows number, name, and phone, and handles reading, failed with retry, and not found; a `403` removes what's shown and gives `ForbiddenState`, with a refresh so the gate can re-decide; a value that isn't a number makes no request. Export `PatientChooser` and `ChosenPatient` from `src/features/patients/public.ts` (FR-003)
+- [ ] T028 [P] [US1] Write failing tests, then add `searchActiveDoctors(terms, page, locale)` to `src/features/doctors/api/doctors.ts`, with `is_active=1`, and implement `src/features/doctors/components/doctor-chooser.tsx` with its test: name field and specialty select, sent to the API with no matching of its own; a first page on mounting; API paging; `specialtyName`; all states; `onChoose(doctor)`. Create `src/features/doctors/public.ts`, exporting `DoctorChooser` and the `DoctorSummary` and `Specialty` types, which the appointments feature needs (FR-004, research R4)
+- [ ] T029 [P] [US1] Write failing tests, then implement `src/features/scheduling/free-time-window.ts` with its test: `freeTimeWindow(from, today)` first holds `from` between today and today + 90, so a typed date outside them is never requested, then gives `from`, `to` at `min(from + 6, today + 90)`, and `previous` and `next`, each absent past a limit, and `previous` never before today. Cover a past date, a date beyond the limit, and today + 90 itself (FR-005, research R5)
 - [ ] T030 [US1] Write failing tests, then add `src/features/scheduling/api/slots.ts`, and implement `src/features/scheduling/components/free-times.tsx` with its test: a date field, previous and next week, and refresh; one request per window, and the newest answer wins; grouped by the API's `date`; native radios in one group, each named by date and time; controlled `value` and `onChange`; a `refreshSignal` prop that reads again; an `error` prop shown above the times and announced; neutral empty state, offering next week if there is one; failed with retry. No timers. Create `src/features/scheduling/public.ts` (FR-005, FR-006, FR-007, FR-037)
 
 ### The form
 
 - [ ] T031 [P] [US1] Write failing cases in `e2e/appointments.spec.ts` for US1: both starting points, each refusal in research R6, an unknown outcome, the form empty on return, and no `GET /patients/{id}` in any of it
 - [ ] T032 [US1] Write failing tests, then implement `src/features/appointments/components/booking-form.tsx` with its test: patient, doctor, and time in order, with nothing below offered until the part above is done; "Change" on patient and doctor, where changing the doctor clears the time; the note with the "no medical details" hint and no autofill; `useFormSubmit` with fields `patient_id`, `doctor_id`, `date`, `start`, `note`. On `isAboutTheTime`, signal `FreeTimes` to read again and clear the time. On `patient_busy`, link to `/appointments?patient_id=N&from=D&to=D`. On `isOutcomeUnknown`, say it can't tell, and link to that patient's appointments. On success, toast, reset all state, `router.push` to the appointment, and `router.refresh` (FR-001, FR-008, FR-009, FR-034, FR-038)
-- [ ] T033 [US1] Implement `src/app/[locale]/(app)/appointments/new/page.tsx`: `clinicToday`, `readSpecialties`, and `patient_id` from the address through `readPositiveId`. A carried patient is chosen when the form is shown, including when a held page is shown again with no patient chosen, and an invalid one shows the search with a message (FR-003, FR-024)
+- [ ] T033 [US1] Implement `src/app/[locale]/(app)/appointments/new/page.tsx`: `clinicToday`, `readSpecialties`, and `patient_id` from the address through `readPositiveId`. If specialties can't be read, `ApiFailureState` replaces the form, as nothing has been typed yet. A carried patient is chosen when the form is shown, including when a held page is shown again with no patient chosen, and an invalid one shows the search with a message (FR-003, FR-024)
 - [ ] T034 [US1] Add "Book appointment" and "View appointments" to `src/features/patients/components/patient-record.tsx`, with `prefetch={false}`, on every view of a record, including just after registering. No further read. Extend `patient-record.test.tsx`, and leave existing cases unchanged (FR-024, FR-025)
 - [ ] T035 [US1] Add to `e2e/live/appointments.spec.ts`: booking through the page, the time no longer offered, `appointment.booked` once and `patient.opened` unchanged, including through both patient-page links; two simultaneous bookings give one `201` and one `409` with `slot_booked`, and the page offers another time with nothing retyped; `patient_busy` across two doctors, and `GET /patients?id=N` writes no entry. Record what's observed (SC-002, SC-003)
 
@@ -134,7 +139,7 @@
 **Independent test**: Reschedule, then confirm the new time, the same number, the old time offered again, and who moved it.
 
 - [ ] T037 [US4] Write failing tests, then implement `src/features/appointments/components/appointment-actions.tsx` with its test: uses `offeredActions`, holds a page-level refusal shown with `FormError`, and moves focus to the heading after a change or refusal. Wire it into the appointment's page with `clinicNow` from the server. "Check in" isn't offered (FR-021, FR-023)
-- [ ] T038 [US4] Write failing tests, then implement `src/features/appointments/components/reschedule-panel.tsx` with its test: opens in place with the current date and time visible; `FreeTimes` for the same doctor, with no way to choose another; "Move" and "Cancel", which returns focus. A refusal about the time reads again and clears it, with the same `patient_busy` link. A refusal under `appointment` closes the panel and goes to the page-level refusal, with a refresh. On success, toast, close, `router.refresh` (FR-018, FR-022, FR-034)
+- [ ] T038 [US4] Write failing tests, then implement `src/features/appointments/components/reschedule-panel.tsx` with its test: opens in place with the current date and time visible; `FreeTimes` for the same doctor, with no way to choose another; "Move" and "Cancel", which returns focus. A refusal about the time reads again and clears it, with the same `patient_busy` link. A refusal under `appointment` closes the panel and goes to the page-level refusal, with a refresh. On `isOutcomeUnknown`, it says it can't tell whether the change was saved, and refreshes so that the page shows the truth. On success, toast, close, `router.refresh` (FR-018, FR-022, FR-034)
 - [ ] T039 [US4] Extend `e2e/appointments.spec.ts` for US4, and add to `e2e/live/appointments.spec.ts`: same number and patient, old time offered again, `appointment.rescheduled` once, and who moved it shown. Record what's observed
 
 ---
@@ -145,7 +150,7 @@
 
 **Independent test**: Cancel with a reason, then confirm status, reason, and who, and that the time is offered again.
 
-- [ ] T040 [US5] Write failing tests, then implement `src/features/appointments/components/confirmed-change.tsx` with its test, used for cancel with a reason field in `ConfirmDialog`'s `children`: "no medical details" hint, no autofill, at most 255 characters. A refusal under `reason` stays in the dialog on its field. A refusal under `appointment` closes it and goes to the page-level refusal, with a refresh. `403` and `404` refresh. Dismissing changes nothing, and returns focus (FR-019, FR-034, FR-038, research R8)
+- [ ] T040 [US5] Write failing tests, then implement `src/features/appointments/components/confirmed-change.tsx` with its test, used for cancel with a reason field in `ConfirmDialog`'s `children`: "no medical details" hint, no autofill, at most 255 characters. A refusal under `reason` stays in the dialog on its field. A refusal under `appointment` closes it and goes to the page-level refusal, with a refresh. `403` and `404` refresh. On `isOutcomeUnknown`, it closes, says it can't tell whether the change was saved, and refreshes. One request at a time, with progress in the dialog, so a second press does nothing. On success, it closes, shows a toast, calls `router.refresh`, and moves focus to the heading. Dismissing changes nothing, and returns focus (FR-019, FR-022, FR-034, FR-038, research R6, R8)
 - [ ] T041 [US5] Extend `e2e/appointments.spec.ts` for US5, and add to `e2e/live/appointments.spec.ts`: status, reason, and who shown; time offered again; `appointment.cancelled` once; and a reason returned exactly as typed in Arabic. Record what's observed
 
 ---
@@ -156,9 +161,9 @@
 
 **Independent test**: Mark an appointment whose start has passed, then force the action on one that hasn't started.
 
-- [ ] T042 [US6] Write failing tests, then use `ConfirmedChange` for no-show in `appointment-actions.tsx`: offered only once started, says it can't be undone, and refusals go to page level with a refresh (FR-020, FR-021)
+- [ ] T042 [US6] Write failing tests, then use `ConfirmedChange` for no-show in `appointment-actions.tsx`: offered only once started, says it can't be undone, and refusals and an unknown outcome behave as in T040 (FR-020, FR-021, FR-034)
 - [ ] T043 [US6] Extend `e2e/appointments.spec.ts` for US6, using seeded passed starts and a forced refusal
-- [ ] T044 [US6] Add to `e2e/live/appointments.spec.ts`, as research R10 describes, with a dedicated synthetic doctor added in `e2e/live/setup.ts`: 5-minute appointments today from the next 5-minute boundary at least one minute away; book that slot; no-show forced before the start gives `422` on `appointment`, shown at page level; wait for the start; mark through the page; `appointment.no_show` once. Its own timeout, and a stated skip in the clinic's last minutes. Record what's observed
+- [ ] T044 [US6] Add to `e2e/live/appointments.spec.ts`, as research R10 describes, using `noShowDoctor` from T059: 5-minute appointments today from the next 5-minute boundary at least one minute away; book that slot; no-show forced before the start gives `422` on `appointment`, shown at page level; wait for the start; mark through the page; `appointment.no_show` once. Its own timeout, and a stated skip in the clinic's last minutes. Record what's observed
 
 ---
 
@@ -189,8 +194,8 @@
 ## Phase 11: Polish
 
 - [ ] T051 [P] Add the new screens to `e2e/accessibility.spec.ts`: the list with each empty state and a refusal, each booking step and refusal, an appointment's page with the panel and both dialogs open, and the doctor's pages, in both languages and both themes (SC-009)
-- [ ] T052 [P] Add keyboard-only cases and no-sideways-scroll checks at 768px and 390px to `e2e/appointments.spec.ts`, in both languages, for booking, rescheduling, cancelling, and marking a no-show (SC-009)
-- [ ] T053 [P] Add a role changed mid-session and a session ended elsewhere to `e2e/appointments.spec.ts`, on the list, booking, each action, and the doctor's pages. A `403` removes patient details from the screen (FR-030, US8 scenarios 3 and 4)
+- [ ] T052 Add keyboard-only cases and no-sideways-scroll checks at 768px and 390px to `e2e/appointments.spec.ts`, in both languages, for booking, rescheduling, cancelling, and marking a no-show (SC-009)
+- [ ] T053 Add a role changed mid-session and a session ended elsewhere to `e2e/appointments.spec.ts`, on the list, booking, each action, and the doctor's pages. A `403` removes patient details from the screen (FR-030, US8 scenarios 3 and 4)
 - [ ] T054 Add to `e2e/live/appointments.spec.ts`: after a full journey and sign-out, no synthetic term, note, or reason in any address visited, in storage, on the page reached by going back, or in the application server's output, and timing guards for SC-001 and SC-004. Record what's observed (FR-032, FR-039, SC-005)
 - [ ] T055 Search `src/features/appointments`, and the new files in other features: no logging, no browser storage, no `GET /patients/{id}`, no compared message text, no `new Date` on a clinic date, no hard-coded text, and no check-in. Record the result
 - [ ] T056 Update the documents listed in [plan.md](plan.md): `docs/frontend-blueprint.md`, including check-in moving to `/queue`; `docs/backend-integration.md`, with only what's observed; `docs/architecture.md`; `docs/development-guidelines.md`; `docs/roadmap.md`; and a note on FR-032 in `specs/005-patients/spec.md`
@@ -213,9 +218,9 @@ Setup → Foundational → US8 → US2 → US1 → US4 → US5 → US6 → US3 �
 
 ## Parallel Examples
 
-- **Foundational**: T002 to T010 touch different files, and can all run together. T011 and T012 need T002.
+- **Foundational**: T002 to T010 touch different files, and can all run together. T011 and T012 need T002. T059 can run alongside them.
 - **US1 choosers**: T025, T028, and T029 can run together. T026 and T027 need T024 and T025, and T030 needs T029.
-- **Polish**: T051, T052, and T053 can run together, though all but T051 add to one file.
+- **Polish**: T051 can run alongside T052 and T053, which add to one file, so run those two in turn.
 
 ## Implementation Strategy
 

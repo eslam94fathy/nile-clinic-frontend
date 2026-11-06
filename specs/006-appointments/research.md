@@ -44,7 +44,7 @@ An empty list means no such patient. A value that can't be a number never reache
 
 | Detail | Rule | Source |
 |---|---|---|
-| Window | `from` to `min(from + 6, today + 90)`, always one request | `ListSlotsRequest`: at most 31 days, `from` not before today, `to` not beyond 90 days |
+| Window | `from`, held between today and today + 90, to `min(from + 6, today + 90)`, always one request | `ListSlotsRequest`: at most 31 days, `from` not before today, `to` not beyond 90 days |
 | Earlier week | Offered only when `from` is after today, and never goes before today | Same |
 | Later week | Offered only when `to` is before today + 90 | Same |
 | Grouping | By the `date` the API sends, in its order. Days with no free time are left out, and if all seven have none, the empty state appears | Contract: date and time order |
@@ -72,7 +72,7 @@ From `BookingService` and `AppointmentService`, for both booking and reschedulin
 
 Only status, key, and `reason` are compared, never text. `useFormSubmit` hides the error from its caller, so it gains an optional `onFailure(error)`. Existing callers are unaffected.
 
-**An unknown outcome**: the same-origin route answers `502` when the backend gives no usable response, and `browserApi` gives status `0` when no response arrives. For a change, those mean it may have been saved, unlike a `500`, which the API defines as "the action did not happen". `isOutcomeUnknown(error)` is `status === 0 || status >= 502`. Booking then says it can't tell, and links to the patient's appointments. Submitting again is safe, because a saved booking makes the API refuse with a conflict. Mutations are never retried automatically.
+**An unknown outcome**: the same-origin route answers `502` when the backend gives no usable response, and `browserApi` gives status `0` when no response arrives. For a change, those mean it may have been saved, unlike a `500`, which the API defines as "the action did not happen". `isOutcomeUnknown(error)` is `status === 0 || status >= 502`. Booking then says it can't tell, and links to the patient's appointments. Submitting again is safe, because a saved booking makes the API refuse with a conflict. Rescheduling, cancelling, and no-show say the same and refresh, as the appointment's page then shows the truth. Mutations are never retried automatically.
 
 ## R7. Which actions are offered
 
