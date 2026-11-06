@@ -27,7 +27,7 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/doctors/new`, `/doctors/[id]/edit`, `/doctors/[id]/schedule` | A | Create and edit a profile, set hours | `/doctors*`, `/staff`, `/schedule` |
 | `/doctors/[id]` | A R | Profile, schedule, time off, fee. Read-only for R | `/doctors/{id}`, `/schedule`, `/time-off`, `/fee` |
 | `/fees` | A R | All fees | `GET /fees` |
-| `/patients`, `/patients/[id]` | A R | Search, register, view, edit | `/patients*` |
+| `/patients`, `/patients/new`, `/patients/[id]` | A R | Search, register, view, and edit on the record's own page | `/patients*` |
 | `/appointments`, `/appointments/[id]` | A R | Find, book, reschedule, cancel, no-show, check in | `/appointments*`, `/doctors/{id}/slots` |
 | `/queue` | A R | Today's clinic queue, walk-ins, left, undo | `/queue*`, `/doctors/{id}/queue` |
 | `/billing` | A R | A date's visits and balances, charge a visit | `GET /visits`, `POST /visits/{id}/charge` |
@@ -145,8 +145,9 @@ Phase 3 added `Can` for role-based visibility, in `features/app-shell`, and Phas
 audit log, the only list with no total (Phase 11).
 
 **Lists.** Filters and page live in the URL so that they survive reload and the back button, with one
-exception: patient details must not be put in the URL by the frontend beyond what search requires.
-Whether name and phone search terms stay out of the page URL is settled in the patients spec.
+exception: patient search. Its terms and page stay in the component's state and out of the address, so
+a reload clears them, and going back restores them while the page is held
+([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). The patient number may be in an address.
 
 **Responsive.** Reception and back office are desktop first, down to tablet. Doctor screens are also
 usable on a tablet. Tables collapse to cards on narrow screens.

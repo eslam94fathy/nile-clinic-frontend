@@ -20,12 +20,16 @@ export type DataTableColumn<Row> = {
   cell: (row: Row) => ReactNode;
 };
 
+type PageTarget =
+  | { hrefForPage: (page: number) => string; onPage?: never }
+  /** For a list whose filters can't be in the address, so neither can its pages. */
+  | { onPage: (page: number) => void; hrefForPage?: never };
+
 export type DataTablePagination = {
   page: number;
   lastPage: number;
   total: number;
-  hrefForPage: (page: number) => string;
-};
+} & PageTarget;
 
 type DataTableProps<Row> = {
   columns: DataTableColumn<Row>[];
@@ -46,13 +50,13 @@ const longValues = "whitespace-normal [overflow-wrap:anywhere]";
 
 function PageLink({
   page,
-  hrefForPage,
+  target,
   label,
   icon,
   disabled,
 }: {
   page: number;
-  hrefForPage: (page: number) => string;
+  target: PageTarget;
   label: string;
   icon: ReactNode;
   disabled: boolean;
@@ -66,10 +70,26 @@ function PageLink({
     );
   }
 
+  // Only here does a function reach the button: a table on a server-rendered page can't pass one.
+  if (target.onPage) {
+    const { onPage } = target;
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => onPage(page)}
+      >
+        {label}
+        {icon}
+      </Button>
+    );
+  }
+
   return (
     <Button variant="outline" size="sm" asChild>
       {/* No prefetch: a list's next page must not load until someone asks for it (ADR 0005). */}
-      <Link href={hrefForPage(page)} prefetch={false}>
+      <Link href={target.hrefForPage(page)} prefetch={false}>
         {label}
         {icon}
       </Link>
@@ -77,12 +97,7 @@ function PageLink({
   );
 }
 
-function Pagination({
-  page,
-  lastPage,
-  total,
-  hrefForPage,
-}: DataTablePagination) {
+function Pagination({ page, lastPage, total, ...target }: DataTablePagination) {
   const t = useTranslations("shared.table");
   const locale = useLocale();
 
@@ -102,14 +117,14 @@ function Pagination({
       <div className="flex gap-2">
         <PageLink
           page={page - 1}
-          hrefForPage={hrefForPage}
+          target={target}
           label={t("previous")}
           icon={<ChevronLeftIcon className="rtl:rotate-180" />}
           disabled={page <= 1}
         />
         <PageLink
           page={page + 1}
-          hrefForPage={hrefForPage}
+          target={target}
           label={t("next")}
           icon={<ChevronRightIcon className="rtl:rotate-180" />}
           disabled={page >= lastPage}

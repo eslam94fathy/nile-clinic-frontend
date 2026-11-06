@@ -47,14 +47,14 @@ Mutations never retry automatically.
 | Option | Why not |
 |---|---|
 | Disable refetching globally | Would make queue and other screens stale, and doesn't handle prefetch or double fetches |
-| Fetch audited records outside TanStack Query | A second data path for the same features; retry and focus bugs simply move elsewhere |
+| Fetch audited records outside TanStack Query | A second data path for the same features; retry and focus bugs simply move elsewhere. **Reversed by [ADR 0012](0012-audited-reads-in-the-browser.md),** on measured evidence |
 | Ask the backend to record only some reads | Would weaken a deliberate audit rule. Not the frontend's call |
 
 ## Consequences
 
 - Cache Components keeps visited routes mounted but hidden, and re-runs their effects when shown again
   ([ADR 0006](0006-cache-components.md)). So an audited read must never start from a bare `useEffect`, and Phase 5 must test going
-  back to a patient page.
+  back to a patient page. [ADR 0012](0012-audited-reads-in-the-browser.md) records what Phase 5 measured, and the guarded read that came of it.
 - A long-open record may be out of date. This is acceptable: drafts are visible only to their author, finalized
   records can only gain addenda from their author, and a person can refresh.
 - React's Strict Mode double-invokes effects in development, which can double-fetch and create extra entries in

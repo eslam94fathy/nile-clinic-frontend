@@ -37,6 +37,45 @@ const table = {
 };
 const text = messagesByLocale.en.shared.table;
 
+describe("paging with buttons, for a list that can't be in the address", () => {
+  const pagination = { page: 2, lastPage: 3, total: 40 };
+
+  it("calls back with the page, and renders no links", () => {
+    const onPage = vi.fn();
+    renderWithIntl(
+      <DataTable
+        {...table}
+        state="ready"
+        pagination={{ ...pagination, onPage }}
+      />,
+    );
+
+    const pages = screen.getByRole("navigation", { name: text.pagination });
+    expect(within(pages).queryByRole("link")).toBeNull();
+    within(pages).getByRole("button", { name: text.next }).click();
+    expect(onPage).toHaveBeenCalledWith(3);
+    within(pages).getByRole("button", { name: text.previous }).click();
+    expect(onPage).toHaveBeenCalledWith(1);
+  });
+
+  it("disables what isn't there", () => {
+    renderWithIntl(
+      <DataTable
+        {...table}
+        state="ready"
+        pagination={{ page: 1, lastPage: 1, total: 2, onPage: vi.fn() }}
+      />,
+    );
+
+    const pages = screen.getByRole("navigation", { name: text.pagination });
+    for (const name of [text.previous, text.next]) {
+      expect(
+        within(pages).getByRole<HTMLButtonElement>("button", { name }).disabled,
+      ).toBe(true);
+    }
+  });
+});
+
 describe("states", () => {
   it("loading", () => {
     renderWithIntl(<DataTable {...table} state="loading" />);

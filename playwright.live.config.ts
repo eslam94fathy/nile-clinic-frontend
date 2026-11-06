@@ -3,6 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const appPort = 3112;
 
+// What the application server prints during the run, which a test searches for patient details (SC-005).
+const serverLog = ".next/e2e-live-app-server.log";
+
 // The live tests' setup needs the backend's address and the synthetic administrator from here too.
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
@@ -22,7 +25,7 @@ export default defineConfig({
     ...devices["Desktop Chrome"],
   },
   webServer: {
-    command: `node node_modules/next/dist/bin/next start -p ${appPort}`,
+    command: `node node_modules/next/dist/bin/next start -p ${appPort} > ${serverLog} 2>&1`,
     url: `http://localhost:${appPort}/ar/sign-in`,
     reuseExistingServer: false,
   },

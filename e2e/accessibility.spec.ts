@@ -220,6 +220,111 @@ for (const locale of ["ar", "en"] as const) {
         expect(await seriousIssues(page)).toEqual([]);
       });
 
+      test("patients: searching", async ({ page }) => {
+        const p = t.patients;
+        await control("clinic/more-patients?count=20");
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/patients`);
+        await expect(
+          page.getByText(p.search.promptTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        const search = page.getByRole("button", { name: p.search.button });
+        await search.click();
+        await expect(page.getByText(p.search.needTerm)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        const name = page.getByRole("textbox", {
+          name: p.fields.fullName,
+          exact: true,
+        });
+        const phone = page.getByRole("textbox", {
+          name: p.fields.phone,
+          exact: true,
+        });
+        await name.fill("Crowd");
+        await search.click();
+        await expect(page.getByRole("table")).toContainText("Synthetic Crowd");
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await name.fill("Nobody Synthetic");
+        await search.click();
+        await expect(page.getByText(p.search.emptyTitle)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await name.fill("");
+        await phone.fill("12");
+        await search.click();
+        await expect(phone).toHaveAttribute("aria-invalid", "true");
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await script("patients", 500);
+        await phone.fill("01000000002");
+        await search.click();
+        await expect(
+          page.getByText(t.shared.states.errorHeading),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("patients: registering, with errors and warnings", async ({
+        page,
+      }) => {
+        const p = t.patients;
+        const form = p.registerForm;
+        const field = (label: string) =>
+          page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/patients/new`);
+        const submit = page.getByRole("button", {
+          name: form.submit,
+          exact: true,
+        });
+        await expect(submit).toBeEnabled();
+        await submit.click();
+        await expect(page.getByText(p.form.nameRequired)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await field(p.fields.fullName).fill("Synthetic Axe");
+        await field(p.fields.dateOfBirth).fill("1990-04-12");
+        await field(p.fields.sex).selectOption("female");
+        await field(p.fields.phone).fill("01000000002");
+        await submit.click();
+        await expect(page.getByText(form.matchesTitle)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await script("GET patients", 500);
+        await submit.click();
+        await expect(page.getByText(form.checkFailedTitle)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("patients: a record, editing, and failures", async ({ page }) => {
+        const p = t.patients;
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/patients/2`);
+        await expect(page.getByRole("heading", { level: 1 })).toContainText(
+          "Synthetic Patient Beta",
+        );
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await script("patients/2", 500);
+        await page.getByRole("button", { name: p.record.reload }).click();
+        await expect(page.getByText(p.record.outOfDate)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+        await script("patients/2", 0);
+
+        await page.getByRole("button", { name: p.record.edit }).click();
+        await page
+          .getByLabel(new RegExp(`^${p.fields.fullName}`, "u"))
+          .locator("visible=true")
+          .fill("");
+        await page.getByRole("button", { name: p.form.save }).click();
+        await expect(page.getByText(p.form.nameRequired)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
       test("API failing", async ({ page }) => {
         await signIn(page, "doctor", locale);
         await script("auth/me", 500);

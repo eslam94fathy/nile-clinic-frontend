@@ -83,8 +83,94 @@ function freshClinic() {
     schedules: new Map(),
     timeOff: [],
     fees: new Map(),
+    patients: [
+      {
+        id: 1,
+        full_name: "أحمد سامي تجريبي",
+        sex: "male",
+        date_of_birth: "1990-04-12",
+        phone: "01000000001",
+        national_id: "29004120100001",
+        address: "12 Synthetic St, Cairo",
+        emergency_contact: {
+          name: "سامي تجريبي",
+          relationship: "father",
+          phone: "01000000009",
+        },
+        created_at: NOW,
+        updated_at: NOW,
+      },
+      {
+        id: 2,
+        full_name: "Synthetic Patient Beta",
+        sex: "female",
+        date_of_birth: "1985-07-30",
+        phone: "01000000002",
+        national_id: null,
+        address: null,
+        emergency_contact: null,
+        created_at: NOW,
+        updated_at: NOW,
+      },
+      {
+        id: 3,
+        full_name: "Synthetic Child Gamma",
+        sex: "male",
+        date_of_birth: "2015-01-20",
+        phone: "01000000002",
+        national_id: null,
+        address: null,
+        emergency_contact: null,
+        created_at: NOW,
+        updated_at: NOW,
+      },
+      {
+        id: 4,
+        full_name: `Synthetic-${"Long".repeat(30)}-Name`,
+        sex: "female",
+        date_of_birth: "2000-02-29",
+        phone: "01000000004",
+        national_id: "30002290100004",
+        address: `${"Long Synthetic Address ".repeat(15)}`.trim(),
+        emergency_contact: null,
+        created_at: NOW,
+        updated_at: NOW,
+      },
+    ],
+    patientOpenings: new Map(),
   };
 }
+
+const PHONE = /^\+?[0-9]{8,15}$/;
+const NATIONAL_ID = /^[23][0-9]{13}$/;
+const normalizePhone = (value) =>
+  typeof value === "string" ? value.replace(/[\s\-()]/gu, "") : value;
+// A simple copy of the API's name matching, so that screens can be tested without the real API. The live
+// tests prove the real thing.
+const normalizeName = (value) =>
+  value
+    .toLowerCase()
+    .replace(/[أإآ]/gu, "ا")
+    .replace(/ة/gu, "ه")
+    .replace(/ى/gu, "ي")
+    .replace(/\s+/gu, " ")
+    .trim();
+const patientSummary = ({ id, full_name, sex, date_of_birth, phone }) => ({
+  id,
+  full_name,
+  sex,
+  date_of_birth,
+  phone,
+});
+const PATIENT_FIELDS = [
+  "full_name",
+  "date_of_birth",
+  "sex",
+  "phone",
+  "national_id",
+  "address",
+  "emergency_contact",
+];
 
 export function createClinic({ send, readJson, accounts, endSessions, port }) {
   let clinic = freshClinic();
@@ -406,7 +492,178 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     to: query.get("to"),
   });
 
+  // Patients. Refusals use the keys in PatientRules and the patient form requests.
+  const reception = (handler) => (request, response, me, match, query) =>
+    me.role === "doctor"
+      ? forbid(response)
+      : handler(request, response, me, match, query);
+
+  const withPatient = (handler) =>
+    reception((request, response, me, match, query) => {
+      const patient = clinic.patients.find(({ id }) => id === Number(match[1]));
+      return patient
+        ? handler(request, response, patient, query)
+        : send(response, 404, { message: "No patient was found." });
+    });
+
+  function recordOpening(patient) {
+    clinic.patientOpenings.set(
+      patient.id,
+      (clinic.patientOpenings.get(patient.id) ?? 0) + 1,
+    );
+  }
+
+  function patientErrors(body, ignoreId, partial) {
+    const errors = {};
+    const has = (field) => !partial || Object.hasOwn(body, field);
+
+    if (has("full_name") && !body.full_name) {
+      errors.full_name = ["The full name is required."];
+    }
+    if (has("date_of_birth")) {
+      if (!DATE.test(body.date_of_birth ?? "")) {
+        errors.date_of_birth = ["The date of birth is not valid."];
+      } else if (body.date_of_birth > clinicToday()) {
+        errors.date_of_birth = ["The date of birth can't be in the future."];
+      }
+    }
+    if (has("sex") && !["male", "female"].includes(body.sex)) {
+      errors.sex = ["The sex is required."];
+    }
+    if (has("phone") && !PHONE.test(normalizePhone(body.phone) ?? "")) {
+      errors.phone = ["The phone number is not valid."];
+    }
+    if (has("national_id") && body.national_id) {
+      if (!NATIONAL_ID.test(body.national_id)) {
+        errors.national_id = ["The national ID is not valid."];
+      } else if (
+        clinic.patients.some(
+          ({ id, national_id: taken }) =>
+            taken === body.national_id && id !== ignoreId,
+        )
+      ) {
+        errors.national_id = ["This national ID has already been taken."];
+      }
+    }
+    if (has("emergency_contact") && body.emergency_contact) {
+      const contact = body.emergency_contact;
+      if (!contact.name) {
+        errors["emergency_contact.name"] = ["The contact's name is required."];
+      }
+      if (!contact.relationship) {
+        errors["emergency_contact.relationship"] = [
+          "The relationship is required.",
+        ];
+      }
+      if (!PHONE.test(normalizePhone(contact.phone) ?? "")) {
+        errors["emergency_contact.phone"] = [
+          "The contact's phone is not valid.",
+        ];
+      }
+    }
+    return errors;
+  }
+
   const routes = [
+    [
+      "GET",
+      /^patients$/,
+      reception((_request, response, _me, _match, query) => {
+        const name = query.get("name");
+        const phone = query.get("phone");
+        const nationalId = query.get("national_id");
+        const id = query.get("id");
+
+        if (phone && !PHONE.test(normalizePhone(phone))) {
+          return refuse(response, {
+            phone: ["The phone number is not valid."],
+          });
+        }
+        if (nationalId && !NATIONAL_ID.test(nationalId)) {
+          return refuse(response, {
+            national_id: ["The national ID is not valid."],
+          });
+        }
+        if (id && !/^[1-9]\d*$/.test(id)) {
+          return refuse(response, { id: ["The patient number is not valid."] });
+        }
+
+        const rows = clinic.patients
+          .filter(
+            (patient) =>
+              (!name ||
+                normalizeName(patient.full_name).includes(
+                  normalizeName(name),
+                )) &&
+              (!phone || patient.phone === normalizePhone(phone)) &&
+              (!nationalId || patient.national_id === nationalId) &&
+              (!id || patient.id === Number(id)),
+          )
+          .map(patientSummary);
+        return paginate(response, rows, query, "patients");
+      }),
+    ],
+    [
+      "POST",
+      /^patients$/,
+      reception(async (request, response) => {
+        const body = await readJson(request);
+        const errors = patientErrors(body, null, false);
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+
+        const patient = {
+          id: nextId++,
+          full_name: body.full_name,
+          sex: body.sex,
+          date_of_birth: body.date_of_birth,
+          phone: normalizePhone(body.phone),
+          national_id: body.national_id ?? null,
+          address: body.address ?? null,
+          emergency_contact: body.emergency_contact ?? null,
+          created_at: NOW,
+          updated_at: NOW,
+        };
+        clinic.patients.push(patient);
+        return send(response, 201, { data: patient });
+      }),
+    ],
+    [
+      "GET",
+      /^patients\/(\d+)$/,
+      withPatient((_request, response, patient) => {
+        recordOpening(patient);
+        return send(response, 200, { data: patient });
+      }),
+    ],
+    [
+      "PATCH",
+      /^patients\/(\d+)$/,
+      withPatient(async (request, response, patient) => {
+        const body = await readJson(request);
+        if (!PATIENT_FIELDS.some((field) => Object.hasOwn(body, field))) {
+          return refuse(response, {
+            fields: ["Send at least one detail to change."],
+          });
+        }
+        const errors = patientErrors(body, patient.id, true);
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+
+        let changed = false;
+        for (const field of PATIENT_FIELDS) {
+          if (!Object.hasOwn(body, field)) continue;
+          const value =
+            field === "phone" ? normalizePhone(body[field]) : body[field];
+          if (JSON.stringify(patient[field]) !== JSON.stringify(value)) {
+            patient[field] = value;
+            changed = true;
+          }
+        }
+        // As the real API does: the whole record comes back, so this counts as reading it.
+        if (changed) patient.updated_at = "2026-03-01T10:00:00.000000Z";
+        else recordOpening(patient);
+        return send(response, 200, { data: patient });
+      }),
+    ],
     // Staff
     [
       "GET",
@@ -1032,6 +1289,31 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
           end_time: query.get("end_time"),
           reason: query.get("reason"),
         });
+        send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/patient-openings": {
+        send(response, 200, {
+          count: clinic.patientOpenings.get(Number(query.get("id"))) ?? 0,
+        });
+        return true;
+      }
+      case "/__control/clinic/more-patients": {
+        for (let index = 0; index < Number(query.get("count")); index += 1) {
+          const id = nextId++;
+          clinic.patients.push({
+            id,
+            full_name: `Synthetic Crowd ${id}`,
+            sex: "female",
+            date_of_birth: "1990-01-01",
+            phone: "01000000077",
+            national_id: null,
+            address: null,
+            emergency_contact: null,
+            created_at: NOW,
+            updated_at: NOW,
+          });
+        }
         send(response, 200, {});
         return true;
       }

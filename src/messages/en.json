@@ -550,5 +550,90 @@
     "saving": "Saving…",
     "saved": "Fee saved.",
     "chargesNote": "Existing charges keep the amount they were charged at."
+  },
+  "patients": {
+    "title": "Patients",
+    "description": "Find a patient, or register a new one.",
+    "register": "Register a patient",
+    "backToSearch": "Back to search",
+    "sex": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "fields": {
+      "number": "Patient number",
+      "fullName": "Full name",
+      "sex": "Sex",
+      "dateOfBirth": "Date of birth",
+      "phone": "Phone",
+      "nationalId": "National ID",
+      "address": "Address",
+      "emergencyContact": "Emergency contact",
+      "contactName": "Contact's name",
+      "contactRelationship": "Relationship to the patient",
+      "contactPhone": "Contact's phone",
+      "registeredAt": "Registered",
+      "updatedAt": "Last changed",
+      "notRecorded": "Not recorded"
+    },
+    "search": {
+      "button": "Search",
+      "nameHint": "Part of the name is enough.",
+      "wholeValueHint": "Enter all of it.",
+      "promptTitle": "Search for a patient",
+      "promptDescription": "Enter at least one detail. Nobody is listed until you search.",
+      "needTerm": "Enter at least one detail to search.",
+      "caption": "Patients found",
+      "emptyTitle": "No patients match",
+      "emptyDescription": "Check what you entered, or register a new patient."
+    },
+    "record": {
+      "numberLine": "Patient number {number}",
+      "detailsHeading": "Details",
+      "edit": "Edit",
+      "reload": "Reload details",
+      "reloading": "Reloading…",
+      "reloadHint": "Reloading records another opening of this patient's file in the audit trail.",
+      "outOfDate": "The details below may be out of date."
+    },
+    "form": {
+      "requiredHeading": "Required details",
+      "optionalHeading": "Other details, if known",
+      "contactHeading": "Emergency contact, if known",
+      "chooseSex": "Choose",
+      "phoneHint": "Spaces and dashes are fine. Add + for an international number.",
+      "nationalIdHint": "14 digits. Leave empty if the patient has none.",
+      "contactHint": "Fill in all three, or leave all three empty.",
+      "nameRequired": "Enter the patient's full name.",
+      "nameTooLong": "The name can be at most 255 characters.",
+      "dateRequired": "Enter the date of birth.",
+      "dateRange": "The date of birth can't be in the future, or more than 130 years ago.",
+      "sexRequired": "Choose the patient's sex.",
+      "phoneRule": "Enter a phone number of 8 to 15 digits.",
+      "nationalIdRule": "Enter 14 digits, starting with 2 or 3.",
+      "addressTooLong": "The address can be at most 500 characters.",
+      "contactPartRequired": "Fill this in, or leave all three parts empty.",
+      "contactNameTooLong": "The name can be at most 255 characters.",
+      "relationshipTooLong": "The relationship can be at most 50 characters.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "saved": "Patient's details saved."
+    },
+    "registerForm": {
+      "title": "Register a patient",
+      "description": "Search first, as a patient who has been here before already has a record.",
+      "submit": "Register patient",
+      "submitting": "Registering…",
+      "checking": "Checking…",
+      "registered": "Patient registered as number {number}.",
+      "matchesTitle": "This phone number is already recorded",
+      "matchesDescription": "{total, plural, one {# patient has} other {# patients have}} this number. Check whether one of them is this person. Families often share a phone, so a new patient may be correct.",
+      "moreMatches": "Showing the first {shown}.",
+      "registerAnyway": "Register anyway",
+      "checkFailedTitle": "The phone number couldn't be checked",
+      "checkFailedDescription": "It isn't known whether this person is already recorded.",
+      "tryAgain": "Try again"
+    }
   }
 }

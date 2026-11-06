@@ -302,5 +302,29 @@ test.describe("returning after a session ended", () => {
 
     await fillSignIn(page, "en", ACCOUNTS.receptionist, PASSWORD);
     await expect(page).toHaveURL(/\/en\/dashboard$/);
+    expect(await callsTo("patients/5")).toBe(0);
+  });
+
+  test("doesn't go back to a form that could hold patient details", async ({
+    page,
+  }) => {
+    await signIn(page, "receptionist");
+    await control(`revoke?email=${ACCOUNTS.receptionist}`);
+
+    await page.goto("/en/patients/new");
+    await expect(page).toHaveURL(/\/en\/sign-in\?ended=1$/);
+  });
+
+  test("returns to the search, with no terms from the address", async ({
+    page,
+  }) => {
+    await signIn(page, "receptionist");
+    await control(`revoke?email=${ACCOUNTS.receptionist}`);
+
+    await page.goto("/en/patients?name=Synthetic");
+    await expect(page).toHaveURL(/\/en\/sign-in\?ended=1&return=%2Fpatients$/);
+
+    await fillSignIn(page, "en", ACCOUNTS.receptionist, PASSWORD);
+    await expect(page).toHaveURL(/\/en\/patients$/);
   });
 });

@@ -62,6 +62,7 @@ describe("safeReturnAddress", () => {
   it.each([
     "/patients/5",
     "/en/patients/5",
+    "/patients/new",
     "/patients/5/edit",
     "/%70atients/5",
     "/Patients/5",

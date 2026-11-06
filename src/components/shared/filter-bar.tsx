@@ -50,9 +50,17 @@ function fieldsIn(form: HTMLFormElement | null) {
 export function FilterBar({
   filters,
   onApply,
+  onReset,
+  errors,
+  applyLabel,
 }: {
   filters: FilterDefinition[];
   onApply?: (values: FilterValues) => void;
+  /** Called instead of `onApply` on reset, for a screen that must tell a reset from an empty search. */
+  onReset?: () => void;
+  /** Each filter's error, by name, shown as sent. */
+  errors?: Partial<Record<string, string>>;
+  applyLabel?: string;
 }) {
   const t = useTranslations("shared.filters");
   const searchParams = useSearchParams();
@@ -118,14 +126,15 @@ export function FilterBar({
       field.value = "";
     });
     navigate({});
-    onApply?.({});
+    if (onReset) onReset();
+    else onApply?.({});
   }
 
   const fieldProps = (filter: FilterDefinition) => ({
     [FILTER_ATTRIBUTE]: filter.name,
     // A private filter has no `name`, so submitting before JavaScript has loaded can't put it in the
     // address: the browser only sends named fields.
-    ...(filter.inAddress ? { name: filter.name } : {}),
+    ...(filter.inAddress ? { name: filter.name } : { autoComplete: "off" }),
     defaultValue: filter.inAddress ? (searchParams.get(filter.name) ?? "") : "",
   });
 
@@ -138,7 +147,11 @@ export function FilterBar({
     >
       {filters.map((filter) => (
         <div key={filter.name} className="min-w-44 flex-1">
-          <FormField label={filter.label} hint={filter.hint}>
+          <FormField
+            label={filter.label}
+            hint={filter.hint}
+            error={errors?.[filter.name]}
+          >
             {(input) =>
               filter.type === "select" ? (
                 <NativeSelect
@@ -162,10 +175,10 @@ export function FilterBar({
       <div className="flex flex-col gap-1.5">
         {/* Takes a label's height, so the buttons line up with the fields whether or not one has a hint. */}
         <span aria-hidden="true" className="invisible text-sm leading-none">
-          {t("apply")}
+          {applyLabel ?? t("apply")}
         </span>
         <div className="flex gap-2">
-          <Button type="submit">{t("apply")}</Button>
+          <Button type="submit">{applyLabel ?? t("apply")}</Button>
           <Button type="button" variant="outline" onClick={reset}>
             {t("reset")}
           </Button>

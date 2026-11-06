@@ -113,6 +113,8 @@ origin. The proxy adds the bearer token and `Accept-Language`, then returns the 
 
 The query cache is memory only, is never persisted, and is cleared at sign-out and on `401`.
 
+**Patient reads** are the exception to server reads ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). Records and patient search run in Client Components through the same-origin route, and no patient API call exists on the server. A server read of a record writes a false "opened" entry after a refresh and the back button, and search terms can't reach the server without entering the address. Everything else reads on the server, under [ADR 0011](decisions/0011-server-reads-and-refresh.md).
+
 ## Authentication and authorization
 
 ```text
