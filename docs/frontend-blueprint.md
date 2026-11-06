@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system exists, and no feature screens are built yet.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system and app shell exist, and no feature screens are built yet.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -140,8 +140,8 @@ localized format in the clinic's time zone, so the two kinds look different by d
 | `Money`, `ClinicDate`, `ClinicTime`, `Instant`, `LtrText`, `UserText` | One correct display for each kind of value |
 | `ThemeSwitch` | Light, dark, or following the device |
 
-Still to come, in the phase that needs each: `Can` for role-based visibility (Phase 3), and `CursorPager` for the audit log, the
-only list with no total (Phase 11).
+Phase 3 added `Can` for role-based visibility, in `features/app-shell`. Its first consumers come in Phase 4. Still to come: `CursorPager` for the
+audit log, the only list with no total (Phase 11).
 
 **Lists.** Filters and page live in the URL so that they survive reload and the back button, with one
 exception: patient details must not be put in the URL by the frontend beyond what search requires.

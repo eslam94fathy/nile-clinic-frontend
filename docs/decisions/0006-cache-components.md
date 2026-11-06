@@ -21,8 +21,10 @@ Rules that follow:
 1. **`use cache` must never wrap per-user, patient, or clinical data.** Shared caching of those would be a privacy failure.
    It may be used only for public, non-personal content, and only with a reason.
 2. **Static shells must not contain personal data.** Dynamic data stays inside `<Suspense>`.
-3. **Audited reads stay under ADR 0005.** Partial prefetching fetches only the static shell, so it doesn't run dynamic reads.
-   However, `prefetch={true}` could resolve more, so `prefetch={false}` is still required on links to audited records.
+3. **Audited reads stay under ADR 0005.** `prefetch={false}` is required on links to audited records.
+   **Corrected in Phase 3:** this used to say that partial prefetching doesn't run dynamic reads. It does run anything that reads cookies, because
+   a prefetch shell includes session content. Measured: three links in view made four identity calls per page load. What prevents this is
+   [ADR 0010](0010-session-and-guards.md): every server read waits for `connection()`, which keeps it out of the shell.
 4. **Hidden routes re-run effects when shown again.** An audited read must never be triggered from a bare `useEffect`.
    `refetchOnMount: false` and `staleTime: Infinity` from ADR 0005 cover this, and Phase 5 must test it, including going back
    to a patient page.

@@ -2,8 +2,8 @@
 
 > **Status: approved design.** Phase 1 built the foundation: locale routing, configuration, contracts, and tooling. Phase 2 built
 > the design system: see [Design system](#design-system).
-> **The BFF, authentication, and data-fetching sections describe Phase 3 onward, and aren't built yet.** Decisions are
-> recorded in [docs/decisions/](decisions/README.md).
+> Phase 3 built the BFF and authentication: see [Authentication and authorization](#authentication-and-authorization). **Client data fetching with
+> TanStack Query isn't built yet,** as nothing has needed it. Decisions are recorded in [docs/decisions/](decisions/README.md).
 
 ## Overview
 
@@ -40,7 +40,7 @@ src/
 │   │       ├── dashboard/
 │   │       └── <feature routes>/      # see frontend-blueprint.md
 │   └── api/
-│       ├── auth/{sign-in,sign-out}/   # the only code that ever sees the raw token at sign-in
+│       ├── auth/{sign-in,sign-out,session-ended}/   # sign-in is the only code that sees the raw token
 │       └── backend/[...path]/         # same-origin proxy for Client Components
 ├── features/
 │   └── <feature>/                     # auth, staff, patients, appointments, queue, ...
@@ -60,7 +60,7 @@ src/
 │   └── i18n/                          # next-intl routing and request config
 ├── messages/{en,ar}.json
 ├── instrumentation.ts                 # validates configuration at startup
-└── proxy.ts                           # locale routing; later, optimistic session redirect
+└── proxy.ts                           # locale routing and the early session redirect
 
 contracts/                             # read-only snapshot of the backend's contracts
 scripts/                               # contract tooling and project-specific checks
@@ -84,7 +84,8 @@ package, so importing one into client code fails the build.
 ## Data flow
 
 **Reading in a Server Component.** `serverApi()` reads the session cookie and calls Laravel directly.
-Used for the shell, and for first loads where it helps. All such fetches are uncached (`no-store`).
+Used for the shell, and for first loads where it helps. All such fetches are uncached (`no-store`), and each waits for `connection()`
+first, so that a link's prefetch can't reach the API ([ADR 0010](decisions/0010-session-and-guards.md)).
 
 **Reading and writing in a Client Component.** A feature hook calls TanStack Query, which calls the
 feature's API module, which calls `/api/backend/...` on the same origin. The proxy adds the bearer
@@ -93,7 +94,8 @@ token and `Accept-Language`, then returns the status and body unchanged.
 **Proxy rules**
 
 - Forwards only to the configured `/api/v1` base; rejects `..` and encoded traversal.
-- Refuses `auth/sign-in`, so a token-bearing response can't reach the browser by this route.
+- Refuses `auth/sign-in`, so a token-bearing response can't reach the browser by this route, and `auth/sign-out`, which must also clear the cookie.
+- Removes page links from lists, because they hold Laravel's address.
 - Doesn't forward browser cookies to Laravel.
 - Checks `Origin` on state-changing methods. This, with `SameSite=Lax`, is the CSRF defense.
 - Sets `Cache-Control: no-store` on responses.
@@ -117,8 +119,8 @@ Sign-in form → POST /api/auth/sign-in → Laravel POST /auth/sign-in
                                      ← browser receives only the user object
 
 proxy.ts          No cookie? Redirect to sign-in. Optimistic only; never a security decision.
-(app)/layout      GET /auth/me per request. 401 clears the session. Provides user and role.
-Route guard       permissions map says this role can't use this page → "not allowed" state.
+(app)/layout      Static frame. The shell streams in, showing the user and role's navigation.
+ScreenGate        In each page: GET /auth/me, shared within a render. Role can't use this page → "not allowed" state.
 Components        <Can> hides what this role can't do.
 Laravel           The real decision, on every request.
 ```
@@ -126,10 +128,14 @@ Laravel           The real decision, on every request.
 A single `lib/auth/permissions.ts` holds the capability map, transcribed from the backend's policies
 ([matrix](backend-integration.md#permission-matrix)). Tests compare the map with the matrix.
 
-**Session end.** Any `401` clears the cookie and the query cache and redirects to sign-in with a safe,
-same-origin return path. Sign-out calls Laravel, then always clears local state, even if the call fails.
+**Session end.** Any `401` does a full navigation through `/api/auth/session-ended`, which clears the cookie, as a Server Component can't, and sends
+the person to sign-in with a safe, same-origin return path. Pages that write an audit entry when opened aren't returned to. Other tabs follow through a
+`BroadcastChannel`. Sign-out calls Laravel, then always clears the cookie, even if the call fails.
 
-The cookie is `HttpOnly`, `Secure` in production, `SameSite=Lax`, and sealed. Its lifetime is not the
+**Header.** It can't go in the root layout, because a catch-all route can't prerender the language switch. Public pages use `PublicHeader`, and the
+signed-in top bar sits inside the shell's `<Suspense>`.
+
+The cookie is `HttpOnly`, `Secure` in production, `SameSite=Lax`, and sealed. It ends with the browser. Its lifetime is not the
 source of truth: Laravel's idle timeout is.
 
 ## Internationalization and direction
@@ -152,8 +158,8 @@ URL-prefixed locales, `/en/...` and `/ar/...`, with next-intl. See
 [Cache Components](decisions/0006-cache-components.md) are on. Pages are prerendered as a static shell holding `<html lang dir>`
 and static text, and dynamic content streams into `<Suspense>` boundaries. Consequences found by testing:
 
-- Without JavaScript, streamed content doesn't replace its fallback, and not-found pages are blank. The landing page has a
-  `<noscript>` notice. This is acceptable for an internal application.
+- Without JavaScript, streamed content doesn't replace its fallback, and not-found pages are blank. The sign-in page has a
+  `<noscript>` notice, and its submit stays disabled, so a form can't send a password by itself. This is acceptable for an internal application.
 - `next build` needs no runtime configuration and doesn't contact the backend.
 - The static shell can't know the query string, so the language switch gains it only after JavaScript runs. A click in that
   brief moment still changes language and keeps the page, but drops the query. This is accepted: nothing is lost that the

@@ -54,6 +54,10 @@ server's address, and all staff would share one limit of 20 sign-in attempts per
 2. Laravel is configured to trust that header **only from the BFF's address** (`trustProxies`). Trusting any
    source would let a client forge its audit address.
 
+Step 1 waits for this change too, as the right value depends on the deployment (Q6), and forwarding what a client sent would let it forge its
+audit address once the backend trusts the header. All backend calls pass through one function, `callBackend`, so adding it is a small change.
+[ADR 0010](0010-session-and-guards.md) records how sessions were built on this decision.
+
 This is development-safe in the meantime, and the backend's own roadmap already calls for trusted-proxy
 configuration. It won't be changed without the owner's explicit request. Staff-facing production use must
 wait for it.

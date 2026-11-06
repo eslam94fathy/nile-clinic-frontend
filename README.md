@@ -4,8 +4,8 @@ Internal staff application for the Nile Clinic management system, for administra
 and doctors. Arabic and English, RTL and LTR. It is a frontend for the existing
 [Laravel API](https://github.com/eslam94fathy/nile-clinic); there is no patient portal.
 
-> **Status: Phase 2 design system complete.** The application currently has a landing page that reports whether the
-> backend is reachable, a private design system preview, and no business screens. See the [roadmap](docs/roadmap.md).
+> **Status: Phase 3 authentication and app shell built, awaiting acceptance.** Staff can sign in, see their role's navigation, and change
+> their password. There are no business screens yet: their menu entries show "not available yet". See the [roadmap](docs/roadmap.md).
 
 ## Prerequisites
 
@@ -24,13 +24,13 @@ pnpm exec playwright install chromium    # only needed for end-to-end tests
 cp .env.example .env.local               # PowerShell: Copy-Item .env.example .env.local
 ```
 
-Set `BACKEND_API_URL` in `.env.local` to your backend's address, then start the app:
+Set `BACKEND_API_URL` and `SESSION_SECRET` in `.env.local`, then start the app:
 
 ```sh
 pnpm dev
 ```
 
-Open <http://localhost:3000>. It should show Arabic, right to left, with the status "النظام يعمل" (the system is working).
+Open <http://localhost:3000>. It should show the sign-in page in Arabic, right to left, with the status "النظام يعمل" (the system is working). There are no default accounts: create an administrator with the backend's `staff:create-admin` command.
 
 ## Configuration
 
@@ -39,8 +39,11 @@ Settings are server-side only, are validated at startup, and stop the app with a
 | Setting | Required | Description |
 |---|---|---|
 | `BACKEND_API_URL` | Yes | Backend address, including `/api/v1`. The port is the backend's `APP_PORT`, which differs per machine: its default is 8080, but if something else holds that port, it will be different. Check with `docker ps`. |
+| `SESSION_SECRET` | Yes | Seals the session cookie. At least 32 random characters. Changing it signs everyone out. |
 | `CLINIC_TIMEZONE` | No | Must match the backend's `CLINIC_TIMEZONE`. Default `Africa/Cairo`. |
 | `DESIGN_PREVIEW_ENABLED` | No | `true` shows every shared component at `/ar/design-preview` and `/en/design-preview`, with made-up data. Leave it unset in production, where the address then behaves like any unknown one. |
+
+A production build marks the cookie `Secure`, so it must be served over HTTPS, or `localhost`. Over plain HTTP, the browser discards the cookie, and sign-in returns to the sign-in page with no message.
 
 ## Commands
 
@@ -56,7 +59,7 @@ Settings are server-side only, are validated at startup, and stop the app with a
 | `pnpm check:contrast` | Design tokens meet WCAG contrast in both themes, and components use no raw colors |
 | `pnpm test:unit` | Unit and component tests |
 | `pnpm test:e2e` | Builds, then end-to-end tests against a fake backend |
-| `pnpm test:e2e:live` | Builds, then end-to-end tests against **the real backend** from `.env.local` |
+| `pnpm test:e2e:live` | Builds, then end-to-end tests against **the real backend** from `.env.local`. Needs `LIVE_ADMIN_EMAIL` and `LIVE_ADMIN_PASSWORD`, a synthetic administrator, and creates synthetic accounts, which it deactivates afterwards |
 
 ## Backend contracts
 
