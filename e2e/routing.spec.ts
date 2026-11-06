@@ -11,11 +11,11 @@ test.describe("default language", () => {
   test("opens in Arabic whatever the browser prefers", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page).toHaveURL(/\/ar$/);
+    await expect(page).toHaveURL(/\/ar\/sign-in$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      messages.ar.landing.heading,
+      messages.ar.auth.signIn.heading,
     );
   });
 });
@@ -25,14 +25,14 @@ test.describe("language in the server's first response", () => {
     ["ar", "rtl"],
     ["en", "ltr"],
   ] as const) {
-    test(`/${locale} declares lang and dir`, async ({ request }) => {
-      const response = await request.get(`/${locale}`);
+    test(`/${locale}/sign-in declares lang and dir`, async ({ request }) => {
+      const response = await request.get(`/${locale}/sign-in`);
       const body = await response.text();
 
       expect(response.status()).toBe(200);
       expect(firstHtmlTag(body)).toContain(`lang="${locale}"`);
       expect(firstHtmlTag(body)).toContain(`dir="${dir}"`);
-      expect(body).toContain(messages[locale].landing.description);
+      expect(body).toContain(messages[locale].auth.signIn.description);
     });
   }
 
@@ -46,36 +46,39 @@ test.describe("language in the server's first response", () => {
 
 test.describe("language switch", () => {
   test("switches, keeps the page, and is remembered", async ({ page }) => {
-    await page.goto("/ar");
+    await page.goto("/ar/sign-in");
 
     await page.getByRole("link", { name: messages.ar.language.switch }).click();
 
-    await expect(page).toHaveURL(/\/en$/);
+    await expect(page).toHaveURL(/\/en\/sign-in$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      messages.en.landing.heading,
+      messages.en.auth.signIn.heading,
     );
 
     await page.goto("/");
-    await expect(page).toHaveURL(/\/en$/);
+    await expect(page).toHaveURL(/\/en\/sign-in$/);
 
     await page.getByRole("link", { name: messages.en.language.switch }).click();
-    await expect(page).toHaveURL(/\/ar$/);
+    await expect(page).toHaveURL(/\/ar\/sign-in$/);
     await page.goto("/");
-    await expect(page).toHaveURL(/\/ar$/);
+    await expect(page).toHaveURL(/\/ar\/sign-in$/);
   });
 
   test("keeps the query string", async ({ page }) => {
-    await page.goto("/ar?filter=1&page=2");
+    await page.goto("/ar/sign-in?filter=1&page=2");
 
     // The static shell can't know the query, so the link gains it once JavaScript has run. A click
     // before that drops the query, which is a known limit: see "Rendering" in docs/architecture.md.
     const link = page.getByRole("link", { name: messages.ar.language.switch });
-    await expect(link).toHaveAttribute("href", /\/en\?filter=1&page=2$/);
+    await expect(link).toHaveAttribute(
+      "href",
+      /\/en\/sign-in\?filter=1&page=2$/,
+    );
     await link.click();
 
-    await expect(page).toHaveURL(/\/en\?filter=1&page=2$/);
+    await expect(page).toHaveURL(/\/en\/sign-in\?filter=1&page=2$/);
   });
 
   test("is available on not-found pages, and keeps the path", async ({
@@ -98,7 +101,7 @@ test.describe("language switch", () => {
 
     await page.goto("/");
 
-    await expect(page).toHaveURL(/\/ar$/);
+    await expect(page).toHaveURL(/\/ar\/sign-in$/);
   });
 });
 

@@ -7,15 +7,11 @@ import {
 } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { LanguageSwitch } from "@/components/shared/language-switch";
-import { Logo } from "@/components/shared/logo";
 import { Notices } from "@/components/shared/notices";
 import { ThemeScript } from "@/components/shared/theme/theme-script";
-import { ThemeSwitch } from "@/components/shared/theme/theme-switch";
 import { ThemeSync } from "@/components/shared/theme/theme-sync";
 import { DirectionProvider } from "@/components/ui/direction";
 import { getDirection } from "@/lib/i18n/direction";
-import { Link } from "@/lib/i18n/navigation";
 import { routing } from "@/lib/i18n/routing";
 import { arabic, latin } from "./fonts";
 import "../globals.css";
@@ -47,9 +43,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
 
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "language" });
-  const brand = await getTranslations({ locale, namespace: "brand" });
-  const { error, shared } = await getMessages({ locale });
+  const { brand, error, language, shared } = await getMessages({ locale });
   const direction = getDirection(locale);
 
   return (
@@ -67,23 +61,10 @@ export default async function LocaleLayout({
         <ThemeSync />
         <DirectionProvider dir={direction}>
           {/* Client Components get their text as props, except error pages and shared components. */}
-          <NextIntlClientProvider locale={locale} messages={{ error, shared }}>
-            <header className="flex flex-wrap items-center justify-between gap-4 p-4">
-              {/* No prefetch: the home page checks the backend's health only when someone asks. */}
-              <Link href="/" prefetch={false} className="rounded-sm">
-                <Logo
-                  name={brand("name")}
-                  tagline={brand("tagline")}
-                  direction={direction}
-                />
-              </Link>
-              <div className="flex items-center gap-4">
-                <ThemeSwitch />
-                <nav aria-label={t("label")}>
-                  <LanguageSwitch label={t("switch")} />
-                </nav>
-              </div>
-            </header>
+          <NextIntlClientProvider
+            locale={locale}
+            messages={{ brand, error, language, shared }}
+          >
             {children}
             <Notices />
           </NextIntlClientProvider>

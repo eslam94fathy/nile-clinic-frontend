@@ -68,6 +68,15 @@ work from memory or from these docs alone.
 - Don't retry mutations automatically.
 - No optimistic updates for money, medical records, or bookings: show what the server confirmed.
 
+## Signed-in pages
+
+Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.md).
+
+- Wrap **all** of a page's content in `ScreenGate`, inside `<Suspense>`. Anything outside it enters the public static shell.
+- Set `built: true` on the page's row in `lib/auth/app-routes.ts`.
+- Reach the API from the server only through `lib/api/server-api.ts`, as it's what keeps prefetching away from the API. From the client, only through `lib/api/browser-api.ts`.
+- A new page that writes an audit entry when opened goes in `lib/auth/return-address.ts`.
+
 ## Proxy and caching
 
 - Never re-create the request in `src/proxy.ts`; see the [architecture](architecture.md#internationalization-and-direction).
@@ -80,7 +89,7 @@ work from memory or from these docs alone.
 - Zod checks shape and required fields for fast feedback. Rules needing server knowledge belong to the
   API: uniqueness, slots, balances, permissions.
 - On `422`, map each `errors` key to its field, including nested keys, and show the rest at form level.
-- Disable submit while pending.
+- Disable submit while pending, and until hydration, using `useHydrated`. Use `method="post"` on any form with a field that must stay out of the address, or the browser can submit it by itself as GET before React is ready.
 - Show backend messages as sent. Never compare message text in code.
 
 ## Internationalization

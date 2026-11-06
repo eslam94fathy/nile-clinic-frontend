@@ -55,15 +55,23 @@ Don't install its `dialog`, which holds hard-coded text, or `select`; see the AD
 ways, which a re-add would undo and the project's checks or tests would catch: focus rings are solid, so they meet 3:1; invalid
 fields don't tint the ring, as that hid focus; and inputs show the ring on any focus, as date fields otherwise show none.
 
+## Installed (Phase 3)
+
+See [ADR 0001](decisions/0001-authentication-bff.md) and [ADR 0010](decisions/0010-session-and-guards.md).
+
+| Package | Version | Why it is needed |
+|---|---|---|
+| `iron-session` | 9.0.1 | Seals the token inside the cookie, so a leaked cookie value can't be replayed directly at Laravel |
+| `react-hook-form` | 7.91.0 | Sign-in and password forms; API `422`s map to fields through `setError` |
+| `@hookform/resolvers` | 7.0.3 | Connects those forms to Zod 4. Confirmed working together in Phase 3 |
+
 ## Planned
 
 Added by the phase that needs them; versions were checked on 2026-11-05.
 
 | Package | Checked | Why it is needed | Added in |
 |---|---|---|---|
-| `@tanstack/react-query` | 5.106.1 | Client caching, invalidation, and polling. The queue has to poll, and many screens mutate then refresh | Phase 3 |
-| `react-hook-form`, `@hookform/resolvers` | 7.91.0, 7.0.3 | Many forms; server `422`s map to fields through `setError` | Phase 3 |
-| `iron-session` | 9.0.1 | Seals the token inside the cookie, so a leaked cookie value can't be replayed directly at Laravel. See [ADR 0001](decisions/0001-authentication-bff.md) | Phase 3 |
+| `@tanstack/react-query` | 5.106.1 | Client caching, invalidation, and polling. The queue has to poll, and many screens mutate then refresh. Phase 3 had no client query, so it waits for the first | First client query |
 
 ## Rejected or deferred
 
@@ -74,7 +82,7 @@ Added by the phase that needs them; versions were checked on 2026-11-05.
 | `zustand` | **Deferred, not installed** | No justified global client state today: session comes from the server, locale from the URL, server data from TanStack Query. Revisit only with a concrete need |
 | `@tanstack/react-table` | **Deferred, not installed** | Its main value is client sorting, filtering, and pagination. This API has no sort parameters and does all paging and filtering server-side. Phase 2 confirmed that a thin `DataTable` over the shadcn table suffices. Revisit only if column visibility or similar is required |
 | `recharts` | **Deferred to reports phase** | Only reports need charts. Decide with that spec |
-| `msw` | **Deferred** | Decide in Phase 3 whether component tests need network mocking |
+| `msw` | **Not needed so far** | Phase 3 found that a stubbed `fetch` covers component tests, and the fake backend covers end-to-end tests |
 | `jose` | **Not needed** | `iron-session` covers sealing, and the app doesn't verify JWTs |
 
 ## TypeScript version
@@ -94,6 +102,3 @@ ranges widen.
 **pnpm**: strict dependency resolution stops code importing packages it didn't declare, and its supply-chain
 policies guard against very new releases.
 
-## To confirm in later phases
-
-- `@hookform/resolvers` 7 with Zod 4: Phase 3.

@@ -1,5 +1,3 @@
-import type { Locale } from "./routing";
-
-export function getDirection(locale: Locale): "rtl" | "ltr" {
+export function getDirection(locale: string): "rtl" | "ltr" {
   return locale === "ar" ? "rtl" : "ltr";
 }

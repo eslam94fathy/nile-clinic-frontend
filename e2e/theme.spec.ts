@@ -43,7 +43,7 @@ test.describe("with no saved choice", () => {
     const errors = failOnConsoleErrors(page);
     await recordThemes(page);
 
-    await page.goto("/ar");
+    await page.goto("/ar/sign-in");
     await page.waitForLoadState("networkidle");
 
     expect(await seenThemes(page)).toEqual(["dark"]);
@@ -52,7 +52,7 @@ test.describe("with no saved choice", () => {
 
   test("ignores an unknown saved value", async ({ page }) => {
     await saveTheme(page, "purple");
-    await page.goto("/ar");
+    await page.goto("/ar/sign-in");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 });
@@ -67,7 +67,7 @@ test.describe("with a saved choice different from the device", () => {
     await recordThemes(page);
     await saveTheme(page, "light");
 
-    await page.goto("/ar");
+    await page.goto("/ar/sign-in");
     await page.waitForLoadState("networkidle");
 
     expect(await seenThemes(page)).toEqual(["light"]);
@@ -79,14 +79,14 @@ test.describe("with a saved choice different from the device", () => {
   }) => {
     const errors = failOnConsoleErrors(page);
     await saveTheme(page, "light");
-    await page.goto("/ar");
+    await page.goto("/ar/sign-in");
 
     await page.getByRole("link", { name: messages.ar.language.switch }).click();
-    await expect(page).toHaveURL(/\/en$/);
+    await expect(page).toHaveURL(/\/en\/sign-in$/);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
 
     await page.goBack();
-    await expect(page).toHaveURL(/\/ar$/);
+    await expect(page).toHaveURL(/\/ar\/sign-in$/);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
     expect(errors).toEqual([]);
   });
@@ -105,7 +105,7 @@ test.describe("with blocked storage", () => {
       });
     });
 
-    await page.goto("/en");
+    await page.goto("/en/sign-in");
     await page.waitForLoadState("networkidle");
 
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -123,14 +123,14 @@ test.describe("fonts", () => {
     });
 
   test("Arabic pages really load the Arabic font", async ({ page }) => {
-    await page.goto("/ar");
+    await page.goto("/ar/sign-in");
     await expect
       .poll(async () => (await loadedFonts(page)).join())
       .toMatch(/arabic/i);
   });
 
   test("English pages load the Latin font", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto("/en/sign-in");
     await expect
       .poll(async () => (await loadedFonts(page)).join())
       .toMatch(/latin/i);
@@ -146,7 +146,7 @@ test.describe("the theme switch", () => {
     test(`works by keyboard, and announces the choice, in ${locale}`, async ({
       page,
     }) => {
-      await page.goto(`/${locale}`);
+      await page.goto(`/${locale}/sign-in`);
       await page.waitForLoadState("networkidle");
       const group = page.getByRole("group", { name: text.label });
       const light = group.getByRole("button", { name: text.light });
@@ -180,7 +180,7 @@ test.describe("the theme switch", () => {
         },
       });
     });
-    await page.goto("/en");
+    await page.goto("/en/sign-in");
     await page.waitForLoadState("networkidle");
     const light = page.getByRole("button", { name: text.light });
 
@@ -195,7 +195,7 @@ test.describe("the theme switch", () => {
   }) => {
     const text = messages.en.shared.theme;
     await saveTheme(page, "light");
-    await page.goto("/en");
+    await page.goto("/en/sign-in");
     await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: text.device }).click();

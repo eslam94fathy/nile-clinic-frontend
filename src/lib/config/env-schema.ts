@@ -39,6 +39,10 @@ const envSchema = z.object({
     .string({ error: "must be a valid IANA time zone" })
     .refine(isTimeZone, "must be a valid IANA time zone")
     .default("Africa/Cairo"),
+  // Seals the session cookie, so changing it signs everyone out (ADR 0001).
+  SESSION_SECRET: z
+    .string({ error: "is required" })
+    .min(32, "must be at least 32 characters"),
   DESIGN_PREVIEW_ENABLED: z
     .enum(["true", "false"], { error: "must be true or false" })
     .optional(),

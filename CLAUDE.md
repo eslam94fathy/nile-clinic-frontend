@@ -48,7 +48,7 @@ It has no default accounts: create one with `php artisan staff:create-admin`.
 ## Commands
 
 `pnpm check` runs every quality check and must pass before work is called complete. `pnpm test:e2e:live` also needs the
-backend. See the README for the rest. On this machine the backend is on port 8081, because phpMyAdmin holds 8080.
+backend. See the README for the rest. The backend's port varies by machine, so check with `docker ps`; `BACKEND_API_URL` in `.env.local` holds it.
 
 **Next.js here is newer than most training data.** Read `node_modules/next/dist/docs/` before relying on memory; see `AGENTS.md`.
 Never re-create the request in `src/proxy.ts`, and never use `use cache` on personal data (ADR 0006).

@@ -7,9 +7,9 @@ What the frontend can rely on from the Nile Clinic API, verified from source rat
 | Repository | <https://github.com/eslam94fathy/nile-clinic> |
 | Analyzed commit | `dff2dcad0b1bb1484966a20567757d825a9543f8` (2026-11-05) |
 | Stack | Laravel 13, Sanctum 4, MySQL, Docker Compose |
-| Base URL (local) | `http://localhost:<APP_PORT>/api/v1`. The backend's default is 8080, but this varies by machine: on the current development machine phpMyAdmin holds 8080 and the API is on **8081** |
+| Base URL (local) | `http://localhost:<APP_PORT>/api/v1`. The backend's default is 8080, but this varies by machine, so check with `docker ps` |
 | Contracts | `specs/<feature>/contracts/*.openapi.yaml` in the backend repository (11 files) |
-| Verification | All **76** route definitions compared with all **76** contract operations: exact match. Policies and sampled API Resources were read directly. The API has **not yet been run** against the frontend; live checks start in Phase 3. |
+| Verification | All **76** route definitions compared with all **76** contract operations: exact match. Policies and sampled API Resources were read directly. Live checks against the running API began in Phase 3 (2026-11-06, at the same commit). |
 
 The backend also ships a Postman collection in `postman/`, with saved error examples.
 
@@ -78,8 +78,12 @@ a string or number with at most two decimals. Keep strings; never use floats.
 | Cursor: `meta.next_cursor`, `prev_cursor`, **no total** | Audit entries only |
 | Not paginated: `data` array only | Specialties, slots, time off, `/doctors/{id}/queue`, `/doctors/me/queue` |
 
-The contracts leave `meta` untyped, so its fields must be confirmed on the live API in Phase 3 before
-the pagination type is final. **No endpoint offers a sort parameter**: order is fixed by the API.
+The contracts leave `meta` untyped. **Confirmed on the running API** (2026-11-06, commit `dff2dca`, on `/staff`, `/doctors`, `/patients`, `/fees`):
+`meta` holds `current_page`, `from`, `last_page`, `links`, `path`, `per_page`, `to`, and `total`, with `total` a number. `from` and `to` are `null`
+on an empty page. `per_page` above 100 gives `422`. **No endpoint offers a sort parameter**: order is fixed by the API.
+
+**Page links expose the private address.** `links.*`, `meta.links[].url`, and `meta.path` hold absolute Laravel addresses, repeating the query
+string, and `meta.links[].label` is untranslated English. The same-origin route removes them, so the type in `lib/api/pagination.ts` leaves them out.
 
 **Range limits** (the API returns `422` beyond these):
 

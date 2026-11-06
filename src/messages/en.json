@@ -7,10 +7,87 @@
     "name": "Nile Clinic",
     "tagline": "مركز النيل الطبي"
   },
-  "landing": {
-    "heading": "Nile Clinic",
-    "description": "Clinic management system for staff.",
-    "noscript": "The system status needs JavaScript to appear."
+  "auth": {
+    "signIn": {
+      "heading": "Sign in",
+      "description": "Clinic management system for staff.",
+      "noscript": "This application needs JavaScript to work.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "working": "Signing in…",
+      "forgotPassword": "Forgot your password? Ask an administrator to set a new one.",
+      "sessionEnded": "Your session ended. Please sign in again.",
+      "emailRequired": "Enter your email.",
+      "passwordRequired": "Enter your password."
+    },
+    "account": {
+      "title": "My account",
+      "description": "Your details and password.",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "passwordHeading": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Repeat the new password",
+      "passwordHint": "Between 12 and 72 characters.",
+      "submit": "Change password",
+      "working": "Changing…",
+      "success": "Your password was changed. Any other sessions on your account have ended.",
+      "currentRequired": "Enter your current password.",
+      "lengthRule": "Use between 12 and 72 characters.",
+      "mismatch": "The two new passwords don't match."
+    },
+    "signOut": {
+      "label": "Sign out",
+      "working": "Signing out…",
+      "failure": "Couldn't sign out, because the application can't be reached. Please try again."
+    },
+    "noProfile": {
+      "heading": "Your doctor profile isn't set up yet",
+      "description": "Ask an administrator to create it. Your account page still works."
+    },
+    "errors": {
+      "general": "Something went wrong. Please try again.",
+      "unavailable": "The clinic system isn't responding right now. You're still signed in.",
+      "refused": "This request came from outside the application, so it was refused.",
+      "noSession": "You aren't signed in.",
+      "emailAndPasswordRequired": "Enter your email and password."
+    }
+  },
+  "shell": {
+    "navigation": "Main navigation",
+    "menu": "Menu",
+    "account": "My account",
+    "welcomeHeading": "Welcome, <name></name>",
+    "welcomeDescription": "You're signed in as: {role}. Use the menu to move around.",
+    "placeholderHeading": "Not available yet",
+    "placeholderDescription": "This part of the application is still being built.",
+    "nav": {
+      "dashboard": "Dashboard",
+      "patients": "Patients",
+      "appointments": "Appointments",
+      "queue": "Queue",
+      "billing": "Billing",
+      "charges": "Charges",
+      "doctors": "Doctors",
+      "specialties": "Specialties",
+      "fees": "Fees",
+      "staff": "Staff",
+      "reports": "Reports",
+      "audit": "Audit log",
+      "myQueue": "My queue",
+      "myAppointments": "My appointments",
+      "myVisits": "My visits",
+      "mySchedule": "My schedule",
+      "account": "My account"
+    }
+  },
+  "roles": {
+    "administrator": "Administrator",
+    "receptionist": "Receptionist",
+    "doctor": "Doctor"
   },
   "status": {
     "heading": "System status",

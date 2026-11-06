@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Request logs include query strings, which can hold patient details (constitution, principle II).
+  logging: { incomingRequests: false },
   turbopack: {
     rules: {
       "*.css": {
