@@ -1,6 +1,7 @@
 # Architecture
 
-> **Status: approved design.** Phase 1 built the foundation: locale routing, configuration, contracts, and tooling.
+> **Status: approved design.** Phase 1 built the foundation: locale routing, configuration, contracts, and tooling. Phase 2 built
+> the design system: see [Design system](#design-system).
 > **The BFF, authentication, and data-fetching sections describe Phase 3 onward, and aren't built yet.** Decisions are
 > recorded in [docs/decisions/](decisions/README.md).
 
@@ -157,6 +158,18 @@ and static text, and dynamic content streams into `<Suspense>` boundaries. Conse
 - The static shell can't know the query string, so the language switch gains it only after JavaScript runs. A click in that
   brief moment still changes language and keeps the page, but drops the query. This is accepted: nothing is lost that the
   person can't re-enter, and fixing it would make every page dynamic.
+
+## Design system
+
+Tokens live in `app/globals.css`. Shared parts live in `components/shared` over generated `components/ui`.
+See [ADR 0007](decisions/0007-design-system-foundation.md) and [ADR 0008](decisions/0008-visual-direction.md).
+
+- **Themes.** A fixed inline script sets `data-theme` before first paint. A layout effect re-applies it, because a language switch
+  swaps the root layout and the script doesn't run again. Reading a cookie on the server would make every page dynamic.
+- **Fonts.** `next/font/local` over pinned packages, with `adjustFontFallback: false`, or Arabic text stops at the Latin font's fallback.
+- **Preview.** `/{locale}/design-preview` has two gates, as neither is enough alone. `proxy.ts` gives the `404`, and a check at request
+  time inside `<Suspense>` keeps its content out of prerendered files. Its text and data stay on the server, so they never reach
+  client bundles. It's off unless `DESIGN_PREVIEW_ENABLED=true`.
 
 ## Configuration
 
