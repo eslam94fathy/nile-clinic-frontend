@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/form/form-error";
@@ -17,7 +17,7 @@ import {
   registerPatient,
 } from "../api/patients";
 import { toRegisterBody } from "../form-values";
-import { handOver, noteChange } from "../opening";
+import { changeCount, handOver, noteChange } from "../opening";
 import {
   normalizePhone,
   type PatientFormInput,
@@ -44,13 +44,13 @@ async function checkPhone(
     : { ok: true, status: result.error.status, data: null };
 }
 
-export function RegisterPatient({ today }: { today: string }) {
+export function RegisterPatient({ timeZone }: { timeZone: string }) {
   const locale = useLocale();
   const t = useTranslations("patients.registerForm");
   const shared = useTranslations("shared.form");
   const hydrated = useHydrated();
   const router = useRouter();
-  const schema = usePatientFormSchema(today);
+  const schema = usePatientFormSchema(timeZone);
   const {
     register,
     control,
@@ -69,6 +69,27 @@ export function RegisterPatient({ today }: { today: string }) {
   });
   const [step, setStep] = useState<"checking" | "saving">("checking");
   const [warning, setWarning] = useState<DuplicateWarning | null>(null);
+  const changesSeen = useRef(changeCount());
+
+  // Someone may open a match, correct it, and come back. A decision to register anyway needs what's true now.
+  // This is a list, so it isn't audited. A failure leaves the panel, and the next submit checks again.
+  useEffect(() => {
+    const changes = changeCount();
+    if (changes === changesSeen.current) return;
+    changesSeen.current = changes;
+    if (!warning) return;
+
+    const { phone } = warning;
+    void findByPhone(phone, locale).then((result) => {
+      if (!result.ok) return;
+      setWarning((current) => {
+        if (current?.phone !== phone) return current;
+        return result.data.meta.total > 0
+          ? { kind: "matches", phone, page: result.data }
+          : null;
+      });
+    });
+  }, [warning, locale]);
 
   // A warning holds only for the phone it's about, however that phone is written (research R8).
   const typedPhone = useWatch({ control, name: "phone" });
@@ -119,7 +140,10 @@ export function RegisterPatient({ today }: { today: string }) {
       className="flex max-w-2xl flex-col gap-6"
     >
       <FormError messages={formErrors} />
-      <PatientFields register={register} errors={errors} />
+      {/* What's saved is what was checked, so nothing can be typed in between. */}
+      <fieldset disabled={working} className="contents">
+        <PatientFields register={register} errors={errors} />
+      </fieldset>
       {shownWarning ? (
         <PossibleMatches
           warning={shownWarning}

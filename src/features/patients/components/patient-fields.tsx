@@ -10,6 +10,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { clinicToday } from "@/lib/format/clinic-today";
 import {
   type PatientFormInput,
   patientFormSchema,
@@ -38,7 +39,7 @@ export const EMPTY_PATIENT_FORM = {
   emergency_contact: { name: "", relationship: "", phone: "" },
 };
 
-export function usePatientFormSchema(today: string) {
+export function usePatientFormSchema(timeZone: string) {
   const t = useTranslations("patients.form");
 
   return useMemo(
@@ -57,9 +58,9 @@ export function usePatientFormSchema(today: string) {
           contactNameTooLong: t("contactNameTooLong"),
           relationshipTooLong: t("relationshipTooLong"),
         },
-        today,
+        () => clinicToday(timeZone),
       ),
-    [t, today],
+    [t, timeZone],
   );
 }
 

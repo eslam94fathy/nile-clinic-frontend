@@ -67,6 +67,8 @@ work from memory or from these docs alone.
 - Mutations invalidate only what they affect, and use the response when it already holds the new record.
 - Don't retry mutations automatically.
 - No optimistic updates for money, medical records, or bookings: show what the server confirmed.
+- Read an audited record the way `features/patients/components/patient-record.tsx` does, in the browser and guarded, and count real entries in a live test on a production build ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)).
+- Link to a patient's record only with `PatientLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
 
 ## Signed-in pages
 
@@ -92,7 +94,7 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Zod checks shape and required fields for fast feedback. Rules needing server knowledge belong to the
   API: uniqueness, slots, balances, permissions.
 - On `422`, map each `errors` key to its field, including nested keys, and show the rest at form level.
-- Use `useFormSubmit`, and `router.refresh()` after a change. A form that moves on calls `router.push()`, then `router.refresh()` ([ADR 0011](decisions/0011-server-reads-and-refresh.md)).
+- Use `useFormSubmit`, and `router.refresh()` after a change. A form that moves on calls `router.push()`, then `router.refresh()` ([ADR 0011](decisions/0011-server-reads-and-refresh.md)). Patient forms are the exception: nothing they show is on the server, so they use what the API returned and call `noteChange()` ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)).
 - Visited pages stay mounted but hidden. A form that moves on calls `reset()`, and any password field uses `useClearOnLeave`.
 - Give a field holding an existing value a `defaultValue`, so that it's there before hydration.
 - Disable submit while pending, and until hydration, using `useHydrated`. Use `method="post"` on any form with a field that must stay out of the address, or the browser can submit it by itself as GET before React is ready.

@@ -72,7 +72,7 @@ function form(patient: Patient = record) {
     >
       <PatientEditForm
         record={patient}
-        today="2026-11-06"
+        timeZone="Africa/Cairo"
         onSaved={onSaved}
         onCancel={onCancel}
         onFailure={onFailure}
@@ -230,6 +230,53 @@ describe("what gets sent", () => {
 
     await screen.findByText(shared.form.nothingToSave);
     expect(updatePatient).not.toHaveBeenCalled();
+  });
+
+  it("doesn't undo a colleague's change that arrived underneath", async () => {
+    const view = render(form());
+
+    view.rerender(form({ ...record, phone: "01000000077" }));
+    set(f.address, "New St");
+    await save();
+
+    await waitFor(() => expect(updatePatient).toHaveBeenCalled());
+    expect(updatePatient).toHaveBeenCalledWith(5, { address: "New St" }, "en");
+  });
+
+  it("sends what this person changed, even over a colleague's change", async () => {
+    const view = render(form());
+
+    view.rerender(form({ ...record, phone: "01000000077" }));
+    set(f.phone, "01000000088");
+    await save();
+
+    await waitFor(() => expect(updatePatient).toHaveBeenCalled());
+    expect(updatePatient).toHaveBeenCalledWith(
+      5,
+      { phone: "01000000088" },
+      "en",
+    );
+  });
+
+  it("treats extra spaces inside a name as no change, as the API does", async () => {
+    render(form());
+
+    set(f.fullName, "Synthetic   Patient");
+    await save();
+
+    await screen.findByText(shared.form.nothingToSave);
+    expect(updatePatient).not.toHaveBeenCalled();
+  });
+
+  it("can't be typed in while saving", async () => {
+    updatePatient.mockReturnValue(new Promise(() => undefined));
+    render(form());
+
+    set(f.phone, "01000000009");
+    await save();
+    await screen.findByRole("button", { name: t.form.saving });
+
+    expect(input(f.phone).closest("fieldset")?.disabled).toBe(true);
   });
 
   it("keeps what was typed when a new read arrives underneath", () => {

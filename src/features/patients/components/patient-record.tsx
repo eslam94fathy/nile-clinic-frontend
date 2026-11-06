@@ -9,7 +9,7 @@ import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
 import { ApiFailureState } from "@/features/auth/public";
 import type { ApiError } from "@/lib/api/api-error";
-import { Link } from "@/lib/i18n/navigation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 import { readPatient } from "../api/patients";
 import { takeAsked, takeHandedOver } from "../opening";
 import type { Patient } from "../types";
@@ -28,14 +28,12 @@ const losesTheRecord = (error: ApiError) =>
 export function PatientRecord({
   id,
   timeZone,
-  today,
 }: {
   id: number;
   timeZone: string;
-  /** The clinic's, for the edit form's date check. */
-  today: string;
 }) {
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations("patients");
   const [record, setRecord] = useState<Patient | null>(null);
   const [failure, setFailure] = useState<ApiError | null>(null);
@@ -47,6 +45,9 @@ export function PatientRecord({
   const wasEditing = useRef(false);
 
   const lose = useCallback((error: ApiError) => {
+    // A read still on its way mustn't put back what was just removed.
+    newest.current += 1;
+    setReading(false);
     setFailure(error);
     setRecord(null);
     setEditing(false);
@@ -68,7 +69,9 @@ export function PatientRecord({
     }
     if (losesTheRecord(result.error)) lose(result.error);
     else setFailure(result.error);
-  }, [id, locale, lose]);
+    // So that the gate and the navigation re-decide. Nothing about a patient is read on the server.
+    if (result.error.status === 403) router.refresh();
+  }, [id, locale, lose, router]);
 
   // This runs on mounting, and again each time a held page is shown. The ref and the mark are what decide.
   useEffect(() => {
@@ -94,7 +97,14 @@ export function PatientRecord({
 
   if (record === null) {
     return failure ? (
-      <ApiFailureState error={failure} onRetry={() => void read()} />
+      <ApiFailureState
+        error={failure}
+        onRetry={() => {
+          // Loading replaces the button, as a second press would write a second opening.
+          setFailure(null);
+          void read();
+        }}
+      />
     ) : (
       <LoadingState />
     );
@@ -122,7 +132,7 @@ export function PatientRecord({
       {editing ? (
         <PatientEditForm
           record={record}
-          today={today}
+          timeZone={timeZone}
           onCancel={() => setEditing(false)}
           onFailure={(error) => {
             if (losesTheRecord(error)) lose(error);

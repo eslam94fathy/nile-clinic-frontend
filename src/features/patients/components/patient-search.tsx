@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ApiFailureState } from "@/features/auth/public";
 import type { ApiError } from "@/lib/api/api-error";
 import { toWesternDigits } from "@/lib/format/digits";
-import { Link } from "@/lib/i18n/navigation";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 import { type PatientPage, searchPatients } from "../api/patients";
 import { changeCount } from "../opening";
 import { normalizeNationalId, normalizePhone } from "../schemas/patient";
@@ -64,6 +64,7 @@ function otherRefusals(error: ApiError, fallback: string): string[] {
  */
 export function PatientSearch() {
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations("patients");
   const tAuth = useTranslations("auth");
   const columns = usePatientColumns();
@@ -96,13 +97,18 @@ export function PatientSearch() {
       }
       if (request !== newest.current) return;
 
+      // This person may no longer see patients, so the terms go too, and the gate and navigation re-decide.
+      if (!result.ok && result.error.status === 403) {
+        last.current = null;
+        router.refresh();
+      }
       setAnswer(
         result.ok
           ? { kind: "found", page: result.data }
           : { kind: "failed", error: result.error },
       );
     },
-    [locale],
+    [locale, router],
   );
 
   const forget = () => {
@@ -167,6 +173,10 @@ export function PatientSearch() {
     }
     void run(terms, 1);
   };
+
+  if (answer.kind === "failed" && answer.error.status === 403) {
+    return <ApiFailureState error={answer.error} />;
+  }
 
   const refused = answer.kind === "failed" && answer.error.status === 422;
 

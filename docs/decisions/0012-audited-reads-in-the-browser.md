@@ -48,6 +48,17 @@ changed, and it repeats its last search when next shown.
 **Measured**, with all three parts in place: first click 1, away and back 1, second click 2, refresh elsewhere 2, back after that 2,
 Ctrl+click into a new tab 3, back in the first tab 3. Registering, then moving to the record: 0. Away and back: 0. Full reload: 1.
 
+**Measured again on the built feature** (real entries, production build, `e2e/live/patients.spec.ts`), and all as the spike found:
+
+| Journey | Entries, in order |
+|---|---|
+| From the record's address | Load 1, focus events 1, away and back 1, a real change on `/specialties` then back 1, "Reload details" 2, reload 3, language switch 4 |
+| From real search results | Results shown and hovered 0, click 1, to the search by its link and back 1, a real change then back 1, the same result again 2, Ctrl+click reading in a new tab 3, back in the first tab 3 |
+| Registering | `patient.registered` once and openings 0, then reload 1 |
+| Correcting | Opening 1, a save with no change sends no `PATCH` and stays 1, a real change gives `patient.updated` once and stays 1 |
+
+On `next dev`, under Strict Mode: first opening 1, away and back 1. So development mode doesn't double the entry, which answers ADR 0005's concern. A unit test also checks Strict Mode's repeat directly.
+
 ## This reverses part of ADR 0005
 
 ADR 0005 rejected "fetch audited records outside TanStack Query", because it would be "a second data path", and "retry and focus bugs

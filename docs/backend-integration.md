@@ -243,6 +243,21 @@ with the doctor role.
 **Patients.** Never deleted. Lists contain five fields only; sensitive fields come only from opening
 one patient. Send `null` to clear an optional field.
 
+Confirmed on the running API (2026-11-06, commit `dff2dca`, by `e2e/live/patients.spec.ts`):
+
+- `name` matches part of a name across alef, taa marbuta, and yaa spellings. The frontend sends it as typed.
+- `phone` is normalised before matching, and matching is exact, so patients sharing a phone are all listed. A malformed `phone` or `national_id` filter is `422` on that key, not an empty result.
+- `POST` writes `patient.registered`, and no `patient.opened`. A `PATCH` that changes something writes `patient.updated`, and no `patient.opened`.
+- A body with every field invalid is `422` under `full_name`, `date_of_birth`, `sex`, `phone`, `national_id`, `address`, and `emergency_contact.name`, `.relationship`, and `.phone`.
+- A repeated `national_id` is `422` on that key, on `POST` and on `PATCH`.
+
+From the source only, not exercised, because the frontend never does these (`PatientService`, `ListPatientsRequest`, `UpdatePatientRequest`):
+
+- **A `PATCH` that changes nothing writes `patient.opened`**, so that sending one known field can't read the rest without a trace. The form compares after normalising, and sends nothing.
+- `full_name` has its inner spaces collapsed when stored (`ArabicName::clean`), so a difference only in those is a `PATCH` that changes nothing.
+- An empty `PATCH` is `422` under the key `fields`.
+- **`GET /patients` with no filters lists everyone,** so the frontend never sends it with no term.
+
 **"No medical details" fields.** The API asks that time-off reason, appointment note, and charge
 reasons hold no medical details. Time-off reasons are readable by all staff. These fields need a
 visible hint.
@@ -260,6 +275,8 @@ openings are recorded too.
 
 TanStack Query's default refetch on focus, a retry, or a prefetched link would therefore write false
 "opened" entries to a permanent record. See [ADR 0005](decisions/0005-audit-safe-data-fetching.md).
+A read on the server would too, after a refresh and the back button, so patient records are read in the
+browser. See [ADR 0012](decisions/0012-audited-reads-in-the-browser.md), which Phases 8 and 11 should start from.
 
 Every `PUT` of a draft also writes `encounter.draft_saved`, so timer-based autosave would flood the
 trail. To be decided in the encounters spec.

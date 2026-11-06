@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { ApiResult } from "@/lib/api/api-error";
 import { browserApi } from "@/lib/api/browser-api";
+import { checkResult, toQuery } from "@/lib/api/check-result";
 import { itemSchema, pageSchema } from "@/lib/api/pagination";
 import { patientSchema, patientSummarySchema } from "../schemas/patient";
 import type {
@@ -19,20 +20,8 @@ const recordSchema = itemSchema(patientSchema);
 
 export type PatientPage = z.output<typeof listSchema>;
 
-function checked<Schema extends z.ZodType>(
-  result: ApiResult<unknown>,
-  schema: Schema,
-): ApiResult<z.output<Schema>> {
-  if (!result.ok) return result;
-
-  const body = schema.safeParse(result.data);
-  return body.success
-    ? { ok: true, status: result.status, data: body.data }
-    : { ok: false, error: { status: 0, fieldErrors: {} } };
-}
-
 function unwrapped(result: ApiResult<unknown>): ApiResult<Patient> {
-  const body = checked(result, recordSchema);
+  const body = checkResult(result, recordSchema);
   return body.ok ? { ...body, data: body.data.data } : body;
 }
 
@@ -42,14 +31,9 @@ export async function searchPatients(
   page: number,
   locale: string,
 ): Promise<ApiResult<PatientPage>> {
-  const query = new URLSearchParams();
-  for (const [name, value] of Object.entries(terms)) {
-    if (value !== "") query.set(name, value);
-  }
-  if (page > 1) query.set("page", String(page));
-
-  return checked(
-    await browserApi(`patients?${query.toString()}`, { locale }),
+  const query = toQuery({ ...terms, page: page > 1 ? page : undefined });
+  return checkResult(
+    await browserApi(`patients${query}`, { locale }),
     listSchema,
   );
 }
@@ -58,9 +42,9 @@ export async function findByPhone(
   phone: string,
   locale: string,
 ): Promise<ApiResult<PatientPage>> {
-  const query = new URLSearchParams({ phone, per_page: "10" });
-  return checked(
-    await browserApi(`patients?${query.toString()}`, { locale }),
+  const query = toQuery({ phone, per_page: 10 });
+  return checkResult(
+    await browserApi(`patients${query}`, { locale }),
     listSchema,
   );
 }

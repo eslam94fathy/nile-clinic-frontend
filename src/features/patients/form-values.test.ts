@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { recordToForm, toChanges, toRegisterBody } from "./form-values";
+import {
+  recordToForm,
+  toChanges,
+  toChangesSince,
+  toRegisterBody,
+} from "./form-values";
 import type { Patient } from "./types";
 
 const contact = {
@@ -168,5 +173,68 @@ describe("toChanges", () => {
         sparse,
       ),
     ).toEqual({ emergency_contact: contact });
+  });
+});
+
+describe("collapsed spaces in a name", () => {
+  it("are no change, as the API stores it collapsed", () => {
+    expect(
+      toChanges(
+        { ...recordToForm(record), full_name: " Synthetic   Patient " },
+        record,
+      ),
+    ).toEqual({});
+  });
+
+  it("are sent collapsed, along with a real change", () => {
+    expect(
+      toChanges(
+        { ...recordToForm(record), full_name: "Synthetic   Renamed" },
+        record,
+      ),
+    ).toEqual({ full_name: "Synthetic Renamed" });
+  });
+});
+
+describe("toChangesSince", () => {
+  const colleague: Patient = { ...record, phone: "01000000077" };
+
+  it("leaves out a field only a colleague changed", () => {
+    expect(
+      toChangesSince(
+        { ...recordToForm(record), address: "New St" },
+        record,
+        colleague,
+      ),
+    ).toEqual({ address: "New St" });
+  });
+
+  it("sends a field this person changed, over a colleague's value", () => {
+    expect(
+      toChangesSince(
+        { ...recordToForm(record), phone: "01000000088" },
+        record,
+        colleague,
+      ),
+    ).toEqual({ phone: "01000000088" });
+  });
+
+  it("leaves out a change that already matches the newest record", () => {
+    expect(
+      toChangesSince(
+        { ...recordToForm(record), phone: "01000000077" },
+        record,
+        colleague,
+      ),
+    ).toEqual({});
+  });
+
+  it("leaves out a contact a colleague added, when this person left it blank", () => {
+    expect(
+      toChangesSince(recordToForm(sparse), sparse, {
+        ...sparse,
+        emergency_contact: contact,
+      }),
+    ).toEqual({});
   });
 });

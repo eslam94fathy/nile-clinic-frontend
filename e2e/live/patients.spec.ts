@@ -1,7 +1,15 @@
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { mainNavigation, signOutButton } from "../support/auth";
 import { messages } from "../support/messages";
-import { adminToken, api, signInLive } from "./support";
+import {
+  adminToken,
+  api,
+  apiSignIn,
+  liveAccounts,
+  signInLive,
+} from "./support";
 
 // What a person sees against the real API, and above all how many permanent "opened" entries each action
 // writes. These run on a production build: see ADR 0012 and specs/005-patients/quickstart.md.
@@ -584,6 +592,195 @@ test.describe("correcting a patient's details", () => {
     );
     await expect(field(page, f.nationalId)).toHaveValue(nationalId);
     expect(await entries(patient.id, "patient.updated")).toBe(0);
+  });
+});
+
+test.describe("a whole journey", () => {
+  const f = m.patients.fields;
+  const field = (page: Page, label: string) =>
+    page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+
+  test("leaves no patient detail behind, and is quick", async ({ page }) => {
+    test.setTimeout(170_000);
+    const id = stamp();
+    const name = `Synthetic Journey ${id}`;
+    const phone = `010${uniqueDigits(8)}`;
+    const nationalId = `2${uniqueDigits(13)}`;
+    const address = `Journey Address ${id}`;
+    const contact = `Journey Guardian ${id}`;
+    const contactPhone = `011${uniqueDigits(8)}`;
+    const newAddress = `Journey Corrected ${id}`;
+    const details = [
+      name,
+      phone,
+      nationalId,
+      address,
+      contact,
+      contactPhone,
+      newAddress,
+    ];
+
+    const addresses: string[] = [];
+    page.on("framenavigated", (frame) => addresses.push(frame.url()));
+
+    await signInLive(page, admin());
+
+    // SC-001, as a guard against slowness. A script's time isn't a person's: the walkthrough judges that.
+    const registering = Date.now();
+    await page.goto("/en/patients/new");
+    await field(page, f.fullName).fill(name);
+    await field(page, f.dateOfBirth).fill("1990-04-12");
+    await field(page, f.sex).selectOption("female");
+    await field(page, f.phone).fill(phone);
+    await field(page, f.nationalId).fill(nationalId);
+    await field(page, f.address).fill(address);
+    await page
+      .getByLabel(f.contactName, { exact: true })
+      .locator("visible=true")
+      .fill(contact);
+    await page
+      .getByLabel(f.contactRelationship, { exact: true })
+      .locator("visible=true")
+      .fill("father");
+    await page
+      .getByLabel(f.contactPhone, { exact: true })
+      .locator("visible=true")
+      .fill(contactPhone);
+    await page
+      .getByRole("button", {
+        name: m.patients.registerForm.submit,
+        exact: true,
+      })
+      .click();
+    await expect(page).toHaveURL(/\/en\/patients\/\d+$/);
+    await expect(reloadButton(page)).toBeVisible();
+    expect(Date.now() - registering).toBeLessThan(60_000);
+    const patientId = Number(page.url().split("/").pop());
+
+    // SC-002, by each of the four search types.
+    for (const [label, term] of [
+      [f.fullName, name],
+      [f.phone, phone],
+      [f.number, String(patientId)],
+      [f.nationalId, nationalId],
+    ] as const) {
+      const finding = Date.now();
+      await search(page, label, term);
+      await results(page).getByRole("link", { name }).click();
+      await expect(reloadButton(page)).toBeVisible();
+      expect(Date.now() - finding, label).toBeLessThan(30_000);
+    }
+
+    await page.getByRole("button", { name: m.patients.record.edit }).click();
+    await field(page, f.address).fill(newAddress);
+    await page.getByRole("button", { name: m.patients.form.save }).click();
+    await expect(page.getByText(m.patients.form.saved)).toBeVisible();
+
+    // Only the patient number may be in an address (constitution II).
+    expect(addresses.length).toBeGreaterThan(0);
+    for (const visited of addresses) {
+      for (const detail of details) {
+        expect(decodeURIComponent(visited)).not.toContain(detail);
+      }
+    }
+
+    await signOutButton(page, "en").click();
+    await expect(page).toHaveURL(/\/en\/sign-in/);
+
+    // FR-024: back shows nothing, and storage holds nothing.
+    await page.goBack();
+    await page.waitForLoadState("networkidle");
+    const shown = (await page.locator("body").textContent()) ?? "";
+    const stored = await page.evaluate(() =>
+      JSON.stringify([{ ...localStorage }, { ...sessionStorage }]),
+    );
+    for (const detail of details) {
+      expect(shown).not.toContain(detail);
+      expect(stored).not.toContain(detail);
+    }
+
+    // SC-005: the application server's own output.
+    const log = readFileSync(".next/e2e-live-app-server.log", "utf8");
+    expect(log.length).toBeGreaterThan(0);
+    for (const detail of details) expect(log).not.toContain(detail);
+  });
+});
+
+test.describe("each role, against the real API", () => {
+  const f = m.patients;
+
+  test("a doctor has no entry, no page, and is refused by the API", async ({
+    page,
+  }) => {
+    const { doctor } = liveAccounts();
+    await signInLive(page, doctor);
+
+    await expect(
+      mainNavigation(page, "en").getByRole("link", {
+        name: m.shell.nav.patients,
+      }),
+    ).toHaveCount(0);
+    for (const address of ["patients", "patients/new", "patients/1"]) {
+      await page.goto(`/en/${address}`);
+      await expect(
+        page.getByText(m.shared.states.forbiddenHeading),
+      ).toBeVisible();
+    }
+
+    const doctorToken = await apiSignIn(doctor.email, doctor.password);
+    const answer = await api("patients?name=Synthetic", { token: doctorToken });
+    expect(answer.status).toBe(403);
+  });
+
+  test("a receptionist reaches search, the form, and editing", async ({
+    page,
+  }) => {
+    // Its own account, because another spec changes the shared receptionist's password.
+    const email = `synthetic.patients.${stamp()}@example.test`;
+    const password = `Synthetic-${randomBytes(12).toString("hex")}`;
+    const created = await api("staff", {
+      method: "POST",
+      token,
+      body: {
+        name: `Synthetic Patients ${stamp()}`,
+        email,
+        role: "receptionist",
+        password,
+        password_confirmation: password,
+      },
+    });
+    expect(created.status).toBe(201);
+    const { data: account } = (await created.json()) as {
+      data: { id: number };
+    };
+    const patient = await newPatient({ phone: `010${uniqueDigits(8)}` });
+    await signInLive(page, { email, password });
+
+    await mainNavigation(page, "en")
+      .getByRole("link", { name: m.shell.nav.patients })
+      .click();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(
+      page.getByRole("main").getByRole("link", { name: f.register }),
+    ).toBeVisible();
+
+    await page.goto(`/en/patients/${patient.id}`);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      patient.full_name,
+    );
+    await expect(
+      page.getByRole("button", { name: f.record.edit }),
+    ).toBeVisible();
+
+    await page.goto("/en/patients/new");
+    await expect(
+      page.getByRole("button", { name: f.registerForm.submit, exact: true }),
+    ).toBeVisible();
+
+    await api(`staff/${String(account.id)}/deactivate`, {
+      method: "POST",
+      token,
+    });
   });
 });
 

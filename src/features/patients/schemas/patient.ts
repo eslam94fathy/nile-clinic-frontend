@@ -60,10 +60,10 @@ function earliestBirthDate(today: string): string {
 }
 
 /**
- * Quick feedback only: the API's answer always wins. `today` is the clinic's, from the server, as the
- * browser's may differ.
+ * Quick feedback only: the API's answer always wins. `today` is the clinic's, and is asked for at each check,
+ * as a page can stay open overnight.
  */
-export function patientFormSchema(text: PatientFormText, today: string) {
+export function patientFormSchema(text: PatientFormText, today: () => string) {
   return z.object({
     full_name: z
       .string()
@@ -73,8 +73,11 @@ export function patientFormSchema(text: PatientFormText, today: string) {
     date_of_birth: z.string().superRefine((value, context) => {
       if (value === "") {
         context.addIssue({ code: "custom", message: text.dateRequired });
-      } else if (value > today || value < earliestBirthDate(today)) {
-        context.addIssue({ code: "custom", message: text.dateRange });
+      } else {
+        const now = today();
+        if (value > now || value < earliestBirthDate(now)) {
+          context.addIssue({ code: "custom", message: text.dateRange });
+        }
       }
     }),
     sex: z.enum(SEXES, { error: text.sexRequired }),

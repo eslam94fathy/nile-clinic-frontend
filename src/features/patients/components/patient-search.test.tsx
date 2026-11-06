@@ -16,6 +16,7 @@ const searchPatients = vi.hoisted(() => vi.fn());
 vi.mock("../api/patients", () => ({ searchPatients }));
 
 const push = vi.hoisted(() => vi.fn());
+const router = vi.hoisted(() => ({ push, refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -27,7 +28,7 @@ vi.mock("@/lib/i18n/navigation", () => ({
     <a data-prefetch={String(prefetch)} {...props} />
   ),
   usePathname: () => "/patients",
-  useRouter: () => ({ push, refresh: vi.fn() }),
+  useRouter: () => router,
 }));
 
 const { patients: t, shared } = messagesByLocale.en;
@@ -342,13 +343,16 @@ describe("when the API refuses or fails", () => {
     expect(screen.getByRole("table")).toBeTruthy();
   });
 
-  it("shows the forbidden state on a 403", async () => {
+  it("on a 403, removes the terms too, and has the gate decide again", async () => {
     searchPatients.mockResolvedValue(refused(403));
+    router.refresh.mockClear();
     render(stage());
 
-    await searchByName();
+    await searchByName("Synthetic Secret");
 
     expect(screen.getByText(shared.states.forbiddenHeading)).toBeTruthy();
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 });
 

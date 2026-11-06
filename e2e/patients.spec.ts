@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
+  ACCOUNTS,
   callsTo,
   control,
   mainNavigation,
@@ -957,6 +958,322 @@ test.describe("around editing", () => {
     await expect(page.getByRole("main")).toContainText("3 Synthetic Road");
     await settle(page);
     expect(await openings(id)).toBe(0);
+  });
+});
+
+async function tabTo(page: Page, target: Locator) {
+  await expect(target).toBeVisible();
+  for (let presses = 0; presses < 80; presses += 1) {
+    if (
+      await target.evaluate((element) => element === document.activeElement)
+    ) {
+      return;
+    }
+    await page.keyboard.press("Tab");
+  }
+  throw new Error("Tab never reached the element.");
+}
+
+for (const locale of ["ar", "en"] as const) {
+  const t = messages[locale].patients;
+  const field = (page: Page, label: string) =>
+    page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+
+  test.describe(`by keyboard alone, in ${locale}`, () => {
+    test.beforeEach(async ({ page }) => {
+      await signIn(page, "receptionist", locale);
+    });
+
+    test("finding a patient, opening them, and correcting a detail", async ({
+      page,
+    }) => {
+      await page.goto(`/${locale}/patients`);
+      await tabTo(page, searchField(page, t.fields.fullName));
+      await page.keyboard.type("Beta");
+      await page.keyboard.press("Enter");
+
+      const link = page.getByRole("link", { name: "Synthetic Patient Beta" });
+      await tabTo(page, link);
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(new RegExp(`/${locale}/patients/2$`));
+
+      const edit = page.getByRole("button", { name: t.record.edit });
+      await tabTo(page, edit);
+      await page.keyboard.press("Enter");
+      await expect(field(page, t.fields.fullName)).toBeFocused();
+
+      await tabTo(page, field(page, t.fields.address));
+      await page.keyboard.type("5 Synthetic Way");
+      await tabTo(page, page.getByRole("button", { name: t.form.save }));
+      await page.keyboard.press("Enter");
+
+      await expect(page.getByText(t.form.saved)).toBeVisible();
+      await expect(page.getByRole("main")).toContainText("5 Synthetic Way");
+      await expect(edit).toBeFocused();
+    });
+
+    test("paging through results keeps your place", async ({ page }) => {
+      await control("clinic/more-patients?count=20");
+      await page.goto(`/${locale}/patients`);
+      await tabTo(page, searchField(page, t.fields.fullName));
+      await page.keyboard.type("Crowd");
+      await page.keyboard.press("Enter");
+
+      const next = page.getByRole("button", {
+        name: messages[locale].shared.table.next,
+      });
+      await tabTo(page, next);
+      await page.keyboard.press("Enter");
+
+      await expect(
+        page.getByRole("button", {
+          name: messages[locale].shared.table.previous,
+        }),
+      ).toBeEnabled();
+      // Focus is on the results, so the next Tab goes on from there, not from the top of the page.
+      await page.keyboard.press("Tab");
+      await expect(
+        page.locator(":focus").locator("xpath=ancestor-or-self::main"),
+      ).toHaveCount(1);
+    });
+
+    test("registering, through a warning", async ({ page }) => {
+      await page.goto(`/${locale}/patients/new`);
+      const submit = page.getByRole("button", {
+        name: t.registerForm.submit,
+        exact: true,
+      });
+      await expect(submit).toBeEnabled();
+
+      await tabTo(page, field(page, t.fields.fullName));
+      await page.keyboard.type("Synthetic Keyboard");
+      await tabTo(page, field(page, t.fields.dateOfBirth));
+      await page.keyboard.type("04121990");
+      await tabTo(page, field(page, t.fields.sex));
+      await page.keyboard.press("ArrowDown");
+      await tabTo(page, field(page, t.fields.phone));
+      await page.keyboard.type("01000000002");
+      await tabTo(page, submit);
+      await page.keyboard.press("Enter");
+
+      await expect(page.getByText(t.registerForm.matchesTitle)).toBeVisible();
+      await tabTo(
+        page,
+        page.getByRole("button", { name: t.registerForm.registerAnyway }),
+      );
+      await page.keyboard.press("Enter");
+
+      await movedToRecord(page, locale);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        "Synthetic Keyboard",
+      );
+    });
+  });
+}
+
+test.describe("when the API refuses part way through", () => {
+  const t = messages.en.patients;
+  const { forbiddenHeading, notFoundHeading } = messages.en.shared.states;
+  const field = (page: Page, label: string) =>
+    page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+  const noLongerReception = () =>
+    control(`account?email=${ACCOUNTS.receptionist}&role=doctor`);
+  const sessionEnds = () => control(`revoke?email=${ACCOUNTS.receptionist}`);
+
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, "receptionist");
+  });
+
+  async function withResults(page: Page) {
+    await page.goto("/en/patients");
+    await searchField(page, t.fields.phone).fill("01000000002");
+    await submitSearch(page);
+    await expect(
+      page.getByRole("link", { name: "Synthetic Patient Beta" }),
+    ).toBeVisible();
+  }
+
+  async function withFilledForm(page: Page) {
+    await page.goto("/en/patients/new");
+    await fillRequired(page, "en", {
+      name: "Synthetic Refused",
+      phone: "01000000060",
+    });
+  }
+
+  async function withRecord(page: Page) {
+    await page.goto("/en/patients/2");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "Synthetic Patient Beta",
+    );
+  }
+
+  async function withEdit(page: Page) {
+    await withRecord(page);
+    await page.getByRole("button", { name: t.record.edit }).click();
+    await field(page, t.fields.address).fill("6 Synthetic Close");
+  }
+
+  const expectNoDetails = async (page: Page) => {
+    const main = page.getByRole("main");
+    await expect(main).not.toContainText("Synthetic Patient Beta");
+    await expect(main).not.toContainText("01000000002");
+    await expect(main).not.toContainText("Synthetic Refused");
+  };
+
+  test("a role changed mid-session: searching", async ({ page }) => {
+    await withResults(page);
+    await noLongerReception();
+    await submitSearch(page);
+
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    await expect(page.getByRole("table")).toHaveCount(0);
+    // What was typed is patient detail too.
+    await expect(searchField(page, t.fields.phone)).toHaveCount(0);
+    await expect(
+      mainNavigation(page, "en").getByRole("link", {
+        name: messages.en.shell.nav.patients,
+      }),
+    ).toHaveCount(0);
+    await expectNoDetails(page);
+  });
+
+  test("a role changed mid-session: the duplicate check", async ({ page }) => {
+    await withFilledForm(page);
+    await noLongerReception();
+    await submitRegister(page);
+
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    await expect(page.getByText(t.registerForm.checkFailedTitle)).toHaveCount(
+      0,
+    );
+    expect(await callsTo("patients")).toBe(1);
+    await expect(field(page, t.fields.fullName)).toHaveCount(0);
+    await expectNoDetails(page);
+  });
+
+  test("a role changed mid-session: registering anyway", async ({ page }) => {
+    await page.goto("/en/patients/new");
+    await fillRequired(page, "en", {
+      name: "Synthetic Refused",
+      phone: "01000000002",
+    });
+    await submitRegister(page);
+    await expect(page.getByText(t.registerForm.matchesTitle)).toBeVisible();
+
+    await noLongerReception();
+    await page
+      .getByRole("button", { name: t.registerForm.registerAnyway })
+      .click();
+
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    await expectNoDetails(page);
+  });
+
+  test("a role changed mid-session: opening a result", async ({ page }) => {
+    await withResults(page);
+    await noLongerReception();
+    const result = page.getByRole("link", { name: "Synthetic Patient Beta" });
+    await result.click();
+
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    // The search page is held, hidden, so `getByRole` is what says nothing of it is on screen.
+    await expect(result).toHaveCount(0);
+    await expect(page.getByRole("table")).toHaveCount(0);
+    expect(await openings(2)).toBe(0);
+  });
+
+  test("a role changed mid-session: going back to held results doesn't show them", async ({
+    page,
+  }) => {
+    await withResults(page);
+    const result = page.getByRole("link", { name: "Synthetic Patient Beta" });
+    await noLongerReception();
+    await result.click();
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+
+    await page.goBack();
+
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    await expect(result).toHaveCount(0);
+    await expect(page.getByRole("table")).toHaveCount(0);
+    expect(await openings(2)).toBe(0);
+  });
+
+  test("a role changed mid-session: reloading details", async ({ page }) => {
+    await withRecord(page);
+    await noLongerReception();
+    await page.getByRole("button", { name: t.record.reload }).click();
+
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    await expectNoDetails(page);
+    await expect(
+      mainNavigation(page, "en").getByRole("link", {
+        name: messages.en.shell.nav.patients,
+      }),
+    ).toHaveCount(0);
+  });
+
+  test("a role changed mid-session: saving", async ({ page }) => {
+    await withEdit(page);
+    await noLongerReception();
+    await page.getByRole("button", { name: t.form.save }).click();
+
+    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    await expectNoDetails(page);
+    await expect(page.getByRole("main")).not.toContainText("6 Synthetic Close");
+  });
+
+  test("a patient removed while being edited gives the neutral state", async ({
+    page,
+  }) => {
+    await withEdit(page);
+    await script("PATCH patients/2", 404);
+    await page.getByRole("button", { name: t.form.save }).click();
+
+    await expect(page.getByText(notFoundHeading)).toBeVisible();
+    await expectNoDetails(page);
+  });
+
+  const endsTheSession = async (page: Page) => {
+    await expect(page).toHaveURL(/\/en\/sign-in\?ended=1/);
+    await expect(page.locator("body")).not.toContainText("Synthetic");
+  };
+
+  test("a session ended elsewhere: searching", async ({ page }) => {
+    await withResults(page);
+    await sessionEnds();
+    await submitSearch(page);
+    await endsTheSession(page);
+  });
+
+  test("a session ended elsewhere: the duplicate check", async ({ page }) => {
+    await withFilledForm(page);
+    await sessionEnds();
+    await submitRegister(page);
+    await endsTheSession(page);
+  });
+
+  test("a session ended elsewhere: opening a result", async ({ page }) => {
+    await withResults(page);
+    await sessionEnds();
+    await page.getByRole("link", { name: "Synthetic Patient Beta" }).click();
+    await endsTheSession(page);
+  });
+
+  test("a session ended elsewhere: reloading details", async ({ page }) => {
+    await withRecord(page);
+    await sessionEnds();
+    await page.getByRole("button", { name: t.record.reload }).click();
+    await endsTheSession(page);
+  });
+
+  test("a session ended elsewhere: saving", async ({ page }) => {
+    await withEdit(page);
+    await sessionEnds();
+    await page.getByRole("button", { name: t.form.save }).click();
+    await endsTheSession(page);
   });
 });
 

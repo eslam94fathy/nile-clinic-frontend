@@ -7,10 +7,10 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import type { ComponentProps } from "react";
+import { Activity, type ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { messagesByLocale } from "@/test-support/render-with-intl";
-import { changeCount, takeHandedOver } from "../opening";
+import { changeCount, noteChange, takeHandedOver } from "../opening";
 import { RegisterPatient } from "./register-patient";
 
 const findByPhone = vi.hoisted(() => vi.fn());
@@ -34,8 +34,6 @@ vi.mock("sonner", () => ({ toast: { success } }));
 
 const { patients: t } = messagesByLocale.en;
 const f = t.fields;
-
-const TODAY = "2026-11-06";
 
 const summary = (id: number) => ({
   id,
@@ -81,17 +79,21 @@ const refused = (
   error: { status, fieldErrors, ...(message ? { message } : {}) },
 });
 
-function stage() {
-  return render(
+function view(mode: "visible" | "hidden" = "visible") {
+  return (
     <NextIntlClientProvider
       locale="en"
       messages={messagesByLocale.en}
       timeZone="Africa/Cairo"
     >
-      <RegisterPatient today={TODAY} />
-    </NextIntlClientProvider>,
+      <Activity mode={mode}>
+        <RegisterPatient timeZone="Africa/Cairo" />
+      </Activity>
+    </NextIntlClientProvider>
   );
 }
+
+const stage = () => render(view());
 
 const input = (label: string) =>
   screen.getByLabelText<HTMLInputElement>(new RegExp(`^${label}`, "u"));
@@ -167,7 +169,7 @@ describe("the form", () => {
     expect(screen.getByText(t.form.sexRequired)).toBeTruthy();
     expect(screen.getByText(t.form.phoneRule)).toBeTruthy();
 
-    set(f.dateOfBirth, "2026-11-07");
+    set(f.dateOfBirth, "2999-01-01");
     set(f.nationalId, "123");
     set(f.contactName, "Synthetic Guardian");
     await submit();
@@ -281,6 +283,49 @@ describe("with possible duplicates", () => {
     const shown = t.registerForm.moreMatches.replace("{shown}", "1");
     expect(await screen.findByText(shown)).toBeTruthy();
     expect(screen.getByRole("alert").textContent).toContain("12 patients");
+  });
+
+  it("shows what's true now, if a patient changed while the form was hidden", async () => {
+    const { rerender } = stage();
+    fillRequired();
+    await submit();
+    await screen.findByText(t.registerForm.matchesTitle);
+
+    rerender(view("hidden"));
+    noteChange();
+    findByPhone.mockResolvedValue(
+      page([{ ...summary(7), full_name: "Corrected" }]),
+    );
+    await act(async () => {
+      rerender(view());
+      await Promise.resolve();
+    });
+
+    await waitFor(() =>
+      expect(screen.getByRole("table").textContent).toContain("Corrected"),
+    );
+    expect(findByPhone).toHaveBeenCalledTimes(2);
+    expect(registerPatient).not.toHaveBeenCalled();
+  });
+
+  it("removes the panel if nobody has that phone any more", async () => {
+    const { rerender } = stage();
+    fillRequired();
+    await submit();
+    await screen.findByText(t.registerForm.matchesTitle);
+
+    rerender(view("hidden"));
+    noteChange();
+    findByPhone.mockResolvedValue(page([]));
+    await act(async () => {
+      rerender(view());
+      await Promise.resolve();
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByText(t.registerForm.matchesTitle)).toBeNull(),
+    );
+    expect(registerPatient).not.toHaveBeenCalled();
   });
 
   it("registers anyway with no second check", async () => {
@@ -447,6 +492,7 @@ describe("double submission", () => {
     });
 
     expect(findByPhone).toHaveBeenCalledTimes(1);
+    expect(input(f.phone).closest("fieldset")?.disabled).toBe(true);
     expect(
       screen.getByRole<HTMLButtonElement>("button", {
         name: t.registerForm.checking,

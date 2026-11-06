@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   changeCount,
   handOver,
@@ -60,5 +60,31 @@ describe("the change counter", () => {
     noteChange();
     noteChange();
     expect(changeCount()).toBe(before + 2);
+  });
+});
+
+describe("what an overtaken navigation leaves behind", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("doesn't count as asking, once it's old", () => {
+    vi.useFakeTimers();
+    markAsked(70);
+    vi.advanceTimersByTime(14_000);
+    expect(takeAsked(70)).toBe(true);
+
+    markAsked(70);
+    vi.advanceTimersByTime(15_000);
+    expect(takeAsked(70)).toBe(false);
+    expect(takeAsked(70)).toBe(false);
+  });
+
+  it("doesn't stand in for a read, once it's old", () => {
+    vi.useFakeTimers();
+    handOver(record);
+    vi.advanceTimersByTime(15_000);
+
+    expect(takeHandedOver(record.id)).toBeNull();
   });
 });

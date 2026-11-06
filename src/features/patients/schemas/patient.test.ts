@@ -19,7 +19,7 @@ const text: PatientFormText = {
   contactNameTooLong: "contact name long",
   relationshipTooLong: "relationship long",
 };
-const schema = patientFormSchema(text, "2026-11-06");
+const schema = patientFormSchema(text, () => "2026-11-06");
 
 const valid = {
   full_name: "Synthetic Patient",

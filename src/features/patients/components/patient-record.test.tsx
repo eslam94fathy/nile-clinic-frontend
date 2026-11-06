@@ -21,6 +21,7 @@ vi.mock("../api/patients", () => ({ readPatient, updatePatient }));
 const endSession = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/auth/session-end", () => ({ endSession }));
 
+const router = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("@/lib/i18n/navigation", () => ({
   Link: ({
     prefetch,
@@ -28,7 +29,7 @@ vi.mock("@/lib/i18n/navigation", () => ({
   }: ComponentProps<"a"> & { prefetch?: boolean }) => (
     <a data-prefetch={String(prefetch)} {...props} />
   ),
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => router,
 }));
 
 afterEach(cleanup);
@@ -75,7 +76,7 @@ function stage(mode: "visible" | "hidden" = "visible") {
       timeZone="Africa/Cairo"
     >
       <Activity mode={mode}>
-        <PatientRecord id={5} timeZone="Africa/Cairo" today="2026-11-06" />
+        <PatientRecord id={5} timeZone="Africa/Cairo" />
       </Activity>
     </NextIntlClientProvider>
   );
@@ -296,6 +297,32 @@ describe("when reading fails", () => {
     expect(readPatient).toHaveBeenCalledTimes(1);
   });
 
+  it("has the gate decide again on a 403, and not on a 404", async () => {
+    router.refresh.mockClear();
+    readPatient.mockResolvedValue(refused(404));
+    await shown();
+    expect(router.refresh).not.toHaveBeenCalled();
+    cleanup();
+
+    readPatient.mockResolvedValue(refused(403));
+    await shown();
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("can't be retried twice, as each read writes an opening", async () => {
+    readPatient.mockResolvedValueOnce(refused(500, "It failed."));
+    await shown();
+
+    readPatient.mockReturnValue(new Promise(() => {}));
+    fireEvent.click(screen.getByRole("button", { name: shared.states.retry }));
+
+    expect(
+      screen.queryByRole("button", { name: shared.states.retry }),
+    ).toBeNull();
+    expect(screen.getByRole("status")).toBeTruthy();
+    expect(readPatient).toHaveBeenCalledTimes(2);
+  });
+
   it("shows the neutral state on 404", async () => {
     readPatient.mockResolvedValue(refused(404));
     await shown();
@@ -483,6 +510,32 @@ describe("editing", () => {
     expect(screen.queryByText("01000000001")).toBeNull();
     expect(screen.queryByText("Synthetic Patient")).toBeNull();
     expect(screen.queryByRole("button", { name: t.form.save })).toBeNull();
+  });
+
+  it("doesn't let a read still on its way restore a removed record", async () => {
+    await shown();
+    let answerRead: (value: unknown) => void = () => undefined;
+    readPatient.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answerRead = resolve;
+      }),
+    );
+    fireEvent.click(reload());
+
+    updatePatient.mockResolvedValue(refused(403));
+    fireEvent.click(edit());
+    changePhone();
+    await save();
+    await screen.findByText(shared.states.forbiddenHeading);
+
+    await act(async () => {
+      answerRead(found());
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText(shared.states.forbiddenHeading)).toBeTruthy();
+    expect(screen.queryByText("01000000001")).toBeNull();
+    expect(screen.queryByText("Synthetic Patient")).toBeNull();
   });
 
   it("keeps the form through a server failure when saving", async () => {

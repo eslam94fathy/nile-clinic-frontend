@@ -6,7 +6,6 @@ import { ScreenGate } from "@/features/auth/public-server";
 import { PatientRecord } from "@/features/patients/components/patient-record";
 import { readPositiveId } from "@/lib/api/read-positive-id";
 import { getEnv } from "@/lib/config/env";
-import { clinicToday } from "@/lib/format/clinic-today";
 import { ScopedMessages } from "@/lib/i18n/scoped-messages";
 
 type Params = Promise<{ locale: string; id: string }>;
@@ -18,16 +17,9 @@ async function Record({ params }: { params: Params }) {
   const id = readPositiveId(rawId);
   if (id === null) notFound();
 
-  const timeZone = getEnv().CLINIC_TIMEZONE;
-
   return (
     <ScopedMessages locale={locale} namespaces={["patients", "auth"]}>
-      <PatientRecord
-        key={id}
-        id={id}
-        timeZone={timeZone}
-        today={clinicToday(timeZone)}
-      />
+      <PatientRecord key={id} id={id} timeZone={getEnv().CLINIC_TIMEZONE} />
     </ScopedMessages>
   );
 }

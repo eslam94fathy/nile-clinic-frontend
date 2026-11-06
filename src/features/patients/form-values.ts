@@ -83,7 +83,8 @@ export function toChanges(
   values: PatientFormValues,
   record: Patient,
 ): PatientChanges {
-  const fullName = values.full_name.trim();
+  // The API collapses inner spaces in a name, so a difference only in those is no change (`ArabicName::clean`).
+  const fullName = values.full_name.trim().replace(/\s+/gu, " ");
   const phone = normalizePhone(values.phone);
   const nationalId = normalizeNationalId(values.national_id);
   const address = values.address.trim();
@@ -103,4 +104,22 @@ export function toChanges(
       : { address: address === "" ? null : address }),
     ...contactChange(values.emergency_contact, record.emergency_contact),
   };
+}
+
+/**
+ * What the person changed since the form opened. A colleague's save may have arrived underneath, and a field
+ * this person never touched still shows the older value, which must not undo theirs. Anything already matching
+ * the newest record is left out too, as sending it would write a false opening if nothing else changed.
+ */
+export function toChangesSince(
+  values: PatientFormValues,
+  opened: Patient,
+  latest: Patient,
+): PatientChanges {
+  const changedByThisPerson = toChanges(values, opened);
+  return Object.fromEntries(
+    Object.entries(toChanges(values, latest)).filter(
+      ([field]) => field in changedByThisPerson,
+    ),
+  );
 }

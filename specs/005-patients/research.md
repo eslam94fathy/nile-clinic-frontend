@@ -86,6 +86,7 @@ Each has a real consumer here, and each change is small.
 From `PatientService`, `PatientRules`, `UpdatePatientRequest`, and `ListPatientsRequest`. To be added to `docs/backend-integration.md`.
 
 - **A `PATCH` that changes nothing writes `patient.opened`** (`PatientService::update`), so that sending one known field can't read the rest without a trace. So FR-018's "send nothing when nothing changed" also protects the audit trail, and comparison must happen after trimming and phone normalising, or a no-op could still be sent.
+- **The API collapses inner spaces in `full_name`** (`ArabicName::clean`), so a difference only in those is no change, and is compared that way.
 - **An empty `PATCH` is `422`, under the key `fields`.** The form doesn't send one.
 - **Search validates its filters.** A malformed `phone` or `national_id` is `422` on that key, not an empty result. `phone` is normalised on the API before matching, and matching is exact.
 - **Sending no filters lists everyone**, so FR-003's rule that an empty search sends nothing has to be enforced here.
@@ -97,7 +98,7 @@ From `PatientService`, `PatientRules`, `UpdatePatientRequest`, and `ListPatients
 
 **Decision**: "Edit" swaps the details for the form on the same page, from the record in state. A separate address would need the record again, and writing a second opening only to change a phone number is what the spec rules out.
 
-**If a new read arrives during editing**, from a link click on a held page, the record underneath is replaced, and what was typed stays. Comparison for "what changed" uses the latest record. The form mounts only while editing, so saving or cancelling leaves nothing behind.
+**If a new read arrives during editing**, from a link click on a held page, the record underneath is replaced, and what was typed stays. A field this person never touched still shows the older value, so comparing only with the latest record would undo a colleague's change. So what's sent is what differs from both: from the record the form opened with, as this person changed it, and from the latest, as sending what's already there could write a false opening. Found by the code review, T050. The form mounts only while editing, so saving or cancelling leaves nothing behind.
 
 ## R8. Duplicate check
 
@@ -109,6 +110,6 @@ From `PatientService`, `PatientRules`, `UpdatePatientRequest`, and `ListPatients
 
 ## R9. Entering values
 
-- **Date of birth**: `type="date"`, as time off already uses, so it yields `YYYY-MM-DD`. Quick feedback compares strings against bounds worked out from the clinic's today, which the page passes as a prop, so no `Date` conversion can shift the day.
+- **Date of birth**: `type="date"`, as time off already uses, so it yields `YYYY-MM-DD`. Quick feedback compares strings against bounds worked out from the clinic's today, worked out at each check from the clinic's time zone, which the page passes as a prop, because a held page can stay open overnight. Comparing strings means no `Date` conversion can shift the day.
 - **Digits**: `toWesternDigits` from `lib/format/digits` on phone, national ID, and patient number, before checks and sending (FR-031). Native date inputs yield Western digits already.
 - **Phone display**: `LtrText`, as sent. **Names and addresses**: `UserText`, in their own direction. **Sex**: translated. **Absent values**: "not recorded" text, rather than `NoValue`'s dash, as the spec requires words.

@@ -36,7 +36,7 @@ Digits are converted before checks, on phone, national ID, and emergency phone (
 | Form to register body | Blank optional fields are left out. A contact goes only when any part is filled in |
 | Form to changes | Compares normalised values with the record, and returns only what differs. Blank optional with a value becomes `null`. A contact goes whole when any part differs, and as `null` when all three are blank and one was recorded. Returns nothing at all when nothing differs |
 
-"Normalised" means trimmed, with digits converted, and with phone separators removed. The API normalises the same way, so typing `010 0000 0001` over `01000000001` isn't a change. A `PATCH` of no change would otherwise write a false opening (R6).
+"Normalised" means trimmed, with digits converted, with phone separators removed, and with inner spaces in `full_name` collapsed. The API normalises the same way, so typing `010 0000 0001` over `01000000001` isn't a change. A `PATCH` of no change would otherwise write a false opening (R6).
 
 ## Search terms
 
