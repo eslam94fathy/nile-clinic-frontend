@@ -122,7 +122,7 @@ e2e/
 
 | Document | Content |
 |---|---|
-| ADR 0012, audited reads in the browser | Records and patient search are read by Client Components, as an exception to ADR 0011, covering only audited reads and private search terms. Includes the measured table, the asked-for mark, and the handed-over record. Clarifies what "bare `useEffect`" means in ADR 0005 and ADR 0006. Later audited reads (Phases 8 and 11) should start from it |
+| ADR 0012, audited reads in the browser | Records and patient search are read by Client Components, as an exception to ADR 0011, covering only audited reads and private search terms. Includes the measured table, the asked-for mark, and the handed-over record. **Reverses ADR 0005's rejection of fetching audited records outside TanStack Query**, on that evidence, and clarifies what "bare `useEffect`" means in ADR 0005 and ADR 0006. Also records two readings of the constitution: the patient number is an opaque identifier and not a patient detail, so it may appear in an address (Principle II); and registering isn't an irreversible action, because details can be corrected by editing (Principle VI). Later audited reads (Phases 8 and 11) should start from it |
 
 ## Documents to Update
 

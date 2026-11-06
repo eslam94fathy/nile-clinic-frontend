@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft
+**Status**: Approved
 
 **Input**: User description: "Start Phase 5" of `docs/roadmap.md`: patients. Search with Arabic-aware API matching, register, view, edit. Audited reads apply. Administrators and receptionists only; doctors have no access to patient management.
 
@@ -16,6 +16,7 @@
 - Q: After registering, should the person see the record the API returned, or go to the normal patient page, which reads the record and writes a `patient.opened` entry beside `patient.registered`? → A: Show the returned record, with no further read. Reloading the page later is a person's action and records a true opening.
 - Q: The API blocks only a repeated national ID, and duplicates can't be merged later. What should happen when someone registers a patient? → A: Before saving, search for the phone number entered. If patients match, show them with a link to open each and a way to register anyway. It warns and never blocks, because phones can be shared.
 - Q: How should reception enter a search, given that a typed number can't be reliably told apart as a phone or a patient number? → A: Four labelled fields, one per API filter, all visible. The application never guesses the type.
+- Q: Should registering ask for confirmation, given that the constitution requires it for irreversible actions, and patients can't be deleted? → A: No. A wrong detail can be corrected by editing, so registering isn't treated as irreversible, which is also how Phase 4 treated creating staff accounts and specialties. The real safeguard against a duplicate is the phone check. A confirmation on every registration would slow the desk. The reasoning is recorded in ADR 0012.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -72,7 +73,7 @@ Staff open one patient and see everything recorded: patient number, identity, co
 
 **Why this priority**: Every other patient action leads through this page, and it's the first audited read the application makes. A false entry in the audit trail is false evidence.
 
-**Independent Test**: As an administrator, count the backend's `patient.opened` entries for a synthetic patient around each of these: opening from results, hovering over its link, leaving the tab and returning, going back to the page, and refreshing explicitly. Only the opening and the explicit refresh add an entry.
+**Independent Test**: As an administrator, count the backend's `patient.opened` entries for a synthetic patient around each of these: opening from results, hovering over its link, leaving the tab and returning, going back to the page, and choosing "Reload details". Only the opening and "Reload details" add an entry.
 
 **Acceptance Scenarios**:
 
@@ -122,7 +123,7 @@ Administrators and receptionists have the same patient access. Doctors have none
 
 1. **Given** a doctor, **When** they look at their navigation, **Then** no patient entry appears.
 2. **Given** a doctor, **When** they open any patient address, **Then** the "not allowed" state appears, no patient content is sent, and no read of the record is attempted.
-3. **Given** a role changed mid-session, **When** the API answers `403` to a search, opening, or save, **Then** the "not allowed" state or message appears, whatever the screen believed.
+3. **Given** a role changed mid-session, **When** the API answers `403` to a search, opening, or save, **Then** the "not allowed" state or message appears, whatever the screen believed, and any patient details already on screen are removed.
 4. **Given** the session ends, **When** the person signs in again, **Then** they aren't returned to a patient's page, and the record isn't opened on their behalf.
 5. **Given** a person signs out, **When** anyone uses that computer next, **Then** no patient details, search terms, or results remain, whether on screen, in hidden pages, or in browser storage.
 
@@ -133,7 +134,7 @@ Administrators and receptionists have the same patient access. Doctors have none
 - Several patients share a phone number, such as a parent and children: all appear, and the phone alone never identifies one person.
 - Two patients have the same name and date of birth: this is allowed. The patient number is what tells them apart, so it's always shown.
 - A child or foreign patient has no national ID: the record is valid, and a foreign patient's passport isn't captured, as the API has no field for one.
-- Digits typed in Arabic form in phone, national ID, patient number, or date fields are converted before sending, as fees already do. A name is never altered.
+- Digits typed in Arabic form in phone, national ID, or patient number fields are converted before sending, as fees already do. A native date field already gives Western digits. A name is never altered.
 - A date of birth near midnight, or on a computer in another time zone: quick feedback uses the clinic's today, the API decides, and the date is displayed as sent, with no time-zone shift.
 - Two people edit one patient: the API has no way to detect this, so the last save wins for each field sent. Only changed fields are sent, which limits what one person can overwrite, and "last changed" helps people notice.
 - An audit entry can't be saved: the API answers `500`, and the record is not returned or the change did not happen. A general error appears, and the application doesn't claim otherwise.
@@ -199,7 +200,7 @@ Administrators and receptionists have the same patient access. Doctors have none
 - **FR-028**: Dates of birth MUST be shown as sent. "Registered" and "last changed" MUST be shown in the clinic's time zone.
 - **FR-029**: Patient search and form fields MUST ask the browser not to remember or suggest what was typed, because reception computers are shared.
 - **FR-030**: Patient details and search terms MUST NOT be written to logs, analytics, or error reports, and tests MUST use synthetic data only.
-- **FR-031**: Digits typed in Arabic form MUST be converted to Western digits in phone, national ID, patient number, and date fields before quick feedback and sending. Names and addresses MUST NOT be altered.
+- **FR-031**: Digits typed in Arabic form MUST be converted to Western digits in phone, national ID, and patient number fields before quick feedback and sending. Names and addresses MUST NOT be altered.
 - **FR-032**: No appointment, encounter, or billing information MUST be shown on patient pages in this phase.
 
 ### Key Entities

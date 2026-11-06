@@ -77,7 +77,7 @@ Each has a real consumer here, and each change is small.
 
 | Component | Change | Why |
 |---|---|---|
-| `FilterBar` | Takes `errors`, shown on each field. Private filters (`inAddress: false`) get `autoComplete="off"` | US1.5 needs the API's message on its field. FR-029. Turning autofill off also stops browsers restoring the terms after a full back navigation |
+| `FilterBar` | Takes `errors`, shown on each field. Private filters (`inAddress: false`) get `autoComplete="off"` | US1.5 needs the API's message on its field. FR-029 |
 | `DataTable` | Pagination takes `onPage` as an alternative to `hrefForPage`, rendering buttons rather than links | Search's page number can't be an address without keeping the terms alongside it |
 | `ApiFailureState` | Takes an optional `onRetry`, used instead of the full reload. It's exported from `features/auth/public.ts` too | A record's error mustn't cost the person a full reload, and a search's error mustn't clear their terms. Neither reader can retry on its own |
 

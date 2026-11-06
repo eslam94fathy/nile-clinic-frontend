@@ -39,7 +39,8 @@ Invalid number in the address: the neutral not-found state, with no request made
 | Failed, nothing held | `403`: forbidden state. `404`: neutral not found. Otherwise an error with "Try again", which asks for the read |
 | Showing | Header with the name as written and the patient number. Details as a list, with "not recorded" for absent values. Registered and last changed in the clinic's zone. "Edit". "Reload details" with a hint saying this records another opening. A link back to the search |
 | Reloading | Record stays; "Reload details" shows progress |
-| Reload failed | Error above the held record, which is labelled as possibly out of date |
+| Reload failed: network or server | Error above the held record, which is labelled as possibly out of date |
+| Reload failed: `403` or `404` | The held record is removed, and the forbidden or neutral not-found state replaces it |
 | Editing | Form filled from the record, with "Save" and "Cancel". "Reload details" isn't available |
 | Nothing changed, on save | Form-level "nothing to save". No request made |
 | Refused | The API's messages on their fields. Typed values kept |

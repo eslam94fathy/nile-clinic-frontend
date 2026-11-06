@@ -7,7 +7,7 @@ All handle `401` (`browserApi` ends the session), `403`, and `404`. Below, "Keys
 | Operation | Used by | Audited | Keys |
 |---|---|---|---|
 | `GET /patients?name&phone&national_id&id&page&per_page` | Search on `/patients` | No | `name`, `phone`, `national_id`, `id`, each on its search field. `page` and `per_page` at form level |
-| `GET /patients?phone&per_page=10` | Duplicate check on `/patients/new` | No | Treated as "the check couldn't run" |
+| `GET /patients?phone&per_page=10` | Duplicate check on `/patients/new` | No | `401` and `403` take their usual routes. Any other failure means "the check couldn't run" |
 | `POST /patients` | `/patients/new` | `patient.registered` | `full_name`, `date_of_birth`, `sex`, `phone`, `national_id`, `address`, `emergency_contact.name`, `.relationship`, `.phone` |
 | `GET /patients/{id}` | `/patients/[id]` | **`patient.opened`, each read** | |
 | `PATCH /patients/{id}` | Edit on `/patients/[id]` | `patient.updated`. **`patient.opened` if nothing changed**, which the form never sends | As `POST`. `emergency_contact` and `fields` at form level |

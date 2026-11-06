@@ -73,7 +73,7 @@ Module-level, in the browser, never persisted, and gone at a full page load, whi
 - Showing again from hidden, with no mark: no change, and no read.
 - `401` at any point: `browserApi` ends the session and never settles.
 - "Reload details" isn't available while editing or loading.
-- During a repeat read, the held record stays on screen with a progress indication. If that read fails, the error appears above the held record, which is labelled as possibly out of date.
+- During a repeat read, the held record stays on screen with a progress indication. If that read fails from a network or server problem, the error appears above the held record, which is labelled as possibly out of date. A `403` or `404` removes the held record and shows that state instead, so that someone who has lost access isn't left looking at the details.
 
 ## Register states
 

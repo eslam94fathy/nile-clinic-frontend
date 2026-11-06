@@ -54,6 +54,10 @@
 - [ ] T009 Add stateful synthetic patients to `e2e/support/fake-clinic.mjs`, reset by `/__control/reset`, per the contract: list with `name`, `phone`, `national_id`, and `id` filters, with paging; `422` on a malformed `phone` or `national_id` under those keys; `POST` and `PATCH` with the keys in `contracts/api-usage.md`, including a repeated `national_id` and nested `emergency_contact.*`; an empty `PATCH` as `422` under `fields`; `403` for doctors; `404` for an unknown id. Count record reads in a way tests can query, and count a no-change `PATCH` as a read, as the API does. Existing behaviour unchanged
 - [ ] T010 Add the `patients` namespace to `src/messages/en.json` and `src/messages/ar.json`, with `sex.male`, `sex.female`, and the first keys. Later tasks add to it
 
+### Decision record
+
+- [ ] T010a Write `docs/decisions/0012-audited-reads-in-the-browser.md` per the plan, with status "Proposed", before the reader is built. It must state that it reverses ADR 0005's rejection of fetching audited records outside TanStack Query, with the measurements from research R1 and R2, and must record the two readings of the constitution: the patient number in an address (Principle II), and registering not being irreversible (Principle VI). Update `docs/decisions/README.md`, and add pointers to it in `docs/decisions/0005-audit-safe-data-fetching.md` and `docs/decisions/0006-cache-components.md`
+
 **Checkpoint**: All existing tests still pass. No screen has changed.
 
 ---
@@ -82,14 +86,14 @@
 ### Tests
 
 - [ ] T015 [P] [US3] Write failing tests in `src/features/patients/components/patient-link.test.tsx`: `prefetch` off; a plain click calls `markAsked`; a click with Ctrl, Meta, or Shift, or a middle click, doesn't
-- [ ] T016 [P] [US3] Write failing tests in `src/features/patients/components/patient-record.test.tsx` with a mocked API module. Reads once on mounting. Doesn't read on re-render, or on focus, visibility, or online events. Reads again when the effect re-runs with a mark, and doesn't without one. A handed-over record shows with no read. `403`, `404`, and other failures show their states, with no automatic retry. "Try again" and "Reload details" each read once. A repeat read's failure keeps the record, labelled as possibly out of date. "Reload details" states that it records another opening. Absent values read "not recorded"
+- [ ] T016 [P] [US3] Write failing tests in `src/features/patients/components/patient-record.test.tsx` with a mocked API module. Reads once on mounting. Doesn't read on re-render, or on focus, visibility, or online events. Reads again when the effect re-runs with a mark, and doesn't without one. A handed-over record shows with no read. `403`, `404`, and other failures show their states, with no automatic retry. "Try again" and "Reload details" each read once. A repeat read's network or server failure keeps the record, labelled as possibly out of date. A repeat read's `403` or `404` removes the record from the screen and shows that state. "Reload details" states that it records another opening. Absent values read "not recorded"
 
 ### Implementation
 
 - [ ] T017 [P] [US3] Implement `src/features/patients/components/patient-link.tsx`, and export it from `src/features/patients/public.ts` (research R2)
 - [ ] T018 [P] [US3] Implement `src/features/patients/components/patient-details.tsx`: number, name, sex, date of birth, phone, national ID, address, emergency contact, registered, and last changed. Uses `UserText` for names and addresses, `ClinicDate` for the date of birth, `Instant` with the clinic's zone for the times, `LtrText` for phone and national ID, translated sex, and "not recorded" in words (FR-013, FR-027, FR-028)
 - [ ] T019 [US3] Implement `src/features/patients/components/patient-record.tsx`, the reader, per the state flow in [data-model.md](data-model.md). A ref and `takeAsked` guard the effect, and `takeHandedOver` comes first. A request counter means only the newest answer applies. Uses `LoadingState`, `ApiFailureState` with `onRetry`, and "Reload details" with its hint (FR-014, FR-015, research R1, R2)
-- [ ] T020 [US3] Use `PatientRecord` in `src/app/[locale]/(app)/patients/[id]/page.tsx`, passing the id and the clinic's time zone, with no read on the server. The header's name comes from the reader, so that it's never in the tab title (FR-016)
+- [ ] T020 [US3] Use `PatientRecord` in `src/app/[locale]/(app)/patients/[id]/page.tsx`, passing the id, the clinic's time zone, and the clinic's today from `clinicToday` for the edit form's date check, with no read on the server. The header's name comes from the reader, so that it's never in the tab title (FR-016)
 - [ ] T021 [US3] Add to `e2e/patients.spec.ts`: every state in both languages on the fake backend; "not recorded"; a long name and address wrap at tablet and phone width; the tab title holds no patient details; no read on hover, or on going back
 
 ### Live evidence
@@ -115,7 +119,7 @@
 
 - [ ] T025 [US1] Implement `src/features/patients/components/patient-search.tsx`: `FilterBar` with four `inAddress: false` filters and match hints (FR-002), `DataTable` with `onPage` and `PatientLink`, showing only number, name, sex, date of birth, and phone (FR-005), and all states in [contracts/screens.md](contracts/screens.md). No sort control (FR-001, FR-003, FR-004, research R4)
 - [ ] T026 [US1] Use `PatientSearch` in `src/app/[locale]/(app)/patients/page.tsx`, with the page header and a "Register a patient" link
-- [ ] T027 [US1] Add to `e2e/patients.spec.ts`: the first view makes no call; the address stays `/patients` after search and paging; going back from a patient restores terms and results (FR-007); a reload clears them; terms are absent from `localStorage`, `sessionStorage`, and browser history; fields have autofill off; empty, error, and `422` states, in both languages
+- [ ] T027 [US1] Add to `e2e/patients.spec.ts`: the first view makes no call; the address stays `/patients` after search and paging; going back from a patient restores terms and results (FR-007); a reload clears them; terms are absent from `localStorage` and `sessionStorage`, and from every address the page visited, recorded through Playwright's `framenavigated` event; fields have autofill off; empty, error, and `422` states, in both languages
 - [ ] T028 [US1] Add to `e2e/live/patients.spec.ts`: Arabic names found across alef, taa marbuta, and yaa spellings, by the API alone (SC-004); several patients sharing a phone; phone with separators and Arabic digits; exact patient number and national ID; malformed values show the API's message; paging uses the API's totals
 - [ ] T029 [US1] Add the steps that need a link to the opening-count test in `e2e/live/patients.spec.ts`, from real search results, following [quickstart.md](quickstart.md): results shown and a result hovered 0; click 1; away and back 1; a real change on `/specialties`, then back, 1; click the same result again 2; Ctrl+click, where the new tab reads, 3; back in the first tab 3
 
@@ -131,7 +135,7 @@
 
 ### Tests
 
-- [ ] T030 [US2] Write failing tests in `src/features/patients/components/register-patient.test.tsx` with a mocked API module. Quick feedback for each rule in T002. `sex` has no preselected value. Every field has autofill off. Each API key shows on its field, including `emergency_contact.*`, and others at form level. Typed values are kept after a refusal. No duplicates found: `POST`, then `handOver`, `noteChange`, `reset`, `router.replace` to the record, and a confirmation naming the number. Matches: no `POST`, panel shown. "Register anyway" posts with no second check. Changing the phone removes the panel, and the next submit checks. A format-invalid phone skips the check. A failed check offers "Try again" and "Register anyway". Double submission is blocked in both the check and the save
+- [ ] T030 [US2] Write failing tests in `src/features/patients/components/register-patient.test.tsx` with a mocked API module. Quick feedback for each rule in T002. `sex` has no preselected value. Every field has autofill off. Each API key shows on its field, including `emergency_contact.*`, and others at form level. Typed values are kept after a refusal. No duplicates found: `POST`, then `handOver`, `noteChange`, `reset`, `router.replace` to the record, and a confirmation naming the number. Matches: no `POST`, panel shown. "Register anyway" posts with no second check. Changing the phone removes the panel, and the next submit checks. A format-invalid phone skips the check. A failed check offers "Try again" and "Register anyway". A `403` on the check takes the usual route, not the failed-check panel. Double submission is blocked in both the check and the save
 
 ### Implementation
 
@@ -160,7 +164,7 @@
 
 - [ ] T038 [US4] Implement `src/features/patients/components/patient-edit-form.tsx`, using `patient-fields.tsx`, `form-values.ts`, and `useFormSubmit`, with no `router.refresh()` on success (FR-017, FR-018, FR-019)
 - [ ] T039 [US4] Add "Edit" and the editing state to `src/features/patients/components/patient-record.tsx`. The saved record replaces the one in state, with a confirmation (FR-019, FR-020)
-- [ ] T040 [US4] Add to `e2e/patients.spec.ts`: all of US4's scenarios on the fake backend, in both languages, including that no request is sent with nothing changed, and that held results show new values on returning
+- [ ] T040 [US4] Add to `e2e/patients.spec.ts`: all of US4's scenarios on the fake backend, in both languages, including that no request is sent with nothing changed, that held results show new values on returning, and that a just-registered record, which arrived with no read, can be edited (FR-011)
 - [ ] T041 [US4] Add to `e2e/live/patients.spec.ts`: edit steps in the opening-count test: a change gives `patient.updated` with no new opening; nothing changed gives no request; clearing is confirmed through the API; the patient number is unchanged; results show the new name on returning; a national ID held by another patient is refused on its field
 
 **Checkpoint**: All five stories work independently.
@@ -171,10 +175,10 @@
 
 - [ ] T042 [P] Add the three patient pages, and their form, warned, and editing states, to `e2e/accessibility.spec.ts`, in both languages and directions, and make any fix needed (SC-009)
 - [ ] T043 [P] Add a keyboard-only test for finding, registering, and editing to `e2e/patients.spec.ts`, and add the patient screens at tablet and phone width to `e2e/clinic-layout.spec.ts` (SC-009)
-- [ ] T044 [P] Add forced-refusal tests to `e2e/patients.spec.ts`: a role changed mid-session gives `403` on search, on opening, and on saving, with a clear state each time; `401` at each ends the session (FR-022, SC-006)
-- [ ] T045 Add to `e2e/live/patients.spec.ts`: after a full journey and sign-out, going back shows no patient details, and storage holds no synthetic term or detail (FR-024, SC-005). Add a doctor and a receptionist account check against the matrix (SC-006). Time registering (under 1 minute, SC-001) and finding and opening by each search type (under 30 seconds, SC-002)
-- [ ] T046 Confirm by search that nothing logs patient data or search terms, that no patient read exists outside `src/features/patients/api/`, that no `*-server.ts` exists in the feature, and that no `<Link>` to a record bypasses `PatientLink` (FR-030)
-- [ ] T047 Write `docs/decisions/0012-audited-reads-in-the-browser.md` per the plan, with status "Proposed" until the owner accepts it. Update `docs/decisions/README.md`, and add pointers to it in `docs/decisions/0005-audit-safe-data-fetching.md` and `docs/decisions/0006-cache-components.md`
+- [ ] T044 Add forced-refusal tests to `e2e/patients.spec.ts`, after T043, which edits the same file: a role changed mid-session gives `403` on search, on the duplicate check, on opening, on "Reload details", and on saving, with a clear state each time and no patient details left on screen; `401` at each ends the session (FR-022, SC-006)
+- [ ] T045 Add to `e2e/live/patients.spec.ts`: after a full journey and sign-out, going back shows no patient details, and storage holds no synthetic term or detail (FR-024). Start the application server with its output captured to a temporary file for the live run, and search that output for every synthetic term and detail used (SC-005). Add a doctor and a receptionist account check against the matrix (SC-006). Time registering (under 1 minute, SC-001) and finding and opening by each search type (under 30 seconds, SC-002) as a guard against slowness; a script's time isn't a person's, so real speed is judged in T049's walkthrough
+- [ ] T046 Confirm by search that nothing logs patient data or search terms, that no patient read exists outside `src/features/patients/api/`, that no `*-server.ts` exists in the feature, that no `<Link>` to a record bypasses `PatientLink`, and that the feature calls no appointment, encounter, or billing endpoint (FR-030, FR-032)
+- [ ] T047 Update `docs/decisions/0012-audited-reads-in-the-browser.md` with the observed results of T022, T023, and T029. It stays "Proposed" until the owner accepts it
 - [ ] T048 [P] Update `docs/architecture.md`, `docs/backend-integration.md` (research R6, and patient operations confirmed live), `docs/frontend-blueprint.md`, `docs/development-guidelines.md`, and `docs/roadmap.md`
 - [ ] T049 Run `pnpm check` and `pnpm test:e2e:live`, walk through the manual scenarios in [quickstart.md](quickstart.md) in both languages, and record what was actually observed in this file. Failures are fixed or reported, and never hidden
 - [ ] T050 Run `/code-review` on the branch, resolve its findings, and run T049's checks again
@@ -226,7 +230,7 @@ T015 and T017 patient-link   T016 reader tests   T018 patient-details
 T031 patient-fields   T032 possible-matches
 
 # Polish
-T042 accessibility   T043 keyboard and layout   T044 forced refusals   T048 documents
+T042 accessibility   T043 keyboard and layout   T048 documents
 ```
 
 ---
