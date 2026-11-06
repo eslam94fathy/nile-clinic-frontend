@@ -1,10 +1,14 @@
 {
   "meta": {
-    "title": "عيادة النيل",
+    "title": "مركز النيل الطبي",
     "description": "نظام إدارة العيادة للموظفين."
   },
+  "brand": {
+    "name": "مركز النيل الطبي",
+    "tagline": "NILE CLINIC"
+  },
   "landing": {
-    "heading": "عيادة النيل",
+    "heading": "مركز النيل الطبي",
     "description": "نظام إدارة العيادة للموظفين.",
     "noscript": "يتطلب عرض حالة النظام تفعيل JavaScript."
   },

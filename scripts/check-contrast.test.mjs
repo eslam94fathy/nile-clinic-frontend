@@ -14,11 +14,13 @@ const tokensPassing = {
       [back, "#FFFFFF"],
     ]),
   ),
-  // These two are text on some backgrounds, and a background for their own foreground.
+  // These are text on some backgrounds, and a background for their own foreground.
   primary: "#000000",
   "primary-foreground": "#FFFFFF",
   destructive: "#000000",
   "destructive-foreground": "#FFFFFF",
+  brand: "#000000",
+  "brand-foreground": "#FFFFFF",
 };
 
 const css = (tokens) =>

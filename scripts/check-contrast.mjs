@@ -40,6 +40,10 @@ export const REQUIRED_PAIRS = [
   ["input", "card", CONTROL],
   ["ring", "background", CONTROL],
   ["ring", "card", CONTROL],
+  ["brand", "background", CONTROL],
+  ["brand-foreground", "brand", CONTROL],
+  ["brand-name", "background", TEXT],
+  ["brand-tagline", "background", TEXT],
 ];
 
 const SOLID_HEX = /^#[0-9a-f]{6}$/i;
