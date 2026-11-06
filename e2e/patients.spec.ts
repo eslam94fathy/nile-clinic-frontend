@@ -222,6 +222,267 @@ for (const locale of ["ar", "en"] as const) {
   });
 }
 
+const searchField = (page: Page, label: string) =>
+  page.getByRole("textbox", { name: label, exact: true });
+
+async function submitSearch(page: Page, locale: "ar" | "en" = "en") {
+  await page
+    .getByRole("button", { name: messages[locale].patients.search.button })
+    .click();
+}
+
+for (const locale of ["ar", "en"] as const) {
+  const t = messages[locale].patients;
+  const { shared } = messages[locale];
+
+  test.describe(`finding a patient, in ${locale}`, () => {
+    test.beforeEach(async ({ page }) => {
+      await signIn(page, "receptionist", locale);
+      await page.goto(`/${locale}/patients`);
+    });
+
+    test("lists nobody until someone searches, even with nothing entered", async ({
+      page,
+    }) => {
+      await expect(
+        page.getByText(t.search.promptTitle, { exact: true }),
+      ).toBeVisible();
+
+      await submitSearch(page, locale);
+      await expect(page.getByText(t.search.needTerm)).toBeVisible();
+
+      await searchField(page, t.fields.fullName).fill("   ");
+      await submitSearch(page, locale);
+
+      await settle(page);
+      expect(await callsTo("patients")).toBe(0);
+    });
+
+    test("finds by name, across Arabic spellings, leaving the address alone", async ({
+      page,
+    }) => {
+      await searchField(page, t.fields.fullName).fill("احمد");
+      await submitSearch(page, locale);
+
+      const results = page.getByRole("table", { name: t.search.caption });
+      await expect(
+        results.getByRole("link", { name: "أحمد سامي تجريبي" }),
+      ).toBeVisible();
+      await expect(results).toContainText("01000000001");
+      await expect(results).toContainText(t.sex.male);
+      // The list is the short form: nothing from the full record.
+      await expect(results).not.toContainText("29004120100001");
+      await expect(page).toHaveURL(new RegExp(`/${locale}/patients$`));
+    });
+
+    test("finds by phone with Arabic digits and separators, listing all who share it", async ({
+      page,
+    }) => {
+      await searchField(page, t.fields.phone).fill("٠١٠ ٠٠٠٠-٠٠٠٢");
+      await submitSearch(page, locale);
+
+      const results = page.getByRole("table", { name: t.search.caption });
+      await expect(results).toContainText("Synthetic Patient Beta");
+      await expect(results).toContainText("Synthetic Child Gamma");
+    });
+
+    test("says when nothing matches, keeping the terms and offering registering", async ({
+      page,
+    }) => {
+      await searchField(page, t.fields.fullName).fill("Nobody Synthetic");
+      await submitSearch(page, locale);
+
+      await expect(page.getByText(t.search.emptyTitle)).toBeVisible();
+      await expect(searchField(page, t.fields.fullName)).toHaveValue(
+        "Nobody Synthetic",
+      );
+      await page
+        .getByRole("main")
+        .getByRole("link", { name: t.register })
+        .last()
+        .click();
+      await expect(page).toHaveURL(new RegExp(`/${locale}/patients/new$`));
+    });
+
+    test("shows a refusal on its field, keeping what was typed", async ({
+      page,
+    }) => {
+      await searchField(page, t.fields.phone).fill("12");
+      await submitSearch(page, locale);
+
+      await expect(
+        page.getByText("The phone number is not valid."),
+      ).toBeVisible();
+      await expect(searchField(page, t.fields.phone)).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
+      await expect(searchField(page, t.fields.phone)).toHaveValue("12");
+    });
+
+    test("an error keeps the terms, doesn't retry alone, and retries when asked", async ({
+      page,
+    }) => {
+      await script("patients", 500);
+      await searchField(page, t.fields.fullName).fill("Beta");
+      await submitSearch(page, locale);
+
+      await expect(page.getByText(shared.states.errorHeading)).toBeVisible();
+      await expect(searchField(page, t.fields.fullName)).toHaveValue("Beta");
+      await settle(page);
+      expect(await callsTo("patients")).toBe(1);
+
+      await script("patients", 0);
+      await page.getByRole("button", { name: shared.states.retry }).click();
+      await expect(
+        page.getByRole("link", { name: "Synthetic Patient Beta" }),
+      ).toBeVisible();
+      expect(await callsTo("patients")).toBe(2);
+    });
+
+    test("reset returns to the first state", async ({ page }) => {
+      await searchField(page, t.fields.fullName).fill("Beta");
+      await submitSearch(page, locale);
+      await expect(
+        page.getByRole("link", { name: "Synthetic Patient Beta" }),
+      ).toBeVisible();
+
+      await page.getByRole("button", { name: shared.filters.reset }).click();
+
+      await expect(searchField(page, t.fields.fullName)).toHaveValue("");
+      await expect(
+        page.getByText(t.search.promptTitle, { exact: true }),
+      ).toBeVisible();
+      await expect(page.getByRole("table")).toHaveCount(0);
+    });
+  });
+}
+
+test.describe("a search's terms and results", () => {
+  const t = messages.en.patients;
+  const TERM = "Crowd";
+
+  test.beforeEach(async ({ page }) => {
+    await control("clinic/more-patients?count=20");
+    await signIn(page, "receptionist");
+    await page.goto("/en/patients");
+  });
+
+  test("stay out of every address, document request, and browser storage", async ({
+    page,
+  }) => {
+    const addresses: string[] = [];
+    const requests: string[] = [];
+    page.on("framenavigated", (frame) => addresses.push(frame.url()));
+    page.on("request", (request) => requests.push(request.url()));
+
+    for (const label of [t.fields.fullName, t.fields.phone]) {
+      await expect(searchField(page, label)).toHaveAttribute(
+        "autocomplete",
+        "off",
+      );
+    }
+
+    await searchField(page, t.fields.fullName).fill(TERM);
+    await submitSearch(page);
+    await expect(page.getByRole("table")).toContainText("Synthetic Crowd");
+    await page
+      .getByRole("button", { name: messages.en.shared.table.next })
+      .click();
+    await expect(page.getByRole("table")).toContainText("Synthetic Crowd");
+
+    await page
+      .getByRole("link", { name: /Synthetic Crowd/u })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/en\/patients\/\d+$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+
+    expect(addresses.length).toBeGreaterThan(0);
+    for (const address of addresses) expect(address).not.toContain(TERM);
+    // Only the call to the API itself holds the term, which is what it's for.
+    for (const request of requests) {
+      if (!request.includes("/api/backend/patients?")) {
+        expect(request).not.toContain(TERM);
+      }
+    }
+
+    const stored = await page.evaluate(() =>
+      JSON.stringify([{ ...localStorage }, { ...sessionStorage }]),
+    );
+    expect(stored).not.toContain(TERM);
+    expect(stored).not.toContain("Synthetic");
+  });
+
+  test("page by button, with the same terms and no change of address", async ({
+    page,
+  }) => {
+    const shared = messages.en.shared.table;
+    await searchField(page, t.fields.fullName).fill(TERM);
+    await submitSearch(page);
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: shared.previous }),
+    ).toBeDisabled();
+
+    await page.getByRole("button", { name: shared.next }).click();
+
+    await expect(
+      page.getByRole("button", { name: shared.previous }),
+    ).toBeEnabled();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(searchField(page, t.fields.fullName)).toHaveValue(TERM);
+  });
+
+  test("come back with the back button, and hovering or returning reads no record", async ({
+    page,
+  }) => {
+    await searchField(page, t.fields.phone).fill("01000000002");
+    await submitSearch(page);
+
+    const link = page.getByRole("link", { name: "Synthetic Patient Beta" });
+    await link.hover();
+    await settle(page);
+    expect(await openings(2)).toBe(0);
+
+    await link.click();
+    await expect(page).toHaveURL(/\/en\/patients\/2$/);
+    await expect.poll(() => openings(2)).toBe(1);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(searchField(page, t.fields.phone)).toHaveValue("01000000002");
+    await expect(link).toBeVisible();
+    expect(await callsTo("patients")).toBe(1);
+    await settle(page);
+    expect(await openings(2)).toBe(1);
+  });
+
+  test("clicking the same result again is a new opening, and a reload clears the search", async ({
+    page,
+  }) => {
+    await searchField(page, t.fields.fullName).fill("Beta");
+    await submitSearch(page);
+    const link = page.getByRole("link", { name: "Synthetic Patient Beta" });
+
+    await link.click();
+    await expect.poll(() => openings(2)).toBe(1);
+    await page.goBack();
+    await link.click();
+    await expect.poll(() => openings(2)).toBe(2);
+
+    await page.goBack();
+    await expect(link).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByText(t.search.promptTitle, { exact: true }),
+    ).toBeVisible();
+    await expect(searchField(page, t.fields.fullName)).toHaveValue("");
+    await expect(page.getByRole("table")).toHaveCount(0);
+  });
+});
+
 test.describe("a long name and address", () => {
   for (const width of [768, 390]) {
     test(`wrap at ${width}px, in both directions`, async ({ page }) => {
