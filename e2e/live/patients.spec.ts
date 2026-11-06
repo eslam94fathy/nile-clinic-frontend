@@ -449,6 +449,144 @@ test.describe("registering a patient", () => {
   });
 });
 
+test.describe("correcting a patient's details", () => {
+  const f = m.patients.fields;
+  const form = m.patients.form;
+
+  const field = (page: Page, label: string) =>
+    page.getByLabel(new RegExp(`^${label}`, "u")).locator("visible=true");
+  const startEditing = (page: Page) =>
+    page.getByRole("button", { name: m.patients.record.edit }).click();
+  const save = (page: Page) =>
+    page.getByRole("button", { name: form.save }).click();
+
+  test.beforeEach(async ({ page }) => {
+    await signInLive(page, admin());
+  });
+
+  test("a change is recorded as a change, and writes no opening", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const patient = await newPatient({
+      phone: `010${uniqueDigits(8)}`,
+      national_id: `2${uniqueDigits(13)}`,
+      address: "12 Synthetic St",
+      emergency_contact: {
+        name: "Synthetic Guardian",
+        relationship: "father",
+        phone: `011${uniqueDigits(8)}`,
+      },
+    });
+    const patches: string[] = [];
+    page.on("request", (request) => {
+      if (request.method() === "PATCH") patches.push(request.url());
+    });
+
+    await page.goto(`/en/patients/${patient.id}`);
+    await expect(reloadButton(page)).toBeVisible();
+    await expectOpenings(page, patient.id, 1);
+
+    // Starting to edit, and then changing nothing, sends nothing at all.
+    await startEditing(page);
+    await save(page);
+    await expect(page.getByText(m.shared.form.nothingToSave)).toBeVisible();
+    await expectOpenings(page, patient.id, 1);
+    expect(patches).toHaveLength(0);
+    expect(await entries(patient.id, "patient.updated")).toBe(0);
+
+    // A real change.
+    const phone = `010${uniqueDigits(8)}`;
+    await field(page, f.phone).fill(phone);
+    await field(page, f.address).fill("");
+    await page
+      .getByLabel(f.contactName, { exact: true })
+      .locator("visible=true")
+      .fill("");
+    await page
+      .getByLabel(f.contactRelationship, { exact: true })
+      .locator("visible=true")
+      .fill("");
+    await page
+      .getByLabel(f.contactPhone, { exact: true })
+      .locator("visible=true")
+      .fill("");
+    await save(page);
+
+    await expect(page.getByText(form.saved)).toBeVisible();
+    await expect(page.getByRole("main")).toContainText(phone);
+    await expect(page.getByText(f.notRecorded)).toHaveCount(2);
+    expect(patches).toHaveLength(1);
+    await expectOpenings(page, patient.id, 1);
+    expect(await entries(patient.id, "patient.updated")).toBe(1);
+
+    // Confirmed through the API last, as this read writes an entry of its own.
+    const response = await api(`patients/${patient.id}`, { token });
+    expect(response.status).toBe(200);
+    expect(((await response.json()) as { data: unknown }).data).toMatchObject({
+      id: patient.id,
+      full_name: patient.full_name,
+      phone,
+      address: null,
+      emergency_contact: null,
+    });
+  });
+
+  test("the search shows the new name on returning, with no further read", async ({
+    page,
+  }) => {
+    const phone = `010${uniqueDigits(8)}`;
+    const patient = await newPatient({ phone });
+    const renamed = `Synthetic Renamed ${stamp()}`;
+
+    await search(page, f.phone, phone);
+    await results(page).getByRole("link", { name: patient.full_name }).click();
+    await expect(reloadButton(page)).toBeVisible();
+    await expectOpenings(page, patient.id, 1);
+
+    await startEditing(page);
+    await field(page, f.fullName).fill(renamed);
+    await save(page);
+    await expect(page.getByText(form.saved)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      renamed,
+    );
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(
+      results(page).getByRole("link", { name: renamed }),
+    ).toBeVisible();
+    await expect(
+      results(page).getByRole("link", { name: patient.full_name }),
+    ).toHaveCount(0);
+    await expectOpenings(page, patient.id, 1);
+  });
+
+  test("a national ID held by someone else is refused on its field", async ({
+    page,
+  }) => {
+    const nationalId = `3${uniqueDigits(13)}`;
+    await newPatient({
+      national_id: nationalId,
+      phone: `010${uniqueDigits(8)}`,
+    });
+    const patient = await newPatient({ phone: `010${uniqueDigits(8)}` });
+
+    await page.goto(`/en/patients/${patient.id}`);
+    await startEditing(page);
+    await field(page, f.nationalId).fill(nationalId);
+    await save(page);
+
+    await expect(field(page, f.nationalId)).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(field(page, f.nationalId)).toHaveValue(nationalId);
+    expect(await entries(patient.id, "patient.updated")).toBe(0);
+  });
+});
+
 test.describe("the opening count, from the record's address", () => {
   test("only a person's own actions write an entry", async ({
     page,

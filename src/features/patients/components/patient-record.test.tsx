@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { Activity, type ComponentProps, StrictMode } from "react";
@@ -317,6 +318,184 @@ describe("when reading fails", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(
       "Synthetic Patient",
     );
+  });
+});
+
+describe("editing", () => {
+  const edit = () => screen.getByRole("button", { name: t.record.edit });
+  const phoneField = () =>
+    screen.getByLabelText<HTMLInputElement>(
+      new RegExp(`^${t.fields.phone}`, "u"),
+    );
+  const changePhone = (value = "01000000009") =>
+    fireEvent.change(phoneField(), { target: { value } });
+  const save = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: t.form.save }));
+      await Promise.resolve();
+    });
+  };
+
+  it("starts from the record on screen, with no read", async () => {
+    await shown();
+
+    fireEvent.click(edit());
+
+    expect(phoneField().value).toBe("01000000001");
+    expect(readPatient).toHaveBeenCalledTimes(1);
+  });
+
+  it("isn't offered until there's a record", () => {
+    readPatient.mockReturnValue(new Promise(() => {}));
+    render(stage());
+
+    expect(screen.queryByRole("button", { name: t.record.edit })).toBeNull();
+  });
+
+  it("can't reload while editing", async () => {
+    await shown();
+
+    fireEvent.click(edit());
+
+    expect(screen.queryByRole("button", { name: t.record.reload })).toBeNull();
+    expect(screen.queryByText(t.record.reloadHint)).toBeNull();
+  });
+
+  it("shows the returned record after saving, with no read", async () => {
+    await shown();
+    updatePatient.mockResolvedValue(found({ ...record, phone: "01000000009" }));
+
+    fireEvent.click(edit());
+    changePhone();
+    await save();
+
+    await waitFor(() => expect(screen.getByText("01000000009")).toBeTruthy());
+    expect(screen.queryByRole("button", { name: t.form.save })).toBeNull();
+    expect(readPatient).toHaveBeenCalledTimes(1);
+    expect(reload()).toBeTruthy();
+  });
+
+  it("can edit a record that was handed over, which never had a read", async () => {
+    handOver(record);
+    await shown();
+    updatePatient.mockResolvedValue(found({ ...record, phone: "01000000009" }));
+
+    fireEvent.click(edit());
+    changePhone();
+    await save();
+
+    await waitFor(() => expect(screen.getByText("01000000009")).toBeTruthy());
+    expect(readPatient).not.toHaveBeenCalled();
+  });
+
+  it("cancelling returns the record untouched, with no read", async () => {
+    await shown();
+
+    fireEvent.click(edit());
+    changePhone();
+    fireEvent.click(screen.getByRole("button", { name: t.form.cancel }));
+
+    expect(screen.getByText("01000000001")).toBeTruthy();
+    expect(screen.queryByText("01000000009")).toBeNull();
+    expect(readPatient).toHaveBeenCalledTimes(1);
+    expect(updatePatient).not.toHaveBeenCalled();
+  });
+
+  it("forgets what was typed once cancelled", async () => {
+    await shown();
+
+    fireEvent.click(edit());
+    changePhone();
+    fireEvent.click(screen.getByRole("button", { name: t.form.cancel }));
+    fireEvent.click(edit());
+
+    expect(phoneField().value).toBe("01000000001");
+  });
+
+  it("returns focus to the button, after saving or cancelling", async () => {
+    await shown();
+
+    fireEvent.click(edit());
+    fireEvent.click(screen.getByRole("button", { name: t.form.cancel }));
+
+    await waitFor(() => expect(document.activeElement).toBe(edit()));
+  });
+
+  it("keeps what was typed when a read arrives during editing", async () => {
+    const view = await shown();
+
+    fireEvent.click(edit());
+    changePhone();
+    view.rerender(stage("hidden"));
+    await settled();
+    markAsked(5);
+    readPatient.mockResolvedValue(
+      found({ ...record, address: "9 Newer St", full_name: "Newer Name" }),
+    );
+    view.rerender(stage("visible"));
+    await settled();
+
+    expect(readPatient).toHaveBeenCalledTimes(2);
+    expect(phoneField().value).toBe("01000000009");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(
+      "Newer Name",
+    );
+  });
+
+  it("ignores a read that was overtaken by a save", async () => {
+    await shown();
+    let answerRead: (value: unknown) => void = () => undefined;
+    readPatient.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answerRead = resolve;
+      }),
+    );
+    fireEvent.click(reload());
+
+    updatePatient.mockResolvedValue(found({ ...record, phone: "01000000009" }));
+    fireEvent.click(edit());
+    changePhone();
+    await save();
+    await waitFor(() => expect(screen.getByText("01000000009")).toBeTruthy());
+
+    await act(async () => {
+      answerRead(found({ ...record, phone: "01000000055" }));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText("01000000009")).toBeTruthy();
+    expect(screen.queryByText("01000000055")).toBeNull();
+    expect(reload()).toBeTruthy();
+  });
+
+  it.each([
+    [403, shared.states.forbiddenHeading],
+    [404, shared.states.notFoundHeading],
+  ])("removes the record on a %i when saving", async (status, heading) => {
+    await shown();
+    updatePatient.mockResolvedValue(refused(status));
+
+    fireEvent.click(edit());
+    changePhone();
+    await save();
+
+    await screen.findByText(heading);
+    expect(screen.queryByText("01000000001")).toBeNull();
+    expect(screen.queryByText("Synthetic Patient")).toBeNull();
+    expect(screen.queryByRole("button", { name: t.form.save })).toBeNull();
+  });
+
+  it("keeps the form through a server failure when saving", async () => {
+    await shown();
+    updatePatient.mockResolvedValue(refused(500, "It failed."));
+
+    fireEvent.click(edit());
+    changePhone();
+    await save();
+
+    await screen.findByText("It failed.");
+    expect(phoneField().value).toBe("01000000009");
+    expect(readPatient).toHaveBeenCalledTimes(1);
   });
 });
 

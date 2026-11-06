@@ -14,6 +14,7 @@ import { readPatient } from "../api/patients";
 import { takeAsked, takeHandedOver } from "../opening";
 import type { Patient } from "../types";
 import { PatientDetails } from "./patient-details";
+import { PatientEditForm } from "./patient-edit-form";
 
 /** After these, the person may not see this record at all, so nothing already on screen can stay. */
 const losesTheRecord = (error: ApiError) =>
@@ -27,6 +28,7 @@ const losesTheRecord = (error: ApiError) =>
 export function PatientRecord({
   id,
   timeZone,
+  today,
 }: {
   id: number;
   timeZone: string;
@@ -38,8 +40,17 @@ export function PatientRecord({
   const [record, setRecord] = useState<Patient | null>(null);
   const [failure, setFailure] = useState<ApiError | null>(null);
   const [reading, setReading] = useState(false);
+  const [editing, setEditing] = useState(false);
   const opened = useRef(false);
   const newest = useRef(0);
+  const editButton = useRef<HTMLButtonElement>(null);
+  const wasEditing = useRef(false);
+
+  const lose = useCallback((error: ApiError) => {
+    setFailure(error);
+    setRecord(null);
+    setEditing(false);
+  }, []);
 
   const read = useCallback(async () => {
     newest.current += 1;
@@ -55,9 +66,9 @@ export function PatientRecord({
       setFailure(null);
       return;
     }
-    setFailure(result.error);
-    if (losesTheRecord(result.error)) setRecord(null);
-  }, [id, locale]);
+    if (losesTheRecord(result.error)) lose(result.error);
+    else setFailure(result.error);
+  }, [id, locale, lose]);
 
   // This runs on mounting, and again each time a held page is shown. The ref and the mark are what decide.
   useEffect(() => {
@@ -74,6 +85,12 @@ export function PatientRecord({
     }
     void read();
   }, [id, read]);
+
+  // Saving or cancelling removes the focused button, so focus returns to the one that started this.
+  useEffect(() => {
+    if (wasEditing.current && !editing) editButton.current?.focus();
+    wasEditing.current = editing;
+  }, [editing]);
 
   if (record === null) {
     return failure ? (
@@ -102,23 +119,55 @@ export function PatientRecord({
           action={failure.message ? <p>{t("record.outOfDate")}</p> : undefined}
         />
       ) : null}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">{t("record.detailsHeading")}</h2>
-        <PatientDetails record={record} timeZone={timeZone} />
-      </section>
-      <section className="flex flex-col items-start gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={reading}
-          onClick={() => void read()}
-        >
-          {reading ? t("record.reloading") : t("record.reload")}
-        </Button>
-        <p className="text-[0.8125rem] text-muted-foreground">
-          {t("record.reloadHint")}
-        </p>
-      </section>
+      {editing ? (
+        <PatientEditForm
+          record={record}
+          today={today}
+          onCancel={() => setEditing(false)}
+          onFailure={(error) => {
+            if (losesTheRecord(error)) lose(error);
+          }}
+          onSaved={(saved) => {
+            // Whatever a read still on its way says, it's older than this.
+            newest.current += 1;
+            setReading(false);
+            setRecord(saved);
+            setFailure(null);
+            setEditing(false);
+          }}
+        />
+      ) : (
+        <>
+          <section className="flex flex-col gap-3">
+            <h2 className="text-xl font-semibold">
+              {t("record.detailsHeading")}
+            </h2>
+            <PatientDetails record={record} timeZone={timeZone} />
+          </section>
+          <section className="flex flex-col items-start gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                ref={editButton}
+                type="button"
+                onClick={() => setEditing(true)}
+              >
+                {t("record.edit")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={reading}
+                onClick={() => void read()}
+              >
+                {reading ? t("record.reloading") : t("record.reload")}
+              </Button>
+            </div>
+            <p className="text-[0.8125rem] text-muted-foreground">
+              {t("record.reloadHint")}
+            </p>
+          </section>
+        </>
+      )}
     </>
   );
 }

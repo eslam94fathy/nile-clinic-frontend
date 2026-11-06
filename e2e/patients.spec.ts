@@ -754,6 +754,212 @@ test.describe("around registering", () => {
   });
 });
 
+for (const locale of ["ar", "en"] as const) {
+  const t = messages[locale].patients;
+  const { shared } = messages[locale];
+
+  test.describe(`correcting a patient's details, in ${locale}`, () => {
+    const startEditing = async (page: Page, id: number) => {
+      await page.goto(`/${locale}/patients/${id}`);
+      await page.getByRole("button", { name: t.record.edit }).click();
+    };
+    const save = (page: Page) =>
+      page.getByRole("button", { name: t.form.save }).click();
+    const contactField = (page: Page, label: string) =>
+      page.getByLabel(label, { exact: true }).locator("visible=true");
+
+    test.beforeEach(async ({ page }) => {
+      await signIn(page, "receptionist", locale);
+    });
+
+    test("fills in from the record, offers no reload, and reads nothing more", async ({
+      page,
+    }) => {
+      await startEditing(page, 1);
+
+      await expect(formField(page, t.fields.phone)).toHaveValue("01000000001");
+      await expect(formField(page, t.fields.address)).toHaveValue(
+        "12 Synthetic St, Cairo",
+      );
+      await expect(
+        page.getByRole("button", { name: t.record.reload }),
+      ).toHaveCount(0);
+      await settle(page);
+      expect(await callsTo("patients/1")).toBe(1);
+      expect(await openings(1)).toBe(1);
+    });
+
+    test("saves a change and a clearing, showing what came back with no read", async ({
+      page,
+    }) => {
+      await startEditing(page, 1);
+
+      await formField(page, t.fields.phone).fill("010 0000-0050");
+      await formField(page, t.fields.address).fill("");
+      await save(page);
+
+      await expect(page.getByText(t.form.saved)).toBeVisible();
+      const main = page.getByRole("main");
+      await expect(main).toContainText("01000000050");
+      await expect(main).not.toContainText("12 Synthetic St");
+      await expect(page.getByText(t.fields.notRecorded)).toHaveCount(1);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        "أحمد",
+      );
+      await settle(page);
+      // The first read, and the save.
+      expect(await callsTo("patients/1")).toBe(2);
+      expect(await openings(1)).toBe(1);
+    });
+
+    test("sends nothing when nothing changed, and says so", async ({
+      page,
+    }) => {
+      await startEditing(page, 1);
+
+      await formField(page, t.fields.phone).fill("٠١٠ ٠٠٠٠-٠٠٠١");
+      await save(page);
+
+      await expect(page.getByText(shared.form.nothingToSave)).toBeVisible();
+      await settle(page);
+      expect(await callsTo("patients/1")).toBe(1);
+      expect(await openings(1)).toBe(1);
+    });
+
+    test("emptying all of a contact clears it, and one part alone is refused", async ({
+      page,
+    }) => {
+      await startEditing(page, 1);
+
+      await contactField(page, t.fields.contactName).fill("");
+      await save(page);
+      await expect(page.getByText(t.form.contactPartRequired)).toBeVisible();
+      expect(await callsTo("patients/1")).toBe(1);
+
+      await contactField(page, t.fields.contactRelationship).fill("");
+      await contactField(page, t.fields.contactPhone).fill("");
+      await save(page);
+
+      await expect(page.getByText(t.form.saved)).toBeVisible();
+      await expect(page.getByText(t.fields.notRecorded)).toHaveCount(1);
+      await expect(page.getByRole("main")).not.toContainText("01000000009");
+    });
+
+    test("gives quick feedback on an emptied required detail", async ({
+      page,
+    }) => {
+      await startEditing(page, 1);
+
+      await formField(page, t.fields.fullName).fill("  ");
+      await save(page);
+
+      await expect(page.getByText(t.form.nameRequired)).toBeVisible();
+      expect(await callsTo("patients/1")).toBe(1);
+    });
+
+    test("shows a national ID held by someone else on its field, keeping the form", async ({
+      page,
+    }) => {
+      await startEditing(page, 2);
+
+      await formField(page, t.fields.nationalId).fill("29004120100001");
+      await save(page);
+
+      await expect(
+        page.getByText("This national ID has already been taken."),
+      ).toBeVisible();
+      await expect(formField(page, t.fields.nationalId)).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
+      await expect(formField(page, t.fields.nationalId)).toHaveValue(
+        "29004120100001",
+      );
+    });
+
+    test("cancelling returns the record untouched", async ({ page }) => {
+      await startEditing(page, 1);
+
+      await formField(page, t.fields.phone).fill("01000000051");
+      await page.getByRole("button", { name: t.form.cancel }).click();
+
+      const main = page.getByRole("main");
+      await expect(main).toContainText("01000000001");
+      await expect(main).not.toContainText("01000000051");
+      expect(await callsTo("patients/1")).toBe(1);
+      await expect(
+        page.getByRole("button", { name: t.record.edit }),
+      ).toBeFocused();
+    });
+  });
+}
+
+test.describe("around editing", () => {
+  const t = messages.en.patients;
+
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, "receptionist");
+  });
+
+  test("held results show the new name, and no held record is read", async ({
+    page,
+  }) => {
+    await page.goto("/en/patients");
+    await searchField(page, t.fields.phone).fill("01000000002");
+    await submitSearch(page);
+
+    await page.getByRole("link", { name: "Synthetic Child Gamma" }).click();
+    await expect(page).toHaveURL(/\/en\/patients\/3$/);
+    await expect.poll(() => openings(3)).toBe(1);
+    await page.goBack();
+
+    await page.getByRole("link", { name: "Synthetic Patient Beta" }).click();
+    await expect(page).toHaveURL(/\/en\/patients\/2$/);
+    await expect.poll(() => openings(2)).toBe(1);
+    await page.getByRole("button", { name: t.record.edit }).click();
+    await formField(page, t.fields.fullName).fill("Synthetic Patient Renamed");
+    await page.getByRole("button", { name: t.form.save }).click();
+    await expect(page.getByText(t.form.saved)).toBeVisible();
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\/patients$/);
+    await expect(
+      page.getByRole("link", { name: "Synthetic Patient Renamed" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Synthetic Patient Beta" }),
+    ).toHaveCount(0);
+
+    await settle(page);
+    expect(await openings(2)).toBe(1);
+    expect(await openings(3)).toBe(1);
+  });
+
+  test("a record just registered, which had no read, can be edited", async ({
+    page,
+  }) => {
+    await page.goto("/en/patients/new");
+    await fillRequired(page, "en", {
+      name: "Synthetic Fresh Edit",
+      phone: "01000000052",
+    });
+    await submitRegister(page);
+    const id = await movedToRecord(page);
+
+    await page.getByRole("button", { name: t.record.edit }).click();
+    await expect(formField(page, t.fields.fullName)).toHaveValue(
+      "Synthetic Fresh Edit",
+    );
+    await formField(page, t.fields.address).fill("3 Synthetic Road");
+    await page.getByRole("button", { name: t.form.save }).click();
+
+    await expect(page.getByText(t.form.saved)).toBeVisible();
+    await expect(page.getByRole("main")).toContainText("3 Synthetic Road");
+    await settle(page);
+    expect(await openings(id)).toBe(0);
+  });
+});
+
 test.describe("a long name and address", () => {
   for (const width of [768, 390]) {
     test(`wrap at ${width}px, in both directions`, async ({ page }) => {
