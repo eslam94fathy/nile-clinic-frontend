@@ -1,6 +1,6 @@
 # ADR 0009: Brand assets, with the logo drawn inline
 
-**Status:** Proposed. The project owner supplied the logo kit on 2026-11-06. How it is used here awaits their approval.
+**Status:** Accepted, by the project owner, 2026-11-06.
 
 ## Context
 
