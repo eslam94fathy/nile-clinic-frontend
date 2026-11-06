@@ -1,12 +1,174 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-/* Readable defaults only. The design system arrives in Phase 2. */
-body {
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Tahoma,
-    Arial,
-    sans-serif;
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+/* Token values come from docs/decisions/0008-visual-direction.md. Keep them solid hex, except --overlay: `pnpm check:contrast` reads this block. */
+:root {
+  color-scheme: light;
+  --radius: 0.375rem;
+  --background: #f4f7f7;
+  --foreground: #10282d;
+  --card: #ffffff;
+  --card-foreground: #10282d;
+  --popover: #ffffff;
+  --popover-foreground: #10282d;
+  --muted: #e8eeef;
+  --muted-foreground: #4a6166;
+  --secondary: #e8eeef;
+  --secondary-foreground: #10282d;
+  --accent: #dde8ea;
+  --accent-foreground: #10282d;
+  --primary: #0a5a66;
+  --primary-foreground: #ffffff;
+  --destructive: #a3231f;
+  --destructive-foreground: #ffffff;
+  --border: #d3dedf;
+  --input: #748b90;
+  --ring: #0a7786;
+  --overlay: #10282d66;
+  --status-neutral: #e8eeef;
+  --status-neutral-foreground: #2d4146;
+  --status-neutral-border: #6f858a;
+  --status-active: #dcebfa;
+  --status-active-foreground: #0f3f73;
+  --status-active-border: #2f73b8;
+  --status-success: #ddf1e4;
+  --status-success-foreground: #14532d;
+  --status-success-border: #2e8550;
+  --status-warning: #fcebcf;
+  --status-warning-foreground: #6b3e00;
+  --status-warning-border: #b26f00;
+  --status-muted: #eef0f0;
+  --status-muted-foreground: #4e5a5d;
+  --status-muted-border: #8a9699;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0d1b1e;
+  --foreground: #e4eeef;
+  --card: #14262a;
+  --card-foreground: #e4eeef;
+  --popover: #14262a;
+  --popover-foreground: #e4eeef;
+  --muted: #1c3035;
+  --muted-foreground: #a0b4b8;
+  --secondary: #1c3035;
+  --secondary-foreground: #e4eeef;
+  --accent: #24393e;
+  --accent-foreground: #e4eeef;
+  --primary: #63c6d1;
+  --primary-foreground: #06282d;
+  --destructive: #f2a29e;
+  --destructive-foreground: #3a0b09;
+  --border: #27393d;
+  --input: #6e8a90;
+  --ring: #7fd6e0;
+  --overlay: #00000099;
+  --status-neutral: #213338;
+  --status-neutral-foreground: #d5e2e4;
+  --status-neutral-border: #7f979c;
+  --status-active: #12304f;
+  --status-active-foreground: #bbdbfb;
+  --status-active-border: #5a9fe0;
+  --status-success: #123521;
+  --status-success-foreground: #b4e8c7;
+  --status-success-border: #4fb378;
+  --status-warning: #3d2a08;
+  --status-warning-foreground: #f6d59a;
+  --status-warning-border: #cf9333;
+  --status-muted: #1c2a2d;
+  --status-muted-foreground: #a9b6b9;
+  --status-muted-border: #6f7f83;
+}
+
+@theme inline {
+  --font-sans: var(--font-latin), var(--font-arabic), system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-foreground: var(--status-neutral-foreground);
+  --color-status-neutral-border: var(--status-neutral-border);
+  --color-status-active: var(--status-active);
+  --color-status-active-foreground: var(--status-active-foreground);
+  --color-status-active-border: var(--status-active-border);
+  --color-status-success: var(--status-success);
+  --color-status-success-foreground: var(--status-success-foreground);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-foreground: var(--status-warning-foreground);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-muted: var(--status-muted);
+  --color-status-muted-foreground: var(--status-muted-foreground);
+  --color-status-muted-border: var(--status-muted-border);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+  html {
+    @apply font-sans;
+    font-variant-numeric: tabular-nums;
+    /* Keeps a focused element clear of a notice at the bottom of the window (FR-029). */
+    scroll-padding-block: 1rem 6rem;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+  /* Arabic marks need more room above and below the line than Latin text. */
+  :lang(ar) {
+    --text-xs--line-height: 1.6;
+    --text-sm--line-height: 1.6;
+    --text-base--line-height: 1.6;
+    --text-lg--line-height: 1.6;
+    --text-xl--line-height: 1.5;
+    --text-2xl--line-height: 1.5;
+    --text-3xl--line-height: 1.4;
+  }
+  body:lang(ar) {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
