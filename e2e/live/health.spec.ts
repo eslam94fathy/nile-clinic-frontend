@@ -6,7 +6,7 @@ for (const locale of ["ar", "en"] as const) {
   test(`reports the real backend as working, in ${locale}`, async ({
     page,
   }) => {
-    await page.goto(`/${locale}`);
+    await page.goto(`/${locale}/sign-in`);
 
     const region = page.getByRole("status");
     await expect(region).toContainText(messages[locale].status.working);

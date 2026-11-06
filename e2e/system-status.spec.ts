@@ -33,7 +33,7 @@ test.describe("each status", () => {
       });
       const page = await context.newPage();
 
-      await page.goto(`http://localhost:3110/${locale}`);
+      await page.goto(`http://localhost:3110/${locale}/sign-in`);
 
       const region = page.getByRole("status");
       await expect(region).toContainText(messages[locale].status.working);
@@ -52,7 +52,7 @@ test.describe("each status", () => {
     test(`system unavailable for ${mode}`, async ({ page }) => {
       await setMode(mode);
 
-      await page.goto("/en");
+      await page.goto("/en/sign-in");
 
       const region = page.getByRole("status");
       await expect(region).toContainText(status.unavailable);
@@ -67,7 +67,7 @@ test.describe("each status", () => {
     test(`cannot reach for ${mode}`, async ({ page }) => {
       await setMode(mode);
 
-      await page.goto("/en");
+      await page.goto("/en/sign-in");
 
       const region = page.getByRole("status");
       await expect(region).toContainText(status.unreachable);
@@ -84,7 +84,7 @@ test.describe("each status", () => {
     await setMode("hang");
     const started = Date.now();
 
-    await page.goto("/en", { waitUntil: "commit" });
+    await page.goto("/en/sign-in", { waitUntil: "commit" });
     await expect(page.getByRole("status")).toContainText(status.unreachable, {
       timeout: 8000,
     });
@@ -98,10 +98,10 @@ test.describe("each status", () => {
 test("the page shows checking while a slow check runs", async ({ page }) => {
   await setMode("slow");
 
-  await page.goto("/en", { waitUntil: "commit" });
+  await page.goto("/en/sign-in", { waitUntil: "commit" });
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    messages.en.landing.heading,
+    messages.en.auth.signIn.heading,
   );
   await expect(page.getByRole("status")).toContainText(status.checking);
   await expect(page.getByRole("status")).toContainText(status.working);
@@ -111,7 +111,7 @@ test("the live region stays in place, so its result is announced", async ({
   page,
 }) => {
   await setMode("slow");
-  await page.goto("/en", { waitUntil: "commit" });
+  await page.goto("/en/sign-in", { waitUntil: "commit" });
 
   const region = page.getByRole("status");
   await expect(region).toContainText(status.checking);
@@ -125,7 +125,7 @@ test("the live region stays in place, so its result is announced", async ({
 
 test("keyboard focus is kept when checking again", async ({ page }) => {
   await setMode("unavailable");
-  await page.goto("/en");
+  await page.goto("/en/sign-in");
   const button = page.getByRole("button", { name: status.checkAgain });
   await button.focus();
 
@@ -147,7 +147,7 @@ test("check again runs a new check and updates the status", async ({
   page,
 }) => {
   await setMode("unavailable");
-  await page.goto("/en");
+  await page.goto("/en/sign-in");
   await expect(page.getByRole("status")).toContainText(status.unavailable);
 
   await setMode("ok");
@@ -162,7 +162,7 @@ test("each page load makes exactly one check, with the page's language", async (
 }) => {
   await setMode("ok");
 
-  await page.goto("/ar", { waitUntil: "networkidle" });
+  await page.goto("/ar/sign-in", { waitUntil: "networkidle" });
   await expect(page.getByRole("status")).toContainText(
     messages.ar.status.working,
   );
@@ -170,7 +170,7 @@ test("each page load makes exactly one check, with the page's language", async (
   expect(result.count).toBe(1);
   expect(result.acceptLanguage).toBe("ar");
 
-  await page.goto("/en", { waitUntil: "networkidle" });
+  await page.goto("/en/sign-in", { waitUntil: "networkidle" });
   await expect(page.getByRole("status")).toContainText(status.working);
   result = await stats();
   expect(result.count).toBe(2);
@@ -186,7 +186,7 @@ test("the backend is never exposed to the browser", async ({ page }) => {
   const contacted: string[] = [];
   page.on("request", (request) => contacted.push(request.url()));
 
-  const response = await page.goto("/en", { waitUntil: "networkidle" });
+  const response = await page.goto("/en/sign-in", { waitUntil: "networkidle" });
   await expect(page.getByRole("status")).toContainText(status.working);
 
   expect(contacted.filter((url) => url.includes(":3111"))).toEqual([]);

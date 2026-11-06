@@ -11,16 +11,16 @@ for (const locale of ["ar", "en"] as const) {
         .getByRole("link", { name: messages[locale].brand.name })
         .click();
 
-      await expect(page).toHaveURL(new RegExp(`/${locale}$`));
+      await expect(page).toHaveURL(new RegExp(`/${locale}/sign-in$`));
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-        messages[locale].landing.heading,
+        messages[locale].auth.signIn.heading,
       );
     });
 
     test("keeps its text clear of the mark and inside the image", async ({
       page,
     }) => {
-      await page.goto(`/${locale}`);
+      await page.goto(`/${locale}/sign-in`);
 
       const logo = page.getByRole("banner").getByRole("img");
       const box = await logo.boundingBox();
@@ -45,7 +45,7 @@ for (const locale of ["ar", "en"] as const) {
       page,
     }) => {
       await page.setViewportSize({ width: 320, height: 640 });
-      await page.goto(`/${locale}`);
+      await page.goto(`/${locale}/sign-in`);
 
       const widths = await page.evaluate(() => ({
         content: document.documentElement.scrollWidth,
