@@ -43,7 +43,8 @@ work from memory or from these docs alone.
 
 - Use token classes (`bg-primary`, `text-muted-foreground`, `bg-status-success`). Raw colors and palette utilities such as
   `bg-neutral-500` fail `pnpm check:contrast`.
-- Change token values in `app/globals.css` and [ADR 0008](decisions/0008-visual-direction.md) together. Keep them solid hex, except
+- Change token values in `app/globals.css` and [ADR 0008](decisions/0008-visual-direction.md) together, or
+  [ADR 0009](decisions/0009-brand-assets.md) for brand tokens. Keep them solid hex, except
   `overlay`. A new text and background pair goes in the list in `scripts/check-contrast.mjs`.
 - After `shadcn add`, run `pnpm format`, and read the notes in [the tech stack](tech-stack.md#installed-phase-2).
 - Long values in tables wrap and aren't truncated. Phone numbers and IDs use `LtrText`, which never breaks across lines.

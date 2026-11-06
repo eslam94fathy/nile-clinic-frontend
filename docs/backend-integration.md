@@ -291,5 +291,5 @@ Workable today, but worth knowing. Nothing has been changed in the backend.
 | G3 | No dashboard or summary endpoint | Dashboards need several calls; receptionists and doctors have no reports | Compose from existing lists, showing only what they return |
 | G4 | No sort parameters | No sortable columns anywhere | Don't offer sorting; sorting one client page would mislead |
 | G5 | Throttle wait is only in message text | No countdown possible without parsing | Show the message as sent |
-| G6 | No clinic details endpoint | Clinic name and logo have no source | Frontend configuration |
+| G6 | No clinic details endpoint | Clinic name and logo have no source | Held in the frontend ([ADR 0009](decisions/0009-brand-assets.md)) |
 | G7 | No receipt or print endpoint | No printed receipts or prescriptions | Out of scope: decision Q5 in the [roadmap](roadmap.md) |
