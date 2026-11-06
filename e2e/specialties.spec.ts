@@ -85,7 +85,9 @@ for (const locale of ["ar", "en"] as const) {
       await expect(dialog).toContainText(t.deactivateDescription);
       await dialog.getByRole("button", { name: t.deactivate }).click();
 
-      await expect(page.getByText(t.deactivated, { exact: true })).toBeVisible();
+      await expect(
+        page.getByText(t.deactivated, { exact: true }),
+      ).toBeVisible();
       await expect(row).toContainText(shared.status.activity.deactivated);
 
       await row.getByRole("button", { name: t.reactivate }).click();
@@ -93,7 +95,9 @@ for (const locale of ["ar", "en"] as const) {
         .getByRole("alertdialog")
         .getByRole("button", { name: t.reactivate })
         .click();
-      await expect(page.getByText(t.reactivated, { exact: true })).toBeVisible();
+      await expect(
+        page.getByText(t.reactivated, { exact: true }),
+      ).toBeVisible();
       await expect(row).toContainText(shared.status.activity.active);
     });
 

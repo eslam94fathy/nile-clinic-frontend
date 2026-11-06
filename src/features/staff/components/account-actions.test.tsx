@@ -90,7 +90,10 @@ describe("AccountActions, on someone else's account", () => {
 
   it("offers to reactivate a deactivated account, explaining the effect", async () => {
     renderWithIntl(
-      <AccountActions member={{ ...member, is_active: false }} isSelf={false} />,
+      <AccountActions
+        member={{ ...member, is_active: false }}
+        isSelf={false}
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: t.reactivate }));
 
@@ -106,7 +109,9 @@ describe("AccountActions, on one's own account", () => {
     expect(screen.queryByText(t.passwordHeading)).toBeNull();
     expect(screen.getByText(t.ownPassword)).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: t.ownPasswordLink }).getAttribute("href"),
+      screen
+        .getByRole("link", { name: t.ownPasswordLink })
+        .getAttribute("href"),
     ).toBe("/account");
   });
 
@@ -137,7 +142,10 @@ describe("the doctor profile offer", () => {
 
   it("doesn't appear for a deactivated doctor account", () => {
     renderWithIntl(
-      <AccountActions member={{ ...doctor, is_active: false }} isSelf={false} />,
+      <AccountActions
+        member={{ ...doctor, is_active: false }}
+        isSelf={false}
+      />,
     );
     expect(screen.queryByRole("link", { name: t.createProfile })).toBeNull();
   });

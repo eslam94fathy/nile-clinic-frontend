@@ -114,22 +114,24 @@ export function SpecialtyForm({
     >
       <FormError messages={formErrors} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField
-          label={t("nameEn")}
-          error={errors.name_en?.message}
-          required
-        >
+        <FormField label={t("nameEn")} error={errors.name_en?.message} required>
           {(input) => (
-            <Input {...input} {...register("name_en")} dir="ltr" maxLength={200} />
+            <Input
+              {...input}
+              {...register("name_en")}
+              dir="ltr"
+              maxLength={200}
+            />
           )}
         </FormField>
-        <FormField
-          label={t("nameAr")}
-          error={errors.name_ar?.message}
-          required
-        >
+        <FormField label={t("nameAr")} error={errors.name_ar?.message} required>
           {(input) => (
-            <Input {...input} {...register("name_ar")} dir="rtl" maxLength={200} />
+            <Input
+              {...input}
+              {...register("name_ar")}
+              dir="rtl"
+              maxLength={200}
+            />
           )}
         </FormField>
       </div>

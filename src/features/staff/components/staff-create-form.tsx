@@ -17,6 +17,7 @@ import {
 import { type StaffMember, useHydrated } from "@/features/auth/public";
 import { useFormSubmit } from "@/lib/api/use-form-submit";
 import { useRouter } from "@/lib/i18n/navigation";
+import { useClearOnLeave } from "@/lib/use-clear-on-leave";
 import { createStaffMember } from "../api/staff";
 import {
   STAFF_ROLES,
@@ -32,6 +33,8 @@ const FIELDS = [
   "password",
   "password_confirmation",
 ] as const;
+
+const PASSWORD_FIELDS = ["password", "password_confirmation"] as const;
 
 const createdSchema = z.object({ data: z.object({ id: z.number() }) });
 
@@ -52,6 +55,8 @@ export function StaffCreateForm({
     register,
     handleSubmit,
     setError,
+    reset,
+    resetField,
     formState: { errors },
   } = useForm<z.input<typeof schema>, unknown, StaffCreateValues>({
     resolver: zodResolver(schema),
@@ -63,6 +68,7 @@ export function StaffCreateForm({
       password_confirmation: "",
     },
   });
+  useClearOnLeave(resetField, PASSWORD_FIELDS);
   const { working, formErrors, submit } = useFormSubmit<z.input<typeof schema>>(
     { fields: FIELDS, setError, generalFailure: shared("generalFailure") },
   );
@@ -71,6 +77,8 @@ export function StaffCreateForm({
     return submit(
       () => createStaffMember(values, locale),
       (data) => {
+        // This page stays mounted but hidden after moving on, so a password must not stay in it (FR-011).
+        reset();
         const created = createdSchema.safeParse(data);
         if (!created.success) {
           router.push("/staff");
@@ -84,6 +92,8 @@ export function StaffCreateForm({
           toast.success(t("created"));
           router.push(`/staff/${id}`);
         }
+        // Pages opened before this change are still mounted, and this is what updates them (ADR 0011).
+        router.refresh();
       },
     );
   }

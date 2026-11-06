@@ -491,7 +491,7 @@
     "clearDescription": "The doctor will offer no slots. Existing appointments aren't moved or cancelled, and reception will see any affected ones flagged.",
     "cleared": "Schedule cleared.",
     "slotsHeading": "Upcoming slots",
-    "slotsCount": "{count, plural, one {# slot} other {# slots}} in the coming 31 days",
+    "slotsCount": "{total, plural, one {{count} slot} other {{count} slots}} in the coming 31 days",
     "slotsFirstDates": "The first 7 dates with slots are shown.",
     "slotsEmptyTitle": "No slots in the coming 31 days",
     "slotsEmptyDescription": "Slots come from working hours and time off.",

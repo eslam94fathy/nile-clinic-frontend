@@ -207,12 +207,10 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     return { filter: (isActive) => isActive === wanted };
   };
 
-  const admin =
-    (handler) =>
-    (request, response, me, match, query) =>
-      me.role === "administrator"
-        ? handler(request, response, me, match, query)
-        : forbid(response);
+  const admin = (handler) => (request, response, me, match, query) =>
+    me.role === "administrator"
+      ? handler(request, response, me, match, query)
+      : forbid(response);
 
   const withStaff = (handler) =>
     admin((request, response, me, match, query) => {
@@ -361,11 +359,10 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
       let previousEnd = null;
       rows.forEach((row, position) => {
         if (position === 4) {
-          errors[`periods.${row.index}`] = ["A day can have at most 4 periods."];
-        } else if (
-          previousEnd !== null &&
-          minutes(row.start) <= previousEnd
-        ) {
+          errors[`periods.${row.index}`] = [
+            "A day can have at most 4 periods.",
+          ];
+        } else if (previousEnd !== null && minutes(row.start) <= previousEnd) {
           errors[`periods.${row.index}`] = ["The periods overlap."];
         }
         previousEnd = Math.max(previousEnd ?? 0, minutes(row.end));
@@ -382,8 +379,7 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     const allZero = !digits && !/[1-9]/.test(decimals);
     const over =
       digits.length > 6 ||
-      (digits.length === 6 &&
-        (digits !== "100000" || /[1-9]/.test(decimals)));
+      (digits.length === 6 && (digits !== "100000" || /[1-9]/.test(decimals)));
     return !allZero && !over;
   }
 
@@ -594,7 +590,9 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         if (!specialty) return missing(response);
         const body = await readJson(request);
         if (body.name_en === undefined && body.name_ar === undefined) {
-          return send(response, 422, { message: "There is nothing to update." });
+          return send(response, 422, {
+            message: "There is nothing to update.",
+          });
         }
         const errors = checkSpecialty(body, specialty.id, false);
         if (Object.keys(errors).length > 0) return refuse(response, errors);
@@ -633,9 +631,7 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
               doctor.name.toLowerCase().includes(name) &&
               active.filter(doctor.is_active) &&
               (specialty === null ||
-                doctor.specialties.some(
-                  ({ id }) => id === Number(specialty),
-                )),
+                doctor.specialties.some(({ id }) => id === Number(specialty))),
           );
         return paginate(response, rows, query, "doctors");
       },
@@ -722,11 +718,7 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
             }
           }
           if (body.specialty_ids !== undefined) {
-            checkSpecialtyIds(
-              body.specialty_ids,
-              doctor.specialtyIds,
-              errors,
-            );
+            checkSpecialtyIds(body.specialty_ids, doctor.specialtyIds, errors);
           }
           if (Object.keys(errors).length > 0) return refuse(response, errors);
 

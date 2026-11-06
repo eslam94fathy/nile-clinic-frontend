@@ -94,6 +94,9 @@ describe("StaffCreateForm", () => {
       "en",
     );
     expect(toastSuccess).toHaveBeenCalledWith(t.created);
+    // Visited pages stay mounted, so the typed password mustn't stay behind in this one.
+    await waitFor(() => expect(field(t.password).value).toBe(""));
+    expect(field(t.passwordConfirmation).value).toBe("");
   });
 
   it("sends a new doctor account on to its profile", async () => {

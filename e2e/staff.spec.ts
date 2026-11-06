@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import {
   ACCOUNTS,
   control,
@@ -35,9 +35,7 @@ for (const locale of ["ar", "en"] as const) {
       await page.goto(`/${locale}/staff`);
 
       await page.getByLabel(t.role, { exact: true }).selectOption("doctor");
-      await page
-        .getByRole("button", { name: shared.filters.apply })
-        .click();
+      await page.getByRole("button", { name: shared.filters.apply }).click();
       await expect(page).toHaveURL(/role=doctor/);
       await expect(
         page.getByRole("row", { name: /Synthetic Reception/ }),
@@ -98,9 +96,9 @@ for (const locale of ["ar", "en"] as const) {
 
       await expect(page).toHaveURL(new RegExp(`/${locale}/staff/\\d+$`));
       await expect(page.getByText(t.created)).toBeVisible();
-      await expect(page.getByLabel(new RegExp(`^${t.name}`))).toHaveValue(
-        "Synthetic Created",
-      );
+      await expect(
+        page.getByLabel(new RegExp(`^${t.name}`)).locator("visible=true"),
+      ).toHaveValue("Synthetic Created");
     });
 
     test("shows an email in use on its field, and keeps the rest", async ({
@@ -193,7 +191,9 @@ test.describe("what an account change does to that person", () => {
       .getByRole("button", { name: t.deactivate })
       .click();
     await expect(page.getByText(t.deactivated, { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: t.reactivate })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: t.reactivate }),
+    ).toBeVisible();
 
     await other.goto("/en/dashboard");
     await expect(other).toHaveURL(/\/en\/sign-in\?ended=1/);
@@ -203,9 +203,7 @@ test.describe("what an account change does to that person", () => {
       .getByRole("alertdialog")
       .getByRole("button", { name: t.reactivate })
       .click();
-    await expect(
-      page.getByText(t.reactivated, { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByText(t.reactivated, { exact: true })).toBeVisible();
 
     await signIn(other, "receptionist");
   });
@@ -285,9 +283,90 @@ test.describe("what an account change does to that person", () => {
       .fill(ACCOUNTS.administrator);
     await page.getByLabel(messages.en.auth.signIn.password).fill(PASSWORD);
     await page
-      .getByRole("button", { name: messages.en.auth.signIn.submit, exact: true })
+      .getByRole("button", {
+        name: messages.en.auth.signIn.submit,
+        exact: true,
+      })
       .click();
     await expect(page.getByRole("alert").first()).toBeVisible();
+  });
+});
+
+test.describe("a password typed and never submitted", () => {
+  const t = messages.en.staff;
+  const typed = "synthetic-unsubmitted-1";
+  const visible = (page: Page, label: string) =>
+    page.getByLabel(new RegExp(`^${label}`)).locator("visible=true");
+  // Everything in the page, hidden copies included, since visited pages stay mounted.
+  const anywhere = (page: Page) =>
+    page
+      .locator('input[type="password"]')
+      .evaluateAll(
+        (inputs, value) =>
+          inputs.filter((input) => (input as HTMLInputElement).value === value)
+            .length,
+        typed,
+      );
+
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, "administrator");
+  });
+
+  test("is wiped on leaving the new account form", async ({ page }) => {
+    await page.goto("/en/staff/new");
+    await expect(page.getByRole("button", { name: t.create })).toBeEnabled();
+    await visible(page, t.name).fill("Synthetic Kept");
+    await visible(page, t.password).fill(typed);
+    await visible(page, t.passwordConfirmation).fill(typed);
+
+    await page.getByRole("link", { name: t.backToList }).click();
+    await expect(page).toHaveURL(/\/en\/staff$/);
+    await expect.poll(() => anywhere(page)).toBe(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/\/staff\/new$/);
+    await expect(visible(page, t.password)).toHaveValue("");
+    await expect(visible(page, t.passwordConfirmation)).toHaveValue("");
+  });
+
+  test("is wiped on leaving the set-password form", async ({ page }) => {
+    await page.goto("/en/staff/2");
+    await expect(
+      page.getByRole("button", { name: t.setPassword }),
+    ).toBeEnabled();
+    await visible(page, t.password).fill(typed);
+
+    await page.getByRole("link", { name: t.backToList }).click();
+    await expect(page).toHaveURL(/\/en\/staff$/);
+    await expect.poll(() => anywhere(page)).toBe(0);
+  });
+
+  test("is wiped on leaving the account page", async ({ page }) => {
+    const a = messages.en.auth.account;
+    await page.goto("/en/account");
+    await expect(page.getByRole("button", { name: a.submit })).toBeEnabled();
+    await visible(page, a.currentPassword).fill(typed);
+    await visible(page, a.newPassword).fill(typed);
+
+    await page
+      .getByRole("navigation", { name: messages.en.shell.navigation })
+      .getByRole("link", { name: messages.en.shell.nav.staff })
+      .click();
+    await expect(page).toHaveURL(/\/en\/staff$/);
+    await expect.poll(() => anywhere(page)).toBe(0);
+  });
+
+  test("stays while the form is in use, even after a refusal", async ({
+    page,
+  }) => {
+    await page.goto("/en/staff/new");
+    await expect(page.getByRole("button", { name: t.create })).toBeEnabled();
+    await visible(page, t.password).fill(typed);
+    await visible(page, t.passwordConfirmation).fill("different-value-12");
+    await page.getByRole("button", { name: t.create }).click();
+
+    await expect(page.getByText(t.nameRequired)).toBeVisible();
+    await expect(visible(page, t.password)).toHaveValue(typed);
   });
 });
 

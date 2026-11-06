@@ -9,6 +9,7 @@ import { FormField } from "@/components/shared/form/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { mapFieldErrors } from "@/lib/api/map-field-errors";
+import { useClearOnLeave } from "@/lib/use-clear-on-leave";
 import { changePassword } from "../api/change-password";
 import {
   type ChangePasswordValues,
@@ -45,6 +46,7 @@ export function PasswordForm({ text }: { text: PasswordFormText }) {
     handleSubmit,
     setError,
     reset,
+    resetField,
     formState: { errors },
   } = useForm<ChangePasswordValues>({
     resolver: zodResolver(schema),
@@ -54,6 +56,7 @@ export function PasswordForm({ text }: { text: PasswordFormText }) {
       password_confirmation: "",
     },
   });
+  useClearOnLeave(resetField, FIELDS);
   const [working, setWorking] = useState(false);
   const [changed, setChanged] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);

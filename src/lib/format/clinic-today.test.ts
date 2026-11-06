@@ -4,24 +4,24 @@ import { addDays, clinicToday } from "./clinic-today";
 describe("clinicToday", () => {
   it("uses the clinic's date when UTC is still on the day before", () => {
     // 23:30 UTC on the 8th is already 01:30 on the 9th in Cairo, in standard time.
-    expect(
-      clinicToday("Africa/Cairo", new Date("2026-12-08T23:30:00Z")),
-    ).toBe("2026-12-09");
+    expect(clinicToday("Africa/Cairo", new Date("2026-12-08T23:30:00Z"))).toBe(
+      "2026-12-09",
+    );
   });
 
   it("uses the clinic's date when UTC is on the same day", () => {
-    expect(
-      clinicToday("Africa/Cairo", new Date("2026-12-08T12:00:00Z")),
-    ).toBe("2026-12-08");
+    expect(clinicToday("Africa/Cairo", new Date("2026-12-08T12:00:00Z"))).toBe(
+      "2026-12-08",
+    );
   });
 
   it("follows daylight saving, when Cairo is three hours ahead", () => {
-    expect(
-      clinicToday("Africa/Cairo", new Date("2026-07-01T21:30:00Z")),
-    ).toBe("2026-07-02");
-    expect(
-      clinicToday("Africa/Cairo", new Date("2026-07-01T20:30:00Z")),
-    ).toBe("2026-07-01");
+    expect(clinicToday("Africa/Cairo", new Date("2026-07-01T21:30:00Z"))).toBe(
+      "2026-07-02",
+    );
+    expect(clinicToday("Africa/Cairo", new Date("2026-07-01T20:30:00Z"))).toBe(
+      "2026-07-01",
+    );
   });
 
   it("never depends on the machine's zone", () => {

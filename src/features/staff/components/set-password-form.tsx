@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useHydrated } from "@/features/auth/public";
 import { useFormSubmit } from "@/lib/api/use-form-submit";
+import { useClearOnLeave } from "@/lib/use-clear-on-leave";
 import { setStaffPassword } from "../api/staff";
 import { type PasswordValues, passwordSchema } from "../schemas/staff";
 import { useStaffFormText } from "./use-staff-form-text";
@@ -31,11 +32,13 @@ export function SetPasswordForm({ id, name }: { id: number; name: string }) {
     handleSubmit,
     setError,
     reset,
+    resetField,
     formState: { errors },
   } = useForm<PasswordValues>({
     resolver: zodResolver(schema),
     defaultValues: { password: "", password_confirmation: "" },
   });
+  useClearOnLeave(resetField, FIELDS);
   const { working, formErrors, setFormErrors, submit } =
     useFormSubmit<PasswordValues>({
       fields: FIELDS,

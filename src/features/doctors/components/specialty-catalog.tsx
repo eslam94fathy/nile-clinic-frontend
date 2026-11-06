@@ -17,7 +17,11 @@ import { SpecialtyForm } from "./specialty-form";
 
 const RENAME_ATTRIBUTE = "data-rename-specialty";
 
-export function SpecialtyCatalog({ specialties }: { specialties: Specialty[] }) {
+export function SpecialtyCatalog({
+  specialties,
+}: {
+  specialties: Specialty[];
+}) {
   const locale = useLocale();
   const t = useTranslations("specialties");
   const [renamingId, setRenamingId] = useState<number | null>(null);

@@ -9,10 +9,17 @@ describe("readPositiveId", () => {
     expect(readPositiveId(value)).toBe(expected);
   });
 
-  it.each(["0", "-1", "1.5", "abc", "", "1e3", "01", " 1", "99999999999999999"])(
-    "refuses %j",
-    (value) => {
-      expect(readPositiveId(value)).toBeNull();
-    },
-  );
+  it.each([
+    "0",
+    "-1",
+    "1.5",
+    "abc",
+    "",
+    "1e3",
+    "01",
+    " 1",
+    "99999999999999999",
+  ])("refuses %j", (value) => {
+    expect(readPositiveId(value)).toBeNull();
+  });
 });

@@ -27,7 +27,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm that `pnpm check` passes on the branch before any change, and record the result here
+- [X] T001 Confirm that `pnpm check` passes on the branch before any change, and record the result here
 
 ---
 
@@ -35,25 +35,25 @@
 
 ### Pure helpers
 
-- [ ] T002 [P] Write failing tests, then implement `clinicToday(timeZone, now)` and `addDays(date, count)` in `src/lib/format/clinic-today.ts` with `src/lib/format/clinic-today.test.ts`, covering midnight in `Africa/Cairo` against UTC, month and leap-year boundaries, and daylight-saving changes (research R9)
-- [ ] T003 [P] Write failing tests, then implement Arabic-Indic to Western digit conversion in `src/lib/format/digits.ts` with `src/lib/format/digits.test.ts`, leaving every other character alone (research R7)
+- [X] T002 [P] Write failing tests, then implement `clinicToday(timeZone, now)` and `addDays(date, count)` in `src/lib/format/clinic-today.ts` with `src/lib/format/clinic-today.test.ts`, covering midnight in `Africa/Cairo` against UTC, month and leap-year boundaries, and daylight-saving changes (research R9)
+- [X] T003 [P] Write failing tests, then implement Arabic-Indic to Western digit conversion in `src/lib/format/digits.ts` with `src/lib/format/digits.test.ts`, leaving every other character alone (research R7)
 
 ### Gate and failure display
 
-- [ ] T004 Add an optional `capability` prop to `ScreenGate`: a role without it gets `ForbiddenState`, and children aren't rendered, in `src/features/auth/components/screen-gate.tsx`, with cases in `src/features/auth/components/screen-gate.test.tsx` (research R3)
-- [ ] T005 Write failing tests, then build `ApiFailureState` for `401` (`SessionEndRedirect`), `403` (`ForbiddenState`), `404` (`NotFoundState`), and others (`ErrorState` with the API's message or general text, plus `RetryButton`) in `src/features/auth/components/api-failure-state.tsx` with `api-failure-state.test.tsx`, exported from `src/features/auth/public-server.ts`
-- [ ] T006 Add a `readPositiveId(value)` helper in `src/lib/api/path-segments.ts`, with a test, so that a non-numeric, zero, or negative id gives `notFound()` before any API call
+- [X] T004 Add an optional `capability` prop to `ScreenGate`: a role without it gets `ForbiddenState`, and children aren't rendered, in `src/features/auth/components/screen-gate.tsx`, with cases in `src/features/auth/components/screen-gate.test.tsx` (research R3)
+- [X] T005 Write failing tests, then build `ApiFailureState` for `401` (`SessionEndRedirect`), `403` (`ForbiddenState`), `404` (`NotFoundState`), and others (`ErrorState` with the API's message or general text, plus `RetryButton`) in `src/features/auth/components/api-failure-state.tsx` with `api-failure-state.test.tsx`, exported from `src/features/auth/public-server.ts`
+- [X] T006 Add a `readPositiveId(value)` helper in `src/lib/api/read-positive-id.ts`, with a test, so that a non-numeric, zero, or negative id gives `notFound()` before any API call
 
-- [ ] T006a Add `src/features/app-shell/public.ts`, exporting `Can`, so that other features use it through a deliberate public export (constitution IV)
+- [X] T006a Add `src/features/app-shell/public.ts`, exporting `Can`, so that other features use it through a deliberate public export (constitution IV)
 
 ### Fake backend
 
-- [ ] T007 Add routes with ids to `e2e/support/fake-backend.mjs`, so that a path such as `doctors/3/fee` matches a pattern. Keep the exact routes and `/__control/script` working, including scripting by pattern
-- [ ] T008 Add stateful synthetic data to `e2e/support/fake-backend.mjs`, reset by `/__control/reset`: staff with paging and filters, specialties, doctors, schedules, slots computed simply from the schedule, time off, and fees. Refuse with the contract's keys: `periods.N`, `periods.N.start`, `user_id`, `registration_number`, `amount`, and last-administrator `message` only. Enforce role refusals with `403`
+- [X] T007 Add routes with ids to `e2e/support/fake-backend.mjs`, so that a path such as `doctors/3/fee` matches a pattern. Keep the exact routes and `/__control/script` working, including scripting by pattern
+- [X] T008 Add stateful synthetic data to `e2e/support/fake-backend.mjs`, reset by `/__control/reset`: staff with paging and filters, specialties, doctors, schedules, slots computed simply from the schedule, time off, and fees. Refuse with the contract's keys: `periods.N`, `periods.N.start`, `user_id`, `registration_number`, `amount`, and last-administrator `message` only. Enforce role refusals with `403`
 
 ### Messages
 
-- [ ] T009 Add `days.sunday` to `days.saturday`, and the namespaces `staff`, `specialties`, `doctors`, `scheduling`, `fees`, with their first keys, to `src/messages/en.json` and `src/messages/ar.json`. Later tasks add to them
+- [X] T009 Add `days.sunday` to `days.saturday`, and the namespaces `staff`, `specialties`, `doctors`, `scheduling`, `fees`, with their first keys, to `src/messages/en.json` and `src/messages/ar.json`. Later tasks add to them
 
 **Checkpoint**: All existing tests still pass. The fake backend's existing behaviour is unchanged.
 
@@ -67,15 +67,15 @@
 
 ### Tests
 
-- [ ] T010 [P] [US3] Component tests for the add and rename forms in `src/features/doctors/components/specialty-form.test.tsx`: required names, "at most 100", `422` on each name, form-level errors, no request when nothing changed, and no double submission
-- [ ] T011 [P] [US3] End-to-end tests in `e2e/specialties.spec.ts`, in both languages: loading, empty, error, and success states, and the deactivate confirmation's text. Administrator only
+- [X] T010 [P] [US3] Component tests for the add and rename forms in `src/features/doctors/components/specialty-form.test.tsx`: required names, "at most 100", `422` on each name, form-level errors, no request when nothing changed, and no double submission
+- [X] T011 [P] [US3] End-to-end tests in `e2e/specialties.spec.ts`, in both languages: loading, empty, error, and success states, and the deactivate confirmation's text. Administrator only
 
 ### Implementation
 
-- [ ] T012 [P] [US3] Names over generated types in `src/features/doctors/types.ts`, and schemas in `src/features/doctors/schemas/specialty.ts`
-- [ ] T013 [US3] API module in `src/features/doctors/api/specialties.ts`: list with optional `is_active` sent as `1` or `0`, create, rename with only changed names, deactivate, reactivate. Server reads go in `specialties-server.ts`
-- [ ] T014 [US3] Build the add form, rename-in-row, and status actions in `src/features/doctors/components/specialty-form.tsx` and `specialty-list.tsx`, returning focus after a rename, and using `ConfirmDialog` for deactivating
-- [ ] T015 [US3] Build `src/app/[locale]/(app)/specialties/page.tsx`, gated on `specialties`, and set `built: true` in `src/lib/auth/app-routes.ts`
+- [X] T012 [P] [US3] Names over generated types in `src/features/doctors/types.ts`, and schemas in `src/features/doctors/schemas/specialty.ts`
+- [X] T013 [US3] API module in `src/features/doctors/api/specialties.ts`: list with optional `is_active` sent as `1` or `0`, create, rename with only changed names, deactivate, reactivate. Server reads go in `specialties-server.ts`
+- [X] T014 [US3] Build the add form, rename-in-row, and status actions in `src/features/doctors/components/specialty-form.tsx` and `specialty-list.tsx`, returning focus after a rename, and using `ConfirmDialog` for deactivating
+- [X] T015 [US3] Build `src/app/[locale]/(app)/specialties/page.tsx`, gated on `specialties`, and set `built: true` in `src/lib/auth/app-routes.ts`
 
 **Checkpoint**: The catalog works by itself. It sets the pattern for later lists and forms.
 
@@ -89,17 +89,17 @@
 
 ### Tests
 
-- [ ] T016 [P] [US2] Component tests in `src/features/staff/components/staff-create-form.test.tsx`, `staff-edit-form.test.tsx`, and `set-password-form.test.tsx`: "12–72 characters", confirmation matching, `422` on each field with typed values kept except passwords, only changed fields sent, no request when nothing changed, and passwords cleared
-- [ ] T017 [P] [US2] Component tests in `src/features/staff/components/account-actions.test.tsx`: each confirmation's text, the last-administrator refusal shown in the dialog, and the own-account differences (password replaced by a link to `/account`, loss-of-access sentence added)
-- [ ] T018 [P] [US2] End-to-end tests in `e2e/staff.spec.ts`, in both languages: filters and page surviving a reload and the back button, all states, create leading to the account, an invalid filter handled, and an unknown or non-numeric id giving not-found
+- [X] T016 [P] [US2] Component tests in `src/features/staff/components/staff-forms.test.tsx`: "12–72 characters", confirmation matching, `422` on each field with typed values kept except passwords, only changed fields sent, no request when nothing changed, and passwords cleared
+- [X] T017 [P] [US2] Component tests in `src/features/staff/components/account-actions.test.tsx`: each confirmation's text, the last-administrator refusal shown in the dialog, and the own-account differences (password replaced by a link to `/account`, loss-of-access sentence added)
+- [X] T018 [P] [US2] End-to-end tests in `e2e/staff.spec.ts`, in both languages: filters and page surviving a reload and the back button, all states, create leading to the account, an invalid filter handled, and an unknown or non-numeric id giving not-found
 
 ### Implementation
 
-- [ ] T019 [P] [US2] Types in `src/features/staff/types.ts` using `StaffMember` through `features/auth`'s public export, and schemas in `src/features/staff/schemas/`, with passwords required at 12–72 characters and a matching confirmation
-- [ ] T020 [US2] API modules in `src/features/staff/api/`: list and get on the server; create, update, deactivate, reactivate, and set password in the browser
-- [ ] T021 [US2] Build the list and filters in `src/features/staff/components/staff-list.tsx` and `src/app/[locale]/(app)/staff/page.tsx`. Don't offer a name search (gap G1). Set `built: true`
-- [ ] T022 [US2] Build the create form with `method="post"`, and `?role=doctor` preselecting the role, in `src/features/staff/components/staff-create-form.tsx` and `src/app/[locale]/(app)/staff/new/page.tsx`
-- [ ] T023 [US2] Build the edit form and account actions in `src/features/staff/components/staff-edit-form.tsx`, `account-actions.tsx`, `set-password-form.tsx`, and `src/app/[locale]/(app)/staff/[id]/page.tsx`. The page compares ids on the server, and adds the role-change warnings (research R11, FR-009, FR-010)
+- [X] T019 [P] [US2] Types in `src/features/staff/types.ts` using `StaffMember` through `features/auth`'s public export, and schemas in `src/features/staff/schemas/`, with passwords required at 12–72 characters and a matching confirmation
+- [X] T020 [US2] API modules in `src/features/staff/api/`: list and get on the server; create, update, deactivate, reactivate, and set password in the browser
+- [X] T021 [US2] Build the list and filters in `src/features/staff/components/staff-list.tsx` and `src/app/[locale]/(app)/staff/page.tsx`. Don't offer a name search (gap G1). Set `built: true`
+- [X] T022 [US2] Build the create form with `method="post"`, and `?role=doctor` preselecting the role, in `src/features/staff/components/staff-create-form.tsx` and `src/app/[locale]/(app)/staff/new/page.tsx`
+- [X] T023 [US2] Build the edit form and account actions in `src/features/staff/components/staff-edit-form.tsx`, `account-actions.tsx`, `set-password-form.tsx`, and `src/app/[locale]/(app)/staff/[id]/page.tsx`. The page compares ids on the server, and adds the role-change warnings (research R11, FR-009, FR-010)
 
 **Checkpoint**: Accounts can be managed by themselves. The "create doctor profile" offer arrives with US4.
 
@@ -113,18 +113,18 @@
 
 ### Tests
 
-- [ ] T024 [P] [US4] Component tests in `src/features/doctors/components/doctor-form.test.tsx`: title "at most 100", "at least one" specialty, `422` on `user_id`, `title`, `registration_number`, `specialty_ids`, and `specialty_ids.0`, a blank number left out on create and sent as `null` on edit, only changed fields sent, and a deactivated assigned specialty shown and kept
-- [ ] T025 [P] [US4] End-to-end tests in `e2e/doctors.spec.ts`, in both languages: list filters surviving a reload, the account table and its note about existing profiles, an account refused for already having a profile, no accounts and no specialties states, and an inactive doctor's notice
+- [X] T024 [P] [US4] Component tests in `src/features/doctors/components/doctor-form.test.tsx`: title "at most 100", "at least one" specialty, `422` on `user_id`, `title`, `registration_number`, `specialty_ids`, and `specialty_ids.0`, a blank number left out on create and sent as `null` on edit, only changed fields sent, and a deactivated assigned specialty shown and kept
+- [X] T025 [P] [US4] End-to-end tests in `e2e/doctors.spec.ts`, in both languages: list filters surviving a reload, the account table and its note about existing profiles, an account refused for already having a profile, no accounts and no specialties states, and an inactive doctor's notice
 
 ### Implementation
 
-- [ ] T026 [US4] Add doctor types and schemas in `src/features/doctors/types.ts` and `schemas/doctor.ts`, and API modules in `src/features/doctors/api/`
-- [ ] T027 [US4] Build the list in `src/features/doctors/components/doctor-list.tsx` and `src/app/[locale]/(app)/doctors/page.tsx`, with name, specialty, and status filters marked `inAddress: true`, and "New doctor" inside `Can`. Set `built: true`
-- [ ] T028 [US4] Build the specialties checkbox group in `src/features/doctors/components/specialty-choices.tsx`: a `fieldset` with `legend`, native checkboxes, and "deactivated" labels (research R12)
-- [ ] T029 [US4] Build `/doctors/new` in `src/app/[locale]/(app)/doctors/new/page.tsx`, gated with `capability="manageDoctors"`: the account table (`GET /staff?role=doctor&is_active=1&per_page=50`) with no `account`, and the form with one. It needs read access to accounts, so `features/staff` exports its server read through `features/staff/public-server.ts` (research R4)
-- [ ] T030 [US4] Build the edit page in `src/app/[locale]/(app)/doctors/[id]/edit/page.tsx`, gated with `capability="manageDoctors"`
-- [ ] T031 [US4] Build the doctor's page frame in `src/app/[locale]/(app)/doctors/[id]/page.tsx`, with the profile section in `src/features/doctors/components/doctor-profile.tsx`, the `cache()`d read, and a whole-page not-found on a `404` from the profile (research R2). Edit is inside `Can`
-- [ ] T032 [US4] Offer "Create doctor profile" on active doctor-role accounts in `src/features/staff/components/account-actions.tsx`, and send a newly created doctor-role account to `/doctors/new?account=<id>` in `staff-create-form.tsx`
+- [X] T026 [US4] Add doctor types and schemas in `src/features/doctors/types.ts` and `schemas/doctor.ts`, and API modules in `src/features/doctors/api/`
+- [X] T027 [US4] Build the list in `src/features/doctors/components/doctor-list.tsx` and `src/app/[locale]/(app)/doctors/page.tsx`, with name, specialty, and status filters marked `inAddress: true`, and "New doctor" inside `Can`. Set `built: true`
+- [X] T028 [US4] Build the specialties checkbox group in `src/features/doctors/components/specialty-choices.tsx`: a `fieldset` with `legend`, native checkboxes, and "deactivated" labels (research R12)
+- [X] T029 [US4] Build `/doctors/new` in `src/app/[locale]/(app)/doctors/new/page.tsx`, gated with `capability="manageDoctors"`: the account table (`GET /staff?role=doctor&is_active=1&per_page=50`) with no `account`, and the form with one. It needs read access to accounts, so `features/staff` exports its server read through `features/staff/public-server.ts` (research R4)
+- [X] T030 [US4] Build the edit page in `src/app/[locale]/(app)/doctors/[id]/edit/page.tsx`, gated with `capability="manageDoctors"`
+- [X] T031 [US4] Build the doctor's page frame in `src/app/[locale]/(app)/doctors/[id]/page.tsx`, with the profile section in `src/features/doctors/components/doctor-profile.tsx`, the `cache()`d read, and a whole-page not-found on a `404` from the profile (research R2). Edit is inside `Can`
+- [X] T032 [US4] Offer "Create doctor profile" on active doctor-role accounts in `src/features/staff/components/account-actions.tsx`, and send a newly created doctor-role account to `/doctors/new?account=<id>` in `staff-create-form.tsx`
 
 **Checkpoint**: A doctor can be created from an account, and appears on the list.
 
@@ -138,16 +138,16 @@
 
 ### Tests
 
-- [ ] T033 [P] [US5] Unit tests in `src/features/scheduling/schedule-form-values.test.ts`: flattening `days` in order, building rows in on-screen order, and keeping `24:00`
-- [ ] T034 [P] [US5] Component tests in `src/features/scheduling/components/schedule-editor.test.tsx`: `HH:MM` format including `24:00` and Arabic digits, "at most 4" rows per day, `periods.N` and `periods.N.start` shown against the right row after rows were added in the middle of a week, `appointment_minutes` "5–240" in multiples of 5, other keys at form level, and entries kept on refusal
-- [ ] T035 [P] [US5] End-to-end tests in `e2e/schedule.spec.ts`, in both languages: empty state with all 7 days, save and clear, the statement about existing appointments, `24:00`, and a receptionist getting "not allowed" with no page content sent
+- [X] T033 [P] [US5] Unit tests in `src/features/scheduling/schedule-form-values.test.ts`: flattening `days` in order, building rows in on-screen order, and keeping `24:00`
+- [X] T034 [P] [US5] Component tests in `src/features/scheduling/components/schedule-editor.test.tsx`: `HH:MM` format including `24:00` and Arabic digits, "at most 4" rows per day, `periods.N` and `periods.N.start` shown against the right row after rows were added in the middle of a week, `appointment_minutes` "5–240" in multiples of 5, other keys at form level, and entries kept on refusal
+- [X] T035 [P] [US5] End-to-end tests in `e2e/schedule.spec.ts`, in both languages: empty state with all 7 days, save and clear, the statement about existing appointments, `24:00`, and a receptionist getting "not allowed" with no page content sent
 
 ### Implementation
 
-- [ ] T036 [P] [US5] Types, Zod schemas, and `schedule-form-values.ts` in `src/features/scheduling/`, and API modules in `src/features/scheduling/api/`: `getSchedule`, `saveSchedule`, `clearSchedule`
-- [ ] T037 [US5] Build the read-only `WeeklyHours` display in `src/features/scheduling/components/weekly-hours.tsx`, using `ClinicTime` for times, and add its section to the doctor's page, with a link to the editor inside `Can`
-- [ ] T038 [US5] Build the editor in `src/features/scheduling/components/schedule-editor.tsx`, using `useFieldArray` with rows grouped by day, text inputs for times (research R5, R6), and clear through `ConfirmDialog`
-- [ ] T039 [US5] Build `src/app/[locale]/(app)/doctors/[id]/schedule/page.tsx`, gated with `capability="manageSchedules"`
+- [X] T036 [P] [US5] Types, Zod schemas, and `schedule-form-values.ts` in `src/features/scheduling/`, and API modules in `src/features/scheduling/api/`: `getSchedule`, `saveSchedule`, `clearSchedule`
+- [X] T037 [US5] Build the read-only `WeeklyHours` display in `src/features/scheduling/components/weekly-hours.tsx`, using `ClinicTime` for times, and add its section to the doctor's page, with a link to the editor inside `Can`
+- [X] T038 [US5] Build the editor in `src/features/scheduling/components/schedule-editor.tsx`, using `useFieldArray` with rows grouped by day, text inputs for times (research R5, R6), and clear through `ConfirmDialog`
+- [X] T039 [US5] Build `src/app/[locale]/(app)/doctors/[id]/schedule/page.tsx`, gated with `capability="manageSchedules"`
 
 **Checkpoint**: Schedules can be saved, and the API returns slots for them.
 
@@ -161,15 +161,15 @@
 
 ### Tests
 
-- [ ] T040 [P] [US6] Unit tests in `src/features/fees/schemas/fee.test.ts`, with no arithmetic on the amount: `0`, `0.00`, `0.01`, `350.1`, `350.10`, `100000`, `100000.00`, `100000.01`, `1234567`, three decimals, `٣٥٠`, and text (research R8)
-- [ ] T041 [P] [US6] Component tests in `src/features/fees/components/fee-form.test.tsx`: `422` on `amount`, form-level errors, no double submission, and the note about existing charges
-- [ ] T042 [P] [US6] End-to-end tests in `e2e/fees.spec.ts`, in both languages: "not set" rather than zero, setter and time in the clinic's zone, paging surviving a reload, Arabic digits sent as Western, and rows leading to the doctor
+- [X] T040 [P] [US6] Unit tests in `src/features/fees/schemas/fee.test.ts`, with no arithmetic on the amount: `0`, `0.00`, `0.01`, `350.1`, `350.10`, `100000`, `100000.00`, `100000.01`, `1234567`, three decimals, `٣٥٠`, and text (research R8)
+- [X] T041 [P] [US6] Component tests in `src/features/fees/components/fee-form.test.tsx`: `422` on `amount`, form-level errors, no double submission, and the note about existing charges
+- [X] T042 [P] [US6] End-to-end tests in `e2e/fees.spec.ts`, in both languages: "not set" rather than zero, setter and time in the clinic's zone, paging surviving a reload, Arabic digits sent as Western, and rows leading to the doctor
 
 ### Implementation
 
-- [ ] T043 [US6] Types, the schema `above 0, at most 100000, with at most two decimals`, and API modules in `src/features/fees/`
-- [ ] T044 [US6] Build the fee section in `src/features/fees/components/fee-section.tsx` and `fee-form.tsx`, and add it to the doctor's page, with the form inside `Can`
-- [ ] T045 [US6] Build the list in `src/features/fees/components/fee-list.tsx` and `src/app/[locale]/(app)/fees/page.tsx`, and set `built: true`
+- [X] T043 [US6] Types, the schema `above 0, at most 100000, with at most two decimals`, and API modules in `src/features/fees/`
+- [X] T044 [US6] Build the fee section in `src/features/fees/components/fee-section.tsx` and `fee-form.tsx`, and add it to the doctor's page, with the form inside `Can`
+- [X] T045 [US6] Build the list in `src/features/fees/components/fee-list.tsx` and `src/app/[locale]/(app)/fees/page.tsx`, and set `built: true`
 
 **Checkpoint**: Fees can be set, and they appear in both places.
 
@@ -183,15 +183,15 @@
 
 ### Tests
 
-- [ ] T046 [P] [US1] Unit tests in `src/features/doctors/readiness.test.ts`: every combination in the data model's readiness table, including each `unknown`, slots with no fee, and a fee with no slots
-- [ ] T047 [P] [US1] End-to-end tests in `e2e/doctors.spec.ts`: each readiness state, one section failing while others work, "bookable" with the charge warning, slots appearing after a schedule is saved (US5 scenario 2), and the journey by keyboard alone
-- [ ] T048 [US1] Live journey in `e2e/live/clinic-setup.spec.ts`, in English and in Arabic, against the real API: new account, profile, hours, then "bookable" with the warning, fee, then "setup complete", then that doctor signs in with no "profile not set up" state
+- [X] T046 [P] [US1] Unit tests in `src/features/doctors/readiness.test.ts`: every combination in the data model's readiness table, including each `unknown`, slots with no fee, and a fee with no slots
+- [X] T047 [P] [US1] End-to-end tests in `e2e/doctors.spec.ts`: each readiness state, one section failing while others work, "bookable" with the charge warning, slots appearing after a schedule is saved (US5 scenario 2), and the journey by keyboard alone
+- [X] T048 [US1] Live journey in `e2e/live/clinic-setup.spec.ts`, in English and in Arabic, against the real API: new account, profile, hours, then "bookable" with the warning, fee, then "setup complete", then that doctor signs in with no "profile not set up" state
 
 ### Implementation
 
-- [ ] T049 [US1] Implement `src/features/doctors/readiness.ts` as a pure function taking plain values
-- [ ] T050 [US1] Build the slots section in `src/features/scheduling/components/upcoming-slots.tsx` and its API read, for today to today + 30: a count and the first 7 dates with slots (research R9, R10)
-- [ ] T051 [US1] Build the readiness summary in `src/features/doctors/components/readiness-summary.tsx`, stating each item in words, with links to each step, and add it to the doctor's page for administrators
+- [X] T049 [US1] Implement `src/features/doctors/readiness.ts` as a pure function taking plain values
+- [X] T050 [US1] Build the slots section in `src/features/scheduling/components/upcoming-slots.tsx` and its API read, for today to today + 30: a count and the first 7 dates with slots (research R9, R10)
+- [X] T051 [US1] Build the readiness summary in `src/features/doctors/components/readiness-summary.tsx`, stating each item in words, with links to each step, and add it to the doctor's page for administrators
 
 **Checkpoint**: **The phase's done condition is met.** Run T048 before continuing.
 
@@ -205,14 +205,14 @@
 
 ### Tests
 
-- [ ] T052 [P] [US7] Component tests in `src/features/scheduling/components/time-off-form.test.tsx`: whole-day and part-day values sent correctly, reason "at most 255" and left out when blank, the no-medical-details hint and the statement that all staff can read it, and `422` on each field
-- [ ] T053 [P] [US7] End-to-end tests in `e2e/time-off.spec.ts`, in both languages: default range, another range in the address, an over-long range's refusal, no removal offered when the end date has passed, and a refusal for an entry ended earlier today shown in the dialog
+- [X] T052 [P] [US7] Component tests in `src/features/scheduling/components/time-off-form.test.tsx`: whole-day and part-day values sent correctly, reason "at most 255" and left out when blank, the no-medical-details hint and the statement that all staff can read it, and `422` on each field
+- [X] T053 [P] [US7] End-to-end tests in `e2e/time-off.spec.ts`, in both languages: default range, another range in the address, an over-long range's refusal, no removal offered when the end date has passed, and a refusal for an entry ended earlier today shown in the dialog
 
 ### Implementation
 
-- [ ] T054 [US7] API modules for list, record, and remove in `src/features/scheduling/api/`, and types and schemas
-- [ ] T055 [US7] Build the read-only `TimeOffList` in `src/features/scheduling/components/time-off-list.tsx`, and add the section to the doctor's page with a range filter
-- [ ] T056 [US7] Build `src/features/scheduling/components/time-off-form.tsx` and removal with `ConfirmDialog`, inside `Can`, with the statement about existing appointments
+- [X] T054 [US7] API modules for list, record, and remove in `src/features/scheduling/api/`, and types and schemas
+- [X] T055 [US7] Build the read-only `TimeOffList` in `src/features/scheduling/components/time-off-list.tsx`, and add the section to the doctor's page with a range filter
+- [X] T056 [US7] Build `src/features/scheduling/components/time-off-form.tsx` and removal with `ConfirmDialog`, inside `Can`, with the statement about existing appointments
 
 **Checkpoint**: Time off changes the slots shown.
 
@@ -226,12 +226,12 @@
 
 ### Tests
 
-- [ ] T057 [US8] End-to-end tests in `e2e/clinic-roles.spec.ts`: each role against every new page and control, compared with the permission matrix; "not allowed" pages lacking the page's text; a forced change answered with `403` showing a clear state; and, through the fake backend's `/__control/calls`, no request to an audited endpoint on any new page (FR-039)
-- [ ] T058 [US8] Add to `e2e/clinic-roles.spec.ts` the permanent version of the spike in research R1: open a list, change data elsewhere, return by link and by the back button, and expect the new data
+- [X] T057 [US8] End-to-end tests in `e2e/clinic-roles.spec.ts`: each role against every new page and control, compared with the permission matrix; "not allowed" pages lacking the page's text; a forced change answered with `403` showing a clear state; and, through the fake backend's `/__control/calls`, no request to an audited endpoint on any new page (FR-039)
+- [X] T058 [US8] Add to `e2e/clinic-roles.spec.ts` the permanent version of the spike in research R1: open a list, change data elsewhere, return by link and by the back button, and expect the new data
 
 ### Implementation
 
-- [ ] T059 [US8] Close any gap found by T057 and T058, in the components concerned. Confirm that `src/lib/auth/permissions.test.ts` still agrees with the matrix
+- [X] T059 [US8] Close any gap found by T057 and T058, in the components concerned. Confirm that `src/lib/auth/permissions.test.ts` still agrees with the matrix
 
 **Checkpoint**: Each role sees exactly what the matrix allows.
 
@@ -245,11 +245,11 @@
 
 ### Tests
 
-- [ ] T060 [US9] End-to-end tests in `e2e/my-schedule.spec.ts`, in both languages: a schedule, none, no profile, no change controls, and no request to any fee endpoint, confirmed through the fake backend's `/__control/calls`
+- [X] T060 [US9] End-to-end tests in `e2e/my-schedule.spec.ts`, in both languages: a schedule, none, no profile, no change controls, and no request to any fee endpoint, confirmed through the fake backend's `/__control/calls`
 
 ### Implementation
 
-- [ ] T061 [US9] Add `/doctors/me/schedule`, `/slots`, and `/time-off` reads to `src/features/scheduling/api/`, and build `src/app/[locale]/(app)/my/schedule/page.tsx` from the read-only sections. Set `built: true`
+- [X] T061 [US9] Add `/doctors/me/schedule`, `/slots`, and `/time-off` reads to `src/features/scheduling/api/`, and build `src/app/[locale]/(app)/my/schedule/page.tsx` from the read-only sections. Set `built: true`
 
 **Checkpoint**: All five placeholders named in FR-032 are gone.
 
@@ -302,6 +302,11 @@ Recorded as they're observed.
 
 | Check | Result |
 |---|---|
-| `pnpm check` at the start (T001) | Not yet run |
+| `pnpm check` at the start (T001) | Passed: 651 unit tests, 270 end-to-end tests (2026-11-06) |
+| Unit tests, types, lint, formatting, translations, logical styles, Phase 4's specs | See below, in the order they were run |
+| `vitest run`, in the last full run before the anchor rename | 839 passed |
+| Phase 4's end-to-end specs, at their last runs | All passed, run spec by spec: specialties, staff, doctors, schedule, time-off, fees, clinic-roles, my-schedule |
+| `e2e/live/clinic-setup.spec.ts` | 8 passed against the real API, before the anchor rename. Journey about 6 s of automated steps in each language |
+| `pnpm check` on Phase 8's state | **Not completed.** The first run stopped at `check:contrast`, on `#fee` being read as a color, now renamed. The rerun was stopped by the system for low memory, with no verdict |
 | `pnpm check` at the end (T069) | Not yet run |
 | `pnpm test:e2e:live` (T069) | Not yet run |

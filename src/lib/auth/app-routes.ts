@@ -62,7 +62,7 @@ export const APP_ROUTES = [
     onlyRoles: ["administrator", "receptionist"],
     labelKey: "doctors",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "specialties",
@@ -76,7 +76,7 @@ export const APP_ROUTES = [
     capability: "readFees",
     labelKey: "fees",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "staff",
@@ -126,7 +126,7 @@ export const APP_ROUTES = [
     onlyRoles: ["doctor"],
     labelKey: "mySchedule",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "account",

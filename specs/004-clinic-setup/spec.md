@@ -17,6 +17,7 @@
 - Q: Should the doctor's read-only "My schedule" screen be built in this phase, even though the roadmap's Phase 4 description only talks about the administrator's setup work? → A: Yes. It is built in Phase 4 as the lowest-priority story: the doctor's own hours, upcoming slots, and time off, read-only.
 - Q: When an administrator changes a doctor's hours or records time off, should the application say how many existing appointments are now affected, or only state in general that some may be? → A: General statement only. Existing appointments aren't moved or cancelled, and reception will see affected ones flagged. The actual list arrives with appointments in Phase 6.
 - Q: What should happen when an administrator opens their own staff account, given that the API lets them deactivate themselves, demote themselves, or reset their own password unless they're the last active administrator? → A: Allow deactivating and demoting yourself, with a confirmation saying you'll lose access. For your own password, replace the reset with a link to your account page.
+- Q: Should a password that was typed but never submitted be wiped when someone leaves the form, given that visited pages stay mounted but hidden until sign-out? → A: Yes. It is cleared as soon as the person leaves the form, because reception computers are shared. Someone who leaves by accident retypes it. This covers the staff create and set-password forms, and the account page's change-password form from Phase 3.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -222,7 +223,7 @@ A doctor opens "My schedule" and sees their own weekly hours, upcoming slots, an
 - **FR-008**: Administrators MUST be able to deactivate and reactivate an account, and set a new password for another person's account. Deactivating and setting a password MUST ask for confirmation and say that this ends the person's sessions.
 - **FR-009**: Changing an account away from the doctor role MUST warn that the doctor becomes inactive and stops offering slots.
 - **FR-010**: Deactivating or demoting one's own account MUST remain available, with a confirmation that says the person will lose access. The API's refusal MUST be shown when it refuses, including for the last active administrator. On one's own account, setting a password MUST be replaced by a link to the account page. This is the only action not offered on one's own account.
-- **FR-011**: Passwords MUST NOT be shown back, kept after submission, or written to an address, log, or browser storage. There is no requirement to generate passwords.
+- **FR-011**: Passwords MUST NOT be shown back, kept after submission, kept after leaving the form unsubmitted, or written to an address, log, or browser storage. There is no requirement to generate passwords.
 
 **Specialties (administrators)**
 

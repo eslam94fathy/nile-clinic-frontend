@@ -54,9 +54,7 @@ export function ConfirmedAction({
     }
 
     const messages = Object.values(result.error.fieldErrors).flat();
-    setError(
-      messages.join(" ") || result.error.message || t("generalFailure"),
-    );
+    setError(messages.join(" ") || result.error.message || t("generalFailure"));
     if (result.error.status === 403 || result.error.status === 404) {
       router.refresh();
     }

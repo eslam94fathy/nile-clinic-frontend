@@ -212,7 +212,8 @@ function control(pathname, query, response) {
       const account = find();
       if (query.has("role")) account.role = query.get("role");
       if (query.has("name")) account.name = query.get("name");
-      if (query.has("active")) account.is_active = query.get("active") === "true";
+      if (query.has("active"))
+        account.is_active = query.get("active") === "true";
       if (query.has("profile")) {
         account.hasProfile = query.get("profile") === "true";
       }

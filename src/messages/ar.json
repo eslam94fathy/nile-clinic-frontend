@@ -491,7 +491,7 @@
     "clearDescription": "لن تُعرض للطبيب مواعيد. ولا تُنقل المواعيد الحالية ولا تُلغى، وسيرى موظفو الاستقبال المواعيد المتأثرة مميَّزة.",
     "cleared": "مُسح الجدول.",
     "slotsHeading": "المواعيد القادمة",
-    "slotsCount": "{count, plural, zero {لا مواعيد} one {موعد واحد} two {موعدان} few {# مواعيد} many {# موعدًا} other {# موعد}} خلال 31 يومًا القادمة",
+    "slotsCount": "{total, plural, zero {لا مواعيد} one {موعد واحد} two {موعدان} few {{count} مواعيد} many {{count} موعدًا} other {{count} موعد}} خلال 31 يومًا القادمة",
     "slotsFirstDates": "تظهر أول 7 تواريخ فيها مواعيد.",
     "slotsEmptyTitle": "لا توجد مواعيد خلال 31 يومًا القادمة",
     "slotsEmptyDescription": "تأتي المواعيد من ساعات العمل والإجازات.",
