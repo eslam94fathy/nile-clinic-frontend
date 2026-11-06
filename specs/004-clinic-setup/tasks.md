@@ -265,7 +265,7 @@
 - [X] T067 [P] Update `docs/architecture.md`, `docs/tech-stack.md`, `docs/backend-integration.md`, `docs/frontend-blueprint.md`, `docs/development-guidelines.md`, `docs/roadmap.md` (My schedule belongs to this phase), and `specs/003-auth-app-shell/contracts/app-shell.md`, as listed in the plan
 - [ ] T068 Follow the by-hand steps in [quickstart.md](quickstart.md), and time the journey against SC-001
 - [X] T069 Run `pnpm check` and `pnpm test:e2e:live`, record the observed results here, then run `/code-review` and resolve its findings
-- [ ] T070 Set the spec's status and update `docs/roadmap.md`, after the project owner accepts the phase
+- [X] T070 Set the spec's status and update `docs/roadmap.md`, after the project owner accepts the phase
 
 ---
 
@@ -313,4 +313,6 @@ An earlier run failed 1 of 493 end-to-end tests, through a real overflow from a 
 
 Tests were seen to fail first for the foundations, the specialty form, the schedule, time-off, and fee forms, password clearing, and the review's unit-testable fixes. The staff, doctor, and readiness unit tests, and the end-to-end tests, were written alongside or after their code.
 
-T068 needs a person, for the 5-minute target in SC-001 and the by-hand steps. T070 follows the owner's acceptance.
+**Status: accepted by the owner on 2026-11-06.** All automated checks pass. The owner reported no results for the by-hand steps in T068, so that task stays open and they're recorded as unconfirmed.
+
+**T068 stays open, unconfirmed:** the by-hand steps in the quickstart, including timing the journey against the 5-minute target in SC-001, and reading the Arabic wording as a native reader. None has a reported result. A script's 6 seconds says nothing about a person.

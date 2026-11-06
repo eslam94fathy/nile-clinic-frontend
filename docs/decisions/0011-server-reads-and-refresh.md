@@ -1,6 +1,6 @@
 # ADR 0011: Server reads, then refresh, with no client cache yet
 
-**Status:** Proposed, for the project owner's acceptance with Phase 4
+**Status:** Accepted, by the project owner with Phase 4, 2026-11-06
 
 Decided during Phase 4 planning and tested with a production spike against the real backend. See
 [research](../../specs/004-clinic-setup/research.md), R1. This builds on [ADR 0005](0005-audit-safe-data-fetching.md) and

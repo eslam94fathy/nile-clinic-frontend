@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft
+**Status**: Accepted
 
 **Input**: User description: "Start Phase 4" of `docs/roadmap.md`: clinic setup, meaning staff, specialties, doctors, schedules, and fees. Everything that must exist before booking. Done when an administrator can take a new doctor from account to bookable, with a fee.
 
