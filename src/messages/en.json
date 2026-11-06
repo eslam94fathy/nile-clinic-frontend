@@ -70,6 +70,17 @@
       "notFoundHeading": "Nothing to show here",
       "notFoundDescription": "This address doesn't lead to anything you can open."
     },
+    "table": {
+      "pagination": "Pages",
+      "summary": "Page {page} of {lastPage}, {total, plural, one {{count} result} other {{count} results}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "filters": {
+      "label": "Filters",
+      "apply": "Apply filters",
+      "reset": "Reset"
+    },
     "form": {
       "required": "(required)",
       "noMedicalDetails": "Don't include medical details."

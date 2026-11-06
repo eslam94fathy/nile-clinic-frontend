@@ -70,6 +70,17 @@
       "notFoundHeading": "لا يوجد ما يمكن عرضه هنا",
       "notFoundDescription": "هذا العنوان لا يؤدي إلى أي شيء يمكنك فتحه."
     },
+    "table": {
+      "pagination": "الصفحات",
+      "summary": "صفحة {page} من {lastPage}، {total, plural, zero {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} few {{count} نتائج} many {{count} نتيجة} other {{count} نتيجة}}",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "filters": {
+      "label": "عوامل التصفية",
+      "apply": "تطبيق التصفية",
+      "reset": "إعادة الضبط"
+    },
     "form": {
       "required": "(مطلوب)",
       "noMedicalDetails": "لا تكتب أي تفاصيل طبية."
