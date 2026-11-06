@@ -178,6 +178,8 @@ e2e/
 
 ## Complexity Tracking
 
+Approved by the project owner on 2026-11-06, with the phase.
+
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | Principle IX ("Abstractions MUST wait for at least two real uses"): `Can` is built here, and no screen in this phase has an action that differs by role. Navigation filters through the route table instead | The roadmap and the owner's Phase 2 decision assign `Can` to this phase, with the role map, and FR-016 requires it. It's about ten lines over `can()`, and Phase 4's read-only views for receptionists are its first consumers | Building it in Phase 4 would follow the principle, but would contradict the accepted roadmap, and would leave the role map's one reusable control untested until then. If the owner prefers, it can move to Phase 4 with a roadmap edit |

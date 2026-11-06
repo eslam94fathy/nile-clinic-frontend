@@ -1,6 +1,6 @@
 # ADR 0010: How sessions are read, ended, and checked
 
-**Status:** Proposed, for acceptance with Phase 3 · **Date:** 2026-11-06
+**Status:** Accepted, by the project owner with Phase 3, 2026-11-06
 
 Decided during Phase 3 planning and tested with a production spike against the real backend. See
 [research](../../specs/003-auth-app-shell/research.md). This builds on [ADR 0001](0001-authentication-bff.md).

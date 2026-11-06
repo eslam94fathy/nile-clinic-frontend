@@ -260,7 +260,7 @@ T013 Role map
 
 ## Test Results
 
-**Status: all automated checks pass. Awaiting the owner's acceptance, including the one remaining check by a person (T059).**
+**Status: accepted by the owner on 2026-11-06, after merging PR #5.** All automated checks pass. The owner reported no results for the by-hand checks in T059, so that task stays open and they're recorded as unconfirmed. Acceptance also covered the three defaults raised for confirmation: removing page links (FR-006), a real `404` for unknown addresses with no session, and building `Can` in this phase.
 
 Final run, on 2026-11-06, on Windows, in Chromium, after the code review's fixes:
 
@@ -280,7 +280,7 @@ These were run as separate commands rather than as `pnpm check`, because the mac
 - Scenario 23: with a real browser profile on disk, closing and reopening Chromium removed the session cookie, and the next visit landed on sign-in. A browser set to restore previous tabs may behave differently, which FR-004 allows for.
 - Scenario 24, in part: screenshots of sign-in, landing, account with errors, not allowed, and the narrow layout, all in Arabic, were reviewed by the implementing agent. Direction, mixed text, and layout were correct. The placeholder screenshot was taken and not reviewed.
 
-**T059 stays open for a person:** reading every screen in Arabic as a native reader, and timing a first sign-in and password change against SC-008. A script's 0.7 seconds says nothing about a person.
+**T059 stays open, unconfirmed:** reading every screen in Arabic as a native reader, and timing a first sign-in and password change against SC-008. Neither has a reported result. Phase 13's full journeys per role and locale are the natural place to confirm them. A script's 0.7 seconds says nothing about a person.
 
 What testing found:
 

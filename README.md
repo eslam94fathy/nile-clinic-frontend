@@ -4,7 +4,7 @@ Internal staff application for the Nile Clinic management system, for administra
 and doctors. Arabic and English, RTL and LTR. It is a frontend for the existing
 [Laravel API](https://github.com/eslam94fathy/nile-clinic); there is no patient portal.
 
-> **Status: Phase 3 authentication and app shell built, awaiting acceptance.** Staff can sign in, see their role's navigation, and change
+> **Status: Phase 3 authentication and app shell complete.** Staff can sign in, see their role's navigation, and change
 > their password. There are no business screens yet: their menu entries show "not available yet". See the [roadmap](docs/roadmap.md).
 
 ## Prerequisites
