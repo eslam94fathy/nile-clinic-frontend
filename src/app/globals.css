@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is([data-theme="dark"] *));
 
-/* Token values come from docs/decisions/0008-visual-direction.md. Keep them solid hex, except --overlay: `pnpm check:contrast` reads this block. */
+/* Token values come from docs/decisions/0008-visual-direction.md, and the brand tokens from 0009-brand-assets.md. Keep them solid hex, except --overlay: `pnpm check:contrast` reads this block. */
 :root {
   color-scheme: light;
   --radius: 0.375rem;
@@ -43,6 +43,10 @@
   --status-muted: #eef0f0;
   --status-muted-foreground: #4e5a5d;
   --status-muted-border: #8a9699;
+  --brand: #0b6e79;
+  --brand-foreground: #ffffff;
+  --brand-name: #0f2a33;
+  --brand-tagline: #0b6e79;
 }
 
 [data-theme="dark"] {
@@ -82,6 +86,10 @@
   --status-muted: #1c2a2d;
   --status-muted-foreground: #a9b6b9;
   --status-muted-border: #6f7f83;
+  --brand: #3cc2cc;
+  --brand-foreground: #0f2a33;
+  --brand-name: #ffffff;
+  --brand-tagline: #7fdce2;
 }
 
 @theme inline {
@@ -122,6 +130,10 @@
   --color-status-muted: var(--status-muted);
   --color-status-muted-foreground: var(--status-muted-foreground);
   --color-status-muted-border: var(--status-muted-border);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-name: var(--brand-name);
+  --color-brand-tagline: var(--brand-tagline);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

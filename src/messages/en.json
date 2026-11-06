@@ -3,6 +3,10 @@
     "title": "Nile Clinic",
     "description": "Clinic management system for staff."
   },
+  "brand": {
+    "name": "Nile Clinic",
+    "tagline": "مركز النيل الطبي"
+  },
   "landing": {
     "heading": "Nile Clinic",
     "description": "Clinic management system for staff.",
