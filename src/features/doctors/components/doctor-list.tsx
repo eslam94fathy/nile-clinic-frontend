@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { UserText } from "@/components/shared/values/user-text";
 import { type PageMeta, pageHref } from "@/lib/api/pagination";
 import { Link } from "@/lib/i18n/navigation";
+import { specialtyName } from "../specialty-name";
 import type { DoctorSummary, Specialty } from "../types";
 
 export function DoctorList({
@@ -28,8 +29,7 @@ export function DoctorList({
 }) {
   const locale = useLocale();
   const t = useTranslations("doctors");
-  const nameOf = (specialty: Specialty) =>
-    locale === "ar" ? specialty.name_ar : specialty.name_en;
+  const nameOf = (specialty: Specialty) => specialtyName(specialty, locale);
   const filtered = Boolean(
     filters.name || filters.specialty_id || filters.is_active,
   );
@@ -114,7 +114,8 @@ export function DoctorList({
         columns={columns}
         rows={rows}
         getRowKey={(row) => String(row.id)}
-        state={rows.length === 0 ? "empty" : "ready"}
+        // By the total, as a page past the end has no rows, and needs its links back.
+        state={meta.total === 0 ? "empty" : "ready"}
         emptyState={
           filtered ? (
             <EmptyState

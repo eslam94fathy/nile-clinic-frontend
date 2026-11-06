@@ -230,7 +230,7 @@ test("fees: the API's own refusal, an exact amount, and the list", async ({
   ).toBeEnabled();
   await page.getByLabel(new RegExp(`^${f.amountLabel}`)).fill("٣٥٠.٠٧");
   await page.getByRole("button", { name: f.set, exact: true }).click();
-  const section = page.locator("#doctor-fee");
+  const section = page.locator('[id^="doctor-fee-"]');
   await expect(section).toContainText("350.07");
   await expect(section.locator("time")).toBeVisible();
 

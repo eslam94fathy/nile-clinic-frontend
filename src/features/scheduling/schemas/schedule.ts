@@ -37,11 +37,12 @@ export const timeOffSchema = z.object({
 export const START_TIME = /^([01][0-9]|2[0-3]):[0-5][05]$/;
 export const END_TIME = /^(([01][0-9]|2[0-3]):[0-5][05]|24:00)$/;
 
+const typedTime = z
+  .string()
+  .transform((value) => toWesternDigits(value).trim());
+
 function time(pattern: RegExp, message: string) {
-  return z
-    .string()
-    .transform((value) => toWesternDigits(value).trim())
-    .refine((value) => pattern.test(value), { error: message });
+  return typedTime.refine((value) => pattern.test(value), { error: message });
 }
 
 export function scheduleFormSchema(text: {
@@ -85,8 +86,8 @@ export function timeOffFormSchema(text: {
       kind: z.enum(["whole", "part"]),
       start_date: z.string().min(1, text.dateRequired),
       end_date: z.string(),
-      start_time: z.string().transform(toWesternDigits),
-      end_time: z.string().transform(toWesternDigits),
+      start_time: typedTime,
+      end_time: typedTime,
       reason: z.string().trim().max(255, text.reasonTooLong),
     })
     .superRefine((values, context) => {

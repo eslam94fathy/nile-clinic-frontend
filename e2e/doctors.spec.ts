@@ -258,6 +258,31 @@ test.describe("readiness", () => {
   });
 });
 
+test("the fee link reaches this doctor's fee, with another's page still mounted", async ({
+  page,
+}) => {
+  const t = messages.en.doctors;
+  await signIn(page, "administrator");
+  await control("clinic/setup?doctor=1&schedule=1&fee=350.10");
+  await page.goto("/en/doctors/1");
+  await expect(page.getByText(t.setupComplete)).toBeVisible();
+  await page.goto("/en/doctors/new?account=4");
+  await expect(
+    page.getByRole("button", { name: t.create, exact: true }),
+  ).toBeEnabled();
+  await page.getByLabel(new RegExp(`^${t.fieldTitle}`)).fill("Specialist");
+  await page.getByRole("checkbox").first().check();
+  await page.getByRole("button", { name: t.create, exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/doctors\/\d+$/);
+
+  await page.getByRole("link", { name: t.fixFee }).click();
+
+  await expect(page).toHaveURL(/#doctor-fee-\d+$/);
+  const id = /#(.+)$/.exec(page.url())?.[1] ?? "";
+  await expect(page.locator(`[id="${id}"]`)).toHaveCount(1);
+  await expect(page.locator(`[id="${id}"]`)).toBeInViewport();
+});
+
 test("a doctor's page gives not-found for an unknown or malformed id", async ({
   page,
 }) => {

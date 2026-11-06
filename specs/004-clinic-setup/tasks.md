@@ -264,7 +264,7 @@
 - [X] T066 [P] Write `docs/decisions/0011-server-reads-and-refresh.md` from research R1, and add it to `docs/decisions/README.md`
 - [X] T067 [P] Update `docs/architecture.md`, `docs/tech-stack.md`, `docs/backend-integration.md`, `docs/frontend-blueprint.md`, `docs/development-guidelines.md`, `docs/roadmap.md` (My schedule belongs to this phase), and `specs/003-auth-app-shell/contracts/app-shell.md`, as listed in the plan
 - [ ] T068 Follow the by-hand steps in [quickstart.md](quickstart.md), and time the journey against SC-001
-- [ ] T069 Run `pnpm check` and `pnpm test:e2e:live`, record the observed results here, then run `/code-review` and resolve its findings
+- [X] T069 Run `pnpm check` and `pnpm test:e2e:live`, record the observed results here, then run `/code-review` and resolve its findings
 - [ ] T070 Set the spec's status and update `docs/roadmap.md`, after the project owner accepts the phase
 
 ---
@@ -298,15 +298,19 @@ T040, T041, T042   US6 tests
 
 ## Results
 
-Recorded as they're observed.
+Recorded as they're observed. The final run covers the code as committed, with the review's fixes.
 
 | Check | Result |
 |---|---|
-| `pnpm check` at the start (T001) | Passed: 651 unit tests, 270 end-to-end tests (2026-11-06) |
-| Unit tests, types, lint, formatting, translations, logical styles, Phase 4's specs | See below, in the order they were run |
-| `vitest run`, in the last full run before the anchor rename | 839 passed |
-| Phase 4's end-to-end specs, at their last runs | All passed, run spec by spec: specialties, staff, doctors, schedule, time-off, fees, clinic-roles, my-schedule |
-| `e2e/live/clinic-setup.spec.ts` | 8 passed against the real API, before the anchor rename. Journey about 6 s of automated steps in each language |
-| `pnpm check` on Phase 8's state | **Not completed.** The first run stopped at `check:contrast`, on `#fee` being read as a color, now renamed. The rerun was stopped by the system for low memory, with no verdict |
-| `pnpm check` at the end (T069) | Not yet run |
-| `pnpm test:e2e:live` (T069) | Not yet run |
+| `pnpm check` at the start (T001) | Passed: 651 unit tests, 270 end-to-end tests |
+| Types, lint, formatting, translations, logical styles, contrast, generated types (T069) | Passed |
+| Unit tests (T069) | 848 passed, in 61 files |
+| End-to-end tests (T069) | 496 passed: 254 and 242, in two shards, because a foreground command is limited to 10 minutes. The `pnpm check` command itself was stopped twice by the system for low memory, so its steps were run one by one |
+| Live tests against the real API (T069) | 27 passed. The journey takes about 6 seconds of automated steps in each language |
+| `/code-review` (medium) (T069) | 10 findings, all fixed |
+
+An earlier run failed 1 of 493 end-to-end tests, through a real overflow from a long name. Its earlier passes had measured before the page finished streaming, so the test now waits, and the overflow is fixed.
+
+Tests were seen to fail first for the foundations, the specialty form, the schedule, time-off, and fee forms, password clearing, and the review's unit-testable fixes. The staff, doctor, and readiness unit tests, and the end-to-end tests, were written alongside or after their code.
+
+T068 needs a person, for the 5-minute target in SC-001 and the by-hand steps. T070 follows the owner's acceptance.

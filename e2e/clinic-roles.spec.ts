@@ -206,7 +206,7 @@ test.describe("pages opened before a change", () => {
     await page
       .getByRole("button", { name: m.fees.change, exact: true })
       .click();
-    await expect(page.locator("#doctor-fee")).toContainText("400.00");
+    await expect(page.locator('[id^="doctor-fee-"]')).toContainText("400.00");
 
     await nav.getByRole("link", { name: m.shell.nav.fees }).click();
     await expect(page).toHaveURL(/\/fees$/);

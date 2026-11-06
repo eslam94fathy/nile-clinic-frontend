@@ -2,6 +2,8 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useId } from "react";
+import { UserText } from "@/components/shared/values/user-text";
+import { specialtyName } from "../specialty-name";
 import type { Specialty } from "../types";
 
 /** Active specialties, plus any deactivated one a doctor already has, which may be kept. */
@@ -33,7 +35,7 @@ export function SpecialtyChoices({
         </span>
       </legend>
       {options.map((specialty) => {
-        const name = locale === "ar" ? specialty.name_ar : specialty.name_en;
+        const name = specialtyName(specialty, locale);
         return (
           <label key={specialty.id} className="flex items-center gap-2">
             <input
@@ -48,9 +50,9 @@ export function SpecialtyChoices({
                 )
               }
             />
-            <bdi dir="auto">
+            <UserText>
               {specialty.is_active ? name : t("deactivatedSpecialty", { name })}
-            </bdi>
+            </UserText>
           </label>
         );
       })}

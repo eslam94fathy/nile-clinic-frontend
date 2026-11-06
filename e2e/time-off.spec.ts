@@ -131,6 +131,17 @@ test.describe("ranges and refusals", () => {
     await expect(row).toBeVisible();
   });
 
+  test("a range with only an end looks back from it", async ({ page }) => {
+    await control(
+      `clinic/time-off?doctor=1&start=${inDays(-30)}&end=${inDays(-29)}&reason=Synthetic+past`,
+    );
+    await page.goto(`/en/doctors/1?to=${inDays(-1)}`);
+
+    await expect(
+      page.getByRole("row", { name: /Synthetic past/ }),
+    ).toBeVisible();
+  });
+
   test("offers no removal once the end date has passed", async ({ page }) => {
     await control(
       `clinic/time-off?doctor=1&start=${inDays(-30)}&end=${inDays(-29)}&reason=Synthetic+past`,

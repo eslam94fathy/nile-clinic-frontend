@@ -80,6 +80,29 @@ describe("TimeOffForm", () => {
     );
   });
 
+  it("ignores spaces around a time, as the schedule editor does", async () => {
+    recordTimeOff.mockResolvedValue(OK);
+    setup();
+    type(t.kind, "part");
+    type(t.startDate, "2030-01-10");
+    type(t.startTime, "10:00 ");
+    type(t.endTime, " 12:00");
+    submit();
+
+    await waitFor(() =>
+      expect(recordTimeOff).toHaveBeenCalledWith(
+        5,
+        {
+          start_date: "2030-01-10",
+          end_date: "2030-01-10",
+          start_time: "10:00",
+          end_time: "12:00",
+        },
+        "en",
+      ),
+    );
+  });
+
   it("hides the last day and asks for times when it's part of a day", () => {
     setup();
     expect(screen.queryByLabelText(new RegExp(`^${t.startTime}`))).toBeNull();

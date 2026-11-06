@@ -47,6 +47,10 @@ describe("feeFormSchema", () => {
     expect(schema.parse({ amount: "٣٥٠.١٠" })).toEqual({ amount: "350.10" });
   });
 
+  it("accepts the Arabic decimal separator", () => {
+    expect(schema.parse({ amount: "١٥٠٫٥٠" })).toEqual({ amount: "150.50" });
+  });
+
   it("keeps the digits exactly as typed", () => {
     expect(schema.parse({ amount: "0.07" }).amount).toBe("0.07");
     expect(schema.parse({ amount: "99999.99" }).amount).toBe("99999.99");

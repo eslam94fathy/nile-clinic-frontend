@@ -37,7 +37,7 @@ for (const locale of ["ar", "en"] as const) {
       await page.getByRole("button", { name: t.set, exact: true }).click();
 
       await expect(page.getByText(t.saved)).toBeVisible();
-      const section = page.locator("#doctor-fee");
+      const section = page.locator('[id^="doctor-fee-"]');
       await expect(section).toContainText("350.10");
       await expect(section).toContainText("Synthetic Admin");
       await expect(section.locator("time")).toBeVisible();
@@ -65,7 +65,7 @@ for (const locale of ["ar", "en"] as const) {
       await page.getByRole("button", { name: t.set, exact: true }).click();
 
       expect((await sent).postDataJSON()).toEqual({ amount: "350.75" });
-      await expect(page.locator("#doctor-fee")).toContainText("350.75");
+      await expect(page.locator('[id^="doctor-fee-"]')).toContainText("350.75");
     });
 
     test("gives quick feedback, with no request", async ({ page }) => {

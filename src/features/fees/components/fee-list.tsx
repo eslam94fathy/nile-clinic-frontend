@@ -62,7 +62,8 @@ export function FeeList({
       columns={columns}
       rows={rows}
       getRowKey={(row) => String(row.doctor.id)}
-      state={rows.length === 0 ? "empty" : "ready"}
+      // By the total, as a page past the end has no rows, and needs its links back.
+      state={meta.total === 0 ? "empty" : "ready"}
       emptyState={
         <EmptyState
           title={t("emptyTitle")}

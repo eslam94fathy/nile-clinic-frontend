@@ -108,7 +108,7 @@ export function ReadinessSummary({
           label={t("itemFee")}
           state={items.fee}
           fix={
-            <a href="#doctor-fee" className={linkClass}>
+            <a href={`#doctor-fee-${doctorId}`} className={linkClass}>
               {t("fixFee")}
             </a>
           }

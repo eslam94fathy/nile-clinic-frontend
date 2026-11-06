@@ -181,7 +181,7 @@ async function takeDoctorFromAccountToBookable(
 
   await expect(page.getByText(m.doctors.setupComplete)).toBeVisible();
   await expect(page.getByText(m.doctors.chargeWarning)).toHaveCount(0);
-  await expect(page.locator("#doctor-fee")).toContainText("350.10");
+  await expect(page.locator('[id^="doctor-fee-"]')).toContainText("350.10");
 
   return { email, password, doctorUrl };
 }

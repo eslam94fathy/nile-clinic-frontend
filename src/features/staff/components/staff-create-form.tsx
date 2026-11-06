@@ -80,12 +80,11 @@ export function StaffCreateForm({
         // This page stays mounted but hidden after moving on, so a password must not stay in it (FR-011).
         reset();
         const created = createdSchema.safeParse(data);
-        if (!created.success) {
+        const id = created.success ? created.data.data.id : null;
+        if (id === null) {
+          toast.success(t("created"));
           router.push("/staff");
-          return;
-        }
-        const { id } = created.data.data;
-        if (values.role === "doctor") {
+        } else if (values.role === "doctor") {
           toast.success(t("createdDoctor"));
           router.push(`/doctors/new?account=${id}`);
         } else {

@@ -60,6 +60,31 @@ function Section({
   );
 }
 
+/**
+ * Time off is also a record, so a range with only an end looks back from it. Whatever isn't a date goes to
+ * the API as it is, whose refusal then says so.
+ */
+function timeOffRange(
+  from: string | undefined,
+  to: string | undefined,
+  today: string,
+) {
+  const isDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+  if (from === undefined && to !== undefined) {
+    return {
+      from: isDate(to) ? addDays(to, -TIME_OFF_DAYS_AFTER_START) : to,
+      to,
+    };
+  }
+  const start = from ?? today;
+  return {
+    from: start,
+    to:
+      to ?? (isDate(start) ? addDays(start, TIME_OFF_DAYS_AFTER_START) : start),
+  };
+}
+
 function slotRange(today: string) {
   return [today, addDays(today, SLOT_DAYS_AFTER_TODAY)] as const;
 }
@@ -179,12 +204,11 @@ async function TimeOffSection({
 }) {
   const t = await getTranslations({ locale, namespace: "scheduling" });
   const query = await searchParams;
-  const from = firstParam(query.from) ?? today;
-  const to =
-    firstParam(query.to) ??
-    (/^\d{4}-\d{2}-\d{2}$/.test(from)
-      ? addDays(from, TIME_OFF_DAYS_AFTER_START)
-      : from);
+  const { from, to } = timeOffRange(
+    firstParam(query.from),
+    firstParam(query.to),
+    today,
+  );
 
   const [entries, current] = await Promise.all([
     readTimeOff(locale, id, from, to),
@@ -193,7 +217,7 @@ async function TimeOffSection({
   const canManage =
     current.kind === "signed-in" && can(current.user.role, "manageSchedules");
 
-  return (
+  const section = (
     <div className="flex w-full flex-col gap-4">
       <FilterBar
         filters={[
@@ -208,25 +232,30 @@ async function TimeOffSection({
         ]}
       />
       {entries.ok ? (
-        <ScopedMessages locale={locale} namespaces={["scheduling"]}>
-          <TimeOffList
-            entries={entries.data.data}
-            today={today}
-            {...(canManage ? { removableBy: id } : {})}
-          />
-        </ScopedMessages>
+        <TimeOffList
+          entries={entries.data.data}
+          today={today}
+          {...(canManage ? { removableBy: id } : {})}
+        />
       ) : (
         <ApiFailureState error={entries.error} />
       )}
       {canManage ? (
-        <ScopedMessages locale={locale} namespaces={["scheduling"]}>
-          <div className="flex flex-col gap-3">
-            <h3 className="font-medium">{t("addHeading")}</h3>
-            <TimeOffForm doctorId={id} />
-          </div>
-        </ScopedMessages>
+        <div className="flex flex-col gap-3">
+          <h3 className="font-medium">{t("addHeading")}</h3>
+          <TimeOffForm doctorId={id} />
+        </div>
       ) : null}
     </div>
+  );
+
+  // Only someone who can change time off needs this text in the browser.
+  return canManage ? (
+    <ScopedMessages locale={locale} namespaces={["scheduling"]}>
+      {section}
+    </ScopedMessages>
+  ) : (
+    section
   );
 }
 
@@ -281,7 +310,7 @@ async function DoctorPageContent({
       <Section heading={scheduling("slotsHeading")}>
         <Slots locale={locale} id={id} today={today} />
       </Section>
-      <Section heading={fees("sectionHeading")} id="doctor-fee">
+      <Section heading={fees("sectionHeading")} id={`doctor-fee-${id}`}>
         <Fee locale={locale} id={id} timeZone={timeZone} />
       </Section>
       <Section heading={scheduling("timeOffHeading")}>

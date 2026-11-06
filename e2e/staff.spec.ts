@@ -393,6 +393,21 @@ test.describe("addresses and failures", () => {
     ).toBeVisible();
   });
 
+  test("a page past the end isn't mistaken for an empty list", async ({
+    page,
+  }) => {
+    const { staff: t, shared } = messages.en;
+    await page.goto("/en/staff?page=99");
+
+    await expect(page.getByText(t.emptyTitle)).toHaveCount(0);
+    await expect(page.getByText(t.emptyFilteredTitle)).toHaveCount(0);
+    await page
+      .getByRole("navigation", { name: shared.table.pagination })
+      .getByRole("link", { name: shared.table.previous })
+      .click();
+    await expect(page).toHaveURL(/page=98/);
+  });
+
   test("a failed list shows an error with a retry", async ({ page }) => {
     await script("staff", 500);
     await page.goto("/en/staff");

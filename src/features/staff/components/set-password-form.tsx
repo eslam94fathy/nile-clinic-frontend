@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -47,6 +47,8 @@ export function SetPasswordForm({ id, name }: { id: number; name: string }) {
     });
   const [awaitingConfirmation, setAwaitingConfirmation] =
     useState<PasswordValues | null>(null);
+  // This holds the typed password too, and must go with the fields on leaving the page (FR-011).
+  useEffect(() => () => setAwaitingConfirmation(null), []);
 
   async function send(values: PasswordValues) {
     await submit(

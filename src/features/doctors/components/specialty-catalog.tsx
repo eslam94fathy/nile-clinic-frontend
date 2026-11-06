@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
 import { setSpecialtyActive } from "../api/specialties";
+import { specialtyName } from "../specialty-name";
 import type { Specialty } from "../types";
 import { SpecialtyForm } from "./specialty-form";
 
@@ -42,7 +43,7 @@ export function SpecialtyCatalog({
   }, [renamingId]);
 
   function displayName(specialty: Specialty) {
-    return locale === "ar" ? specialty.name_ar : specialty.name_en;
+    return specialtyName(specialty, locale);
   }
 
   const columns: DataTableColumn<Specialty>[] = [

@@ -1,4 +1,12 @@
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import { Activity } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   messagesByLocale,
@@ -321,6 +329,30 @@ describe("SetPasswordForm", () => {
     );
     await waitFor(() => expect(field(t.password).value).toBe(""));
     expect(field(t.passwordConfirmation).value).toBe("");
+  });
+
+  it("forgets a password waiting for confirmation on leaving the page", async () => {
+    const page = (mode: "visible" | "hidden") => (
+      <NextIntlClientProvider
+        locale="en"
+        messages={messagesByLocale.en}
+        timeZone="Africa/Cairo"
+      >
+        <Activity mode={mode}>
+          <SetPasswordForm id={9} name="Synthetic Person" />
+        </Activity>
+      </NextIntlClientProvider>
+    );
+    const { rerender } = render(page("visible"));
+    fill();
+    openConfirm();
+    await screen.findByRole("alertdialog");
+
+    rerender(page("hidden"));
+    rerender(page("visible"));
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(field(t.password).value).toBe("");
   });
 
   it("gives quick feedback with no dialog", async () => {

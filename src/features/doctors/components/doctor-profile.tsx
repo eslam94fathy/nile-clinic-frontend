@@ -6,6 +6,7 @@ import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
 import { Can } from "@/features/app-shell/public";
 import { Link } from "@/lib/i18n/navigation";
+import { specialtyName } from "../specialty-name";
 import type { Doctor } from "../types";
 
 export function DoctorProfile({ doctor }: { doctor: Doctor }) {
@@ -54,9 +55,7 @@ export function DoctorProfile({ doctor }: { doctor: Doctor }) {
           <ul className="flex flex-col">
             {doctor.specialties.map((specialty) => (
               <li key={specialty.id}>
-                <UserText>
-                  {locale === "ar" ? specialty.name_ar : specialty.name_en}
-                </UserText>
+                <UserText>{specialtyName(specialty, locale)}</UserText>
               </li>
             ))}
           </ul>

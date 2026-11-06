@@ -127,8 +127,13 @@ export function DoctorForm({
         // This page stays mounted but hidden after moving on, and must start clean if opened again.
         reset();
         const created = createdSchema.safeParse(data);
-        if (created.success) goToDoctor(created.data.data.id, t("created"));
-        else router.push("/doctors");
+        if (created.success) {
+          goToDoctor(created.data.data.id, t("created"));
+          return;
+        }
+        toast.success(t("created"));
+        router.push("/doctors");
+        router.refresh();
       },
     );
   }

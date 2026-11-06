@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { toWesternDigits } from "@/lib/format/digits";
+import { toWesternDecimal } from "@/lib/format/digits";
 import type { DoctorFee } from "../types";
 
 export const doctorFeeSchema = z.object({
@@ -31,7 +31,7 @@ export function feeFormSchema(text: { amountRule: string }) {
   return z.object({
     amount: z
       .string()
-      .transform((value) => toWesternDigits(value).trim())
+      .transform((value) => toWesternDecimal(value).trim())
       .refine(isValidFeeAmount, { error: text.amountRule }),
   });
 }

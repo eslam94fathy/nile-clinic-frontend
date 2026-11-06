@@ -94,7 +94,8 @@ export function StaffList({
         columns={columns}
         rows={rows}
         getRowKey={(row) => String(row.id)}
-        state={rows.length === 0 ? "empty" : "ready"}
+        // By the total, as a page past the end has no rows, and needs its links back.
+        state={meta.total === 0 ? "empty" : "ready"}
         emptyState={
           filtered ? (
             <EmptyState
