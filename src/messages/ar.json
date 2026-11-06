@@ -33,6 +33,43 @@
   },
   "shared": {
     "noValue": "لا توجد قيمة",
+    "status": {
+      "unknown": "حالة غير معروفة",
+      "appointment": {
+        "scheduled": "مجدول",
+        "cancelled": "ملغى",
+        "no_show": "لم يحضر",
+        "checked_in": "تم تسجيل الوصول",
+        "completed": "مكتمل"
+      },
+      "queue": {
+        "waiting": "في الانتظار",
+        "with_doctor": "مع الطبيب",
+        "seen": "تم الكشف",
+        "left": "غادر"
+      },
+      "charge": {
+        "none": "بلا رسوم",
+        "unpaid": "غير مدفوع",
+        "partially_paid": "مدفوع جزئيًا",
+        "paid": "مدفوع",
+        "cancelled": "ملغى"
+      },
+      "record": {
+        "none": "لا يوجد سجل",
+        "draft": "مسودة",
+        "finalized": "نهائي"
+      }
+    },
+    "states": {
+      "loading": "جارٍ التحميل…",
+      "errorHeading": "تعذّر التحميل",
+      "retry": "إعادة المحاولة",
+      "forbiddenHeading": "ليس لديك صلاحية الوصول إلى هذا",
+      "forbiddenDescription": "دورك لا يشمل هذا. إذا كنت تحتاج إليه، فاطلبه من أحد المسؤولين.",
+      "notFoundHeading": "لا يوجد ما يمكن عرضه هنا",
+      "notFoundDescription": "هذا العنوان لا يؤدي إلى أي شيء يمكنك فتحه."
+    },
     "theme": {
       "label": "المظهر",
       "light": "فاتح",

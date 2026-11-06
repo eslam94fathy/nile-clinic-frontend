@@ -33,6 +33,43 @@
   },
   "shared": {
     "noValue": "No value",
+    "status": {
+      "unknown": "Unknown status",
+      "appointment": {
+        "scheduled": "Scheduled",
+        "cancelled": "Cancelled",
+        "no_show": "No-show",
+        "checked_in": "Checked in",
+        "completed": "Completed"
+      },
+      "queue": {
+        "waiting": "Waiting",
+        "with_doctor": "With doctor",
+        "seen": "Seen",
+        "left": "Left"
+      },
+      "charge": {
+        "none": "No charge",
+        "unpaid": "Unpaid",
+        "partially_paid": "Part paid",
+        "paid": "Paid",
+        "cancelled": "Cancelled"
+      },
+      "record": {
+        "none": "No record",
+        "draft": "Draft",
+        "finalized": "Finalized"
+      }
+    },
+    "states": {
+      "loading": "Loading…",
+      "errorHeading": "This couldn't be loaded",
+      "retry": "Try again",
+      "forbiddenHeading": "You don't have access to this",
+      "forbiddenDescription": "Your role doesn't include this. If you need it, ask an administrator.",
+      "notFoundHeading": "Nothing to show here",
+      "notFoundDescription": "This address doesn't lead to anything you can open."
+    },
     "theme": {
       "label": "Theme",
       "light": "Light",
