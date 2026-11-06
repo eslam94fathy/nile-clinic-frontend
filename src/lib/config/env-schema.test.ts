@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { parseEnv } from "./env-schema";
 
-const valid = { BACKEND_API_URL: "http://localhost:8081/api/v1" };
+const SESSION_SECRET = "synthetic-session-secret-for-tests-only";
+const valid = {
+  BACKEND_API_URL: "http://localhost:8081/api/v1",
+  SESSION_SECRET,
+};
 
 describe("parseEnv", () => {
   it("accepts a valid configuration and applies the default time zone", () => {
@@ -10,6 +14,7 @@ describe("parseEnv", () => {
       env: {
         BACKEND_API_URL: "http://localhost:8081/api/v1",
         CLINIC_TIMEZONE: "Africa/Cairo",
+        SESSION_SECRET,
       },
     });
   });
@@ -18,7 +23,7 @@ describe("parseEnv", () => {
     ["one", "http://localhost:8081/api/v1/"],
     ["several", "https://api.example.test/api/v1///"],
   ])("removes %s trailing slash", (_label, url) => {
-    const result = parseEnv({ BACKEND_API_URL: url });
+    const result = parseEnv({ BACKEND_API_URL: url, SESSION_SECRET });
     expect(result.ok && result.env.BACKEND_API_URL.endsWith("/")).toBe(false);
   });
 
@@ -41,6 +46,20 @@ describe("parseEnv", () => {
     const result = parseEnv(source);
     expect(result.ok).toBe(false);
     expect(!result.ok && result.problems.join()).toContain("BACKEND_API_URL");
+  });
+
+  it.each([
+    ["missing", {}],
+    ["too short", { SESSION_SECRET: "secret-but-short" }],
+  ])("rejects a session secret that is %s, without its value", (_l, source) => {
+    const result = parseEnv({
+      BACKEND_API_URL: valid.BACKEND_API_URL,
+      ...source,
+    });
+    expect(result.ok).toBe(false);
+    const problems = !result.ok ? result.problems.join() : "";
+    expect(problems).toContain("SESSION_SECRET");
+    expect(problems).not.toContain("secret-but-short");
   });
 
   it("rejects an invalid time zone and names the setting", () => {
