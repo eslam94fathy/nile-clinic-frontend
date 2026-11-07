@@ -655,7 +655,8 @@
     },
     "recordLinks": {
       "book": "Book appointment",
-      "view": "View appointments"
+      "view": "View appointments",
+      "addToQueue": "Add to today's queue"
     },
     "chooser": {
       "caption": "Patients found",
@@ -740,6 +741,12 @@
       "noShow": "No-show",
       "unknownOutcome": "The connection failed, so we can't tell whether this was saved. The page now shows the appointment as the clinic has it."
     },
+    "checkIn": {
+      "action": "Check in",
+      "working": "Checking in…",
+      "done": "Checked in. Queue number {number}.",
+      "seeList": "See this doctor's queue"
+    },
     "reschedule": {
       "heading": "Move to another time",
       "current": "Current time: {date}, {start} to {end}",
@@ -794,6 +801,108 @@
       "emptyFilteredTitle": "No appointments match",
       "emptyFilteredDescription": "Try other dates or another status.",
       "outsideDescription": "This no longer fits your hours. Reception will move or cancel it."
+    }
+  },
+  "queue": {
+    "title": "Queue",
+    "description": "Today's patients, by doctor and in queue order. The list updates by itself.",
+    "todaysAppointments": "Today's appointments",
+    "addWalkIn": "Add walk-in",
+    "allDoctors": "See all doctors",
+    "listHeading": "Today's queue",
+    "caption": "Queue for {doctor}",
+    "walkIn": "Walk-in",
+    "readFailed": "The queue couldn't be read.",
+    "unknownOutcome": "The connection failed, so we can't tell whether this was saved. The list is being read again, so check it before trying again.",
+    "fields": {
+      "number": "Queue number",
+      "patient": "Patient",
+      "doctor": "Doctor",
+      "status": "Status",
+      "appointment": "Appointment",
+      "arrived": "Arrived",
+      "times": "Since then",
+      "actions": "Actions"
+    },
+    "sex": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "times": {
+      "called": "Called",
+      "finished": "Finished",
+      "left": "Left"
+    },
+    "filters": {
+      "anyDoctor": "Any doctor",
+      "anyStatus": "Any status",
+      "inactiveDoctor": "{name} (inactive)",
+      "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to filter by doctor."
+    },
+    "lastRead": {
+      "label": "Last updated:",
+      "refresh": "Refresh now",
+      "outOfDate": "This may be out of date, as the latest update failed. Trying again by itself."
+    },
+    "empty": {
+      "todayTitle": "Nobody has arrived today",
+      "todayDescription": "Patients appear here once they're checked in or added as walk-ins.",
+      "filteredTitle": "Nobody matches",
+      "filteredDescription": "Try another doctor or status."
+    },
+    "left": {
+      "action": "Mark as left",
+      "title": "Mark this patient as left?",
+      "description": "They stay on the list for the record, and won't be called.",
+      "confirm": "Mark as left",
+      "done": "Marked as left."
+    },
+    "undo": {
+      "action": "Undo check-in",
+      "title": "Undo this check-in?",
+      "description": "They leave the list and their appointment returns to scheduled. Their queue number isn't reused.",
+      "confirm": "Undo check-in",
+      "done": "Check-in undone. The appointment is scheduled again."
+    },
+    "walkInForm": {
+      "title": "Add a walk-in",
+      "description": "Add a registered patient with no appointment to a doctor's list for today. This takes no bookable time.",
+      "back": "Back to the queue",
+      "patientStep": "Patient",
+      "doctorStep": "Doctor",
+      "choosePatientFirst": "Choose a patient first.",
+      "change": "Change",
+      "patientMissing": "No patient was found with this number. Search for them below.",
+      "permanent": "A walk-in can't be removed afterwards. It can only be marked as left.",
+      "submit": "Add to queue",
+      "submitting": "Adding…",
+      "added": "Added to the queue. Queue number {number}.",
+      "unknownOutcome": "The connection failed, so we can't tell whether this was saved. Check the queue before trying again.",
+      "seeQueue": "See the queue"
+    },
+    "own": {
+      "title": "My queue",
+      "description": "Your patients for today, in queue order. The list updates by itself.",
+      "listHeading": "Today",
+      "caption": "Your queue for today",
+      "currentHeading": "Current patient",
+      "emptyTitle": "Nobody has arrived today",
+      "emptyDescription": "Patients appear here once reception checks them in.",
+      "nobodyWaiting": "Nobody is waiting.",
+      "callNext": {
+        "action": "Call next",
+        "title": "Call the next patient?",
+        "description": "The next patient in the queue will be called. A called patient can't be sent back.",
+        "confirm": "Call next",
+        "done": "{name} is now with you."
+      },
+      "finish": {
+        "action": "Finish visit",
+        "title": "Finish this visit?",
+        "description": "They'll be marked as seen.",
+        "confirm": "Finish visit",
+        "done": "Visit with {name} finished."
+      }
     }
   }
 }

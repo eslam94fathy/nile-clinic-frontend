@@ -18,6 +18,8 @@ describe("safeReturnAddress", () => {
     ["/queue#top", "/queue"],
     ["/queue?a=1#b", "/queue"],
     ["/patients?search=Synthetic", "/patients"],
+    ["/en/queue/walk-in?patient_id=12", "/queue/walk-in"],
+    ["/en/queue?doctor_id=3&status=waiting", "/queue"],
   ])("drops the query and fragment of %s", (raw, expected) => {
     expect(safeReturnAddress(raw)).toBe(expected);
   });

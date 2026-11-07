@@ -36,6 +36,15 @@ const pressEscape = () =>
   });
 
 describe("ConfirmDialog", () => {
+  it("works with no button of its own, for one that can disappear while it's open", () => {
+    const onConfirm = vi.fn();
+    renderWithIntl(<Example trigger={undefined} onConfirm={onConfirm} />);
+
+    expect(screen.queryByRole("button", { name: "Open" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
   it.each(["en", "ar"] as const)(
     "says when an action can't be undone, in %s",
     (locale) => {

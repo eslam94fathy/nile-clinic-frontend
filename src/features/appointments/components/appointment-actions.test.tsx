@@ -15,6 +15,8 @@ const api = vi.hoisted(() => ({
   rescheduleAppointment: vi.fn(),
 }));
 vi.mock("../api/appointments", () => api);
+const queue = vi.hoisted(() => ({ checkInAppointment: vi.fn() }));
+vi.mock("@/features/queue/public", () => queue);
 vi.mock("@/features/patients/public", () => ({
   PatientLink: () => null,
 }));
@@ -89,6 +91,7 @@ const AFTER = "2026-11-08 10:00";
 
 beforeEach(() => {
   for (const mock of Object.values(api)) mock.mockReset();
+  queue.checkInAppointment.mockReset();
   router.refresh.mockReset();
   toast.success.mockReset();
   freeTimes.signal = 0;
@@ -114,8 +117,100 @@ const press = (name: string) =>
   fireEvent.click(screen.getByRole("button", { name }));
 const dialog = () => screen.getByRole("alertdialog");
 
+describe("checking in", () => {
+  const ON_THE_DAY = "2026-11-08 09:00";
+
+  it("is offered on the day, with no confirmation, and gives the number", async () => {
+    queue.checkInAppointment.mockResolvedValue({
+      ok: true,
+      status: 201,
+      data: { queue_number: 4 },
+    });
+    setUp(ON_THE_DAY);
+    press(t.checkIn.action);
+
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith(
+        t.checkIn.done.replace("{number}", "4"),
+      ),
+    );
+    expect(queue.checkInAppointment).toHaveBeenCalledWith(7, "en");
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("isn't offered on another date", () => {
+    setUp();
+    expect(screen.queryByRole("button", { name: t.checkIn.action })).toBeNull();
+  });
+
+  it("shows a refusal on the page, and refreshes", async () => {
+    queue.checkInAppointment.mockResolvedValue({
+      ok: false,
+      error: {
+        status: 422,
+        fieldErrors: { appointment: ["Sent as written."] },
+      },
+    });
+    setUp(ON_THE_DAY);
+    press(t.checkIn.action);
+
+    await screen.findByText("Sent as written.");
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  it("shows a conflict's message, as there's no key to go by", async () => {
+    queue.checkInAppointment.mockResolvedValue({
+      ok: false,
+      error: {
+        status: 409,
+        message: "Already.",
+        reason: "already_checked_in",
+        fieldErrors: {},
+      },
+    });
+    setUp(ON_THE_DAY);
+    press(t.checkIn.action);
+
+    await screen.findByText("Already.");
+  });
+
+  it("says it can't tell when no answer came", async () => {
+    queue.checkInAppointment.mockResolvedValue({
+      ok: false,
+      error: { status: 0, fieldErrors: {} },
+    });
+    setUp(ON_THE_DAY);
+    press(t.checkIn.action);
+
+    await screen.findByText(t.actions.unknownOutcome);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("doesn't send twice while one is under way", async () => {
+    queue.checkInAppointment.mockReturnValue(new Promise(() => {}));
+    setUp(ON_THE_DAY);
+    press(t.checkIn.action);
+    press(t.checkIn.working);
+
+    await waitFor(() =>
+      expect(queue.checkInAppointment).toHaveBeenCalledTimes(1),
+    );
+  });
+
+  it("links a checked-in appointment to that doctor's list, offering no change", () => {
+    setUp(ON_THE_DAY, { status: "checked_in" });
+    const link = screen.getByRole("link", { name: t.checkIn.seeList });
+
+    expect(link.getAttribute("href")).toBe("/queue?doctor_id=3");
+    expect(link.getAttribute("data-prefetch")).toBe("false");
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+});
+
 describe("what's offered", () => {
-  it("before the start: moving and cancelling, and no check-in", () => {
+  it("before the day: moving and cancelling, and no check-in", () => {
     setUp();
     expect(
       screen.getByRole("button", { name: t.actions.reschedule }),

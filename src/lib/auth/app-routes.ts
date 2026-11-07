@@ -40,7 +40,7 @@ export const APP_ROUTES = [
     capability: "manageQueue",
     labelKey: "queue",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "billing",
@@ -104,7 +104,7 @@ export const APP_ROUTES = [
     capability: "ownQueue",
     labelKey: "myQueue",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "my/appointments",

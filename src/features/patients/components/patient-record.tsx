@@ -131,6 +131,11 @@ export function PatientRecord({
               </Link>
             </Button>
             <Button variant="outline" asChild>
+              <Link href={`/queue/walk-in?patient_id=${id}`} prefetch={false}>
+                {t("recordLinks.addToQueue")}
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link href="/patients" prefetch={false}>
                 {t("backToSearch")}
               </Link>

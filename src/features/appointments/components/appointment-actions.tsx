@@ -2,10 +2,14 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { FormError } from "@/components/shared/form/form-error";
 import { FormField } from "@/components/shared/form/form-field";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { checkInAppointment } from "@/features/queue/public";
+import { allMessages, isOutcomeUnknown } from "@/lib/api/refusal";
+import { Link, useRouter } from "@/lib/i18n/navigation";
 import { cancelAppointment, markNoShow } from "../api/appointments";
 import { offeredActions } from "../offered-actions";
 import { cancelBody, cancelReasonSchema } from "../schemas/appointment";
@@ -40,8 +44,12 @@ export function AppointmentActions({
   const [rescheduling, setRescheduling] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string>();
+  const [checkingIn, setCheckingIn] = useState(false);
+  const shared = useTranslations("shared.form");
+  const router = useRouter();
   const rescheduleButton = useRef<HTMLButtonElement>(null);
   const expectingChange = useRef(false);
+  const checkInFlight = useRef(false);
 
   const offered = offeredActions(
     appointment.status,
@@ -74,6 +82,30 @@ export function AppointmentActions({
     focusHeading();
   }
 
+  // No confirmation: a mistake can be put right by undoing it from the queue, and the desk does this all day.
+  async function checkIn() {
+    if (checkInFlight.current) return;
+    checkInFlight.current = true;
+    setCheckingIn(true);
+    setNotices([]);
+
+    const result = await checkInAppointment(appointment.id, locale);
+    checkInFlight.current = false;
+    setCheckingIn(false);
+
+    if (result.ok) {
+      toast.success(
+        t("checkIn.done", { number: String(result.data.queue_number) }),
+      );
+      changed();
+    } else if (isOutcomeUnknown(result.error)) {
+      unknownOutcome();
+    } else {
+      refused(allMessages(result.error, shared("generalFailure")));
+    }
+    router.refresh();
+  }
+
   const reasonSchema = cancelReasonSchema({
     reasonTooLong: tCancel("reasonTooLong"),
   });
@@ -81,6 +113,17 @@ export function AppointmentActions({
   return (
     <section className="flex flex-col gap-3">
       <FormError messages={notices} />
+      {appointment.status === "checked_in" ? (
+        <p>
+          <Link
+            href={`/queue?doctor_id=${appointment.doctor.id}`}
+            prefetch={false}
+            className="font-medium underline underline-offset-4"
+          >
+            {t("checkIn.seeList")}
+          </Link>
+        </p>
+      ) : null}
       {rescheduling ? (
         <ReschedulePanel
           appointment={appointment}
@@ -98,6 +141,15 @@ export function AppointmentActions({
         <>
           <h2 className="text-xl font-semibold">{t("actions.heading")}</h2>
           <div className="flex flex-wrap gap-2">
+            {offered.includes("check_in") ? (
+              <Button
+                type="button"
+                aria-disabled={checkingIn}
+                onClick={() => void checkIn()}
+              >
+                {checkingIn ? t("checkIn.working") : t("checkIn.action")}
+              </Button>
+            ) : null}
             {offered.includes("reschedule") ? (
               <Button
                 ref={rescheduleButton}
