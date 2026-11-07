@@ -65,7 +65,9 @@ Findings come from the backend's source and contracts at the analyzed commit `df
 
 **A refusal** keeps the dialog open with the API's message, as `ConfirmedAction` does, and the list is read again underneath. Unlike the appointment's page (Phase 6, R8), the dialog here isn't removed by a refresh, so there's no need to move the message to the page.
 
-**Row focus during a refresh**: Rows are keyed by entry number, so React keeps the DOM and its focus when data changes. If the focused row goes, focus falls to `body`, so the list checks after an update, and moves focus to the heading only when focus was in a row that's gone (US3).
+**Focus during a refresh**: Rows are keyed by entry number, so React keeps the DOM and its focus when data changes. If the focused control goes, whether or not its row stays, focus falls to `body`, so `useKeepFocus` checks after each update, and moves focus to the heading only when focus was in that part of the list and has been lost. Someone who deliberately left isn't moved (US3). The code review found the first version covered only a row going, and also moved people who'd left.
+
+**Finishing**: `POST /doctors/me/queue/finish` names no entry, so a dialog's copy of the name could be out of step with who gets finished. The dialog remembers the entry, and sends nothing if the list shows a different current patient. This narrows the risk, but can't close it: a change no read has shown yet still reaches the API. Only an entry id in the API could close it.
 
 ## R6. Filters and paging
 

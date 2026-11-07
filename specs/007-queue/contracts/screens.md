@@ -70,7 +70,7 @@ Header: title and description. Below it: the current patient, the action, the la
 | Dialog | Says |
 |---|---|
 | Call next | The next patient in the queue will be called. A called patient can't be sent back. Names nobody |
-| Finish visit | Names the current patient. Can't be undone. Doesn't mention a medical record |
+| Finish visit | Names the current patient. Can't be undone. Doesn't mention a medical record. Once the list shows another current patient, confirming sends nothing and says so, as the API's finish names no patient |
 
 On success, a confirmation names the patient the API returned. On a refusal, the dialog stays open with the API's message, and the list is read again. The dialog opens on the safe choice.
 
@@ -80,7 +80,8 @@ On success, a confirmation names the patient the API returned. On a refusal, the
 |---|---|
 | `scheduled`, dated today | Gains "Check in", first among the actions, with no confirmation |
 | `scheduled`, another date | No change |
-| `checked_in` | Gains a link to that doctor's list |
+| `checked_in`, dated today | Gains a link to that doctor's list |
+| `checked_in`, another date | No change, as today's list can't show it (gap G8) |
 | Anything else | No change |
 
 After check-in, a confirmation gives the queue number, and the page shows the new state. On a refusal, the API's message appears at page level, and the page shows the current state. If the outcome is unknown, it says so, and the page refreshes.

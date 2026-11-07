@@ -272,6 +272,21 @@ From the source only, not exercised, because the frontend never does these (`Pat
 
 From the source only, not exercised: `422` under `date`, `patient_id`, `doctor_id`, and `note` when booking, and under `reason` when cancelling. The fake backend covers how each appears.
 
+**Queue, confirmed on the running API** (2026-11-07, commit `dff2dca`, by `e2e/live/queue.spec.ts`):
+
+- Rows hold exactly `id`, `queue_number`, `status`, `arrived_at`, `called_at`, `finished_at`, `left_at`, `walk_in`, `appointment`, `doctor`, and `patient`, with the patient as `id`, `full_name`, and `phone`. A doctor's own rows have no `doctor`, and their patient is `id`, `full_name`, `sex`, and `date_of_birth`, with no phone.
+- Reading a list writes no audit entry, including over four real 15-second intervals. Check-in, walk-in, left, undo, call next, and finish each write one entry of their own (`visit.checked_in`, `visit.walk_in_added`, `visit.left`, `visit.check_in_undone`, `visit.called`, `visit.finished`), and no `patient.opened`.
+- A second check-in is `422` under `appointment`, as is a check-in on another day. Of two at once, one is `201`, the other is `409` or `422`, and there's one row. The test accepts either, so which one comes back isn't established.
+- A walk-in for someone already on the list is `422` under `patient_id`. A walk-in takes no free time.
+- Left or undo on someone no longer waiting is `422` under `entry`. Left keeps the row, and that patient is never called.
+- Undo removes the row and returns the appointment to `scheduled`. Checking in again gives a higher number.
+- Call next with nobody waiting, or with a patient already with the doctor, is `422`, and with nobody waiting it's under `queue`. Finish with nobody current is `422`. Finishing completes the appointment.
+- A doctor gets `403` on `/queue`, `/doctors/{id}/queue`, walk-ins, left, and undo. A receptionist gets `403` on `/doctors/me/queue`, call next, and finish.
+- Filtering by a doctor who doesn't exist shows the not-found state. The test checks the page, not the status.
+- Two signed-in browsers each showed the other's change within 20 seconds, with no interaction.
+
+From the source only, not exercised: `409` `patient_with_another_doctor`, `409` `already_checked_in`, the walk-in's `409`, undo refused for an active charge, and a walk-in's `422` under `doctor_id`. The fake backend covers how each appears.
+
 **"No medical details" fields.** The API asks that time-off reason, appointment note, and charge
 reasons hold no medical details. Time-off reasons are readable by all staff. These fields need a
 visible hint.
@@ -338,3 +353,4 @@ Workable today, but worth knowing. Nothing has been changed in the backend.
 | G5 | Throttle wait is only in message text | No countdown possible without parsing | Show the message as sent |
 | G6 | No clinic details endpoint | Clinic name and logo have no source | Held in the frontend ([ADR 0009](decisions/0009-brand-assets.md)) |
 | G7 | No receipt or print endpoint | No printed receipts or prescriptions | Out of scope: decision Q5 in the [roadmap](roadmap.md) |
+| G8 | Queue routes only reach the clinic's today (from the source) | An entry still waiting or with a doctor at midnight can't be reached or closed afterwards, so it stays open | Nothing in the frontend can fix it. The screens show today only |
