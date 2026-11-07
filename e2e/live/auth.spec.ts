@@ -233,17 +233,17 @@ test("changing a password keeps this session, and ends another", async ({
   browser,
   page,
 }) => {
-  const { receptionist } = liveAccounts();
-  await signInLive(page, receptionist);
+  const { passwordChange: account } = liveAccounts();
+  await signInLive(page, account);
   const other = await (await browser.newContext()).newPage();
-  await signInLive(other, receptionist);
+  await signInLive(other, account);
 
   const next = `Synthetic-${randomBytes(12).toString("hex")}`;
   const t = messages.en.auth.account;
   await page.goto("/en/account");
   await page
     .getByLabel(new RegExp(`^${t.currentPassword}`))
-    .fill(receptionist.password);
+    .fill(account.password);
   await page.getByLabel(new RegExp(`^${t.newPassword}`)).fill(next);
   await page.getByLabel(new RegExp(`^${t.confirmPassword}`)).fill(next);
   await page.getByRole("button", { name: t.submit }).click();
@@ -258,12 +258,12 @@ test("changing a password keeps this session, and ends another", async ({
 
   const oldPassword = await api("auth/sign-in", {
     method: "POST",
-    body: { email: receptionist.email, password: receptionist.password },
+    body: { email: account.email, password: account.password },
   });
   expect(oldPassword.status).toBe(422);
   const newPassword = await api("auth/sign-in", {
     method: "POST",
-    body: { email: receptionist.email, password: next },
+    body: { email: account.email, password: next },
   });
   expect(newPassword.status).toBe(200);
 });

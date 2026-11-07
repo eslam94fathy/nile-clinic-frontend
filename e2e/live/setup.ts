@@ -55,6 +55,7 @@ export default async function setup() {
     doctor: await createStaff("doctor", "doctor"),
     newDoctor: await createStaff("newdoctor", "doctor"),
     disposable: await createStaff("disposable", "receptionist"),
+    passwordChange: await createStaff("passwordchange", "receptionist"),
     // Unique names, so that a test can find this run's doctor among any left by a run that was interrupted.
     bookingDoctor: await createStaff(`bookingdoctor${stamp}`, "doctor"),
     secondDoctor: await createStaff(`seconddoctor${stamp}`, "doctor"),

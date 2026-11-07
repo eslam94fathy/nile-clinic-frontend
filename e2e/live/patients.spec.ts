@@ -735,7 +735,6 @@ test.describe("each role, against the real API", () => {
   test("a receptionist reaches search, the form, and editing", async ({
     page,
   }) => {
-    // Its own account, because another spec changes the shared receptionist's password.
     const email = `synthetic.patients.${stamp()}@example.test`;
     const password = `Synthetic-${randomBytes(12).toString("hex")}`;
     const created = await api("staff", {

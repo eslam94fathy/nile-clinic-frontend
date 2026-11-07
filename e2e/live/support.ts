@@ -9,6 +9,8 @@ export type LiveAccounts = {
   newDoctor: LiveAccount;
   /** Used up by the tests that end sessions. */
   disposable: LiveAccount;
+  /** The test that changes a password uses this, so that `receptionist` stays usable in every spec. */
+  passwordChange: LiveAccount;
   /** Doctors whose schedules only the appointment tests touch. */
   bookingDoctor: LiveAccount;
   secondDoctor: LiveAccount;
