@@ -383,9 +383,15 @@ for (const locale of ["ar", "en"] as const) {
         await expect(radio).toBeAttached();
         expect(await seriousIssues(page)).toEqual([]);
 
-        await page.locator("label", { has: radio }).click();
+        await page
+          .locator("label", { has: page.getByRole("radio") })
+          .first()
+          .click();
+        await expect(radio).toBeChecked();
         const name = (await radio.getAttribute("aria-label")) ?? "";
-        const [date = "", start = ""] = name.replace(/[,،]/u, "").split(" ");
+        // The words around them differ by language.
+        const [, date = "", start = ""] =
+          /(\d{4}-\d{2}-\d{2})\D+(\d{2}:\d{2})/u.exec(name) ?? [];
         await control(`clinic/take-time?date=${date}&start=${start}`);
         await page
           .getByRole("button", { name: a.booking.submit, exact: true })

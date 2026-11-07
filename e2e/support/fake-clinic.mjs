@@ -404,7 +404,9 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
               appointment.doctor_id === doctor.id &&
               overlaps(appointment, date, clock(start), clock(end)),
           );
-          if (!blocked && (includeBooked || !booked)) {
+          // As the API does: a time that has started is never on offer.
+          const started = hasStarted({ date, start: clock(start) });
+          if (!blocked && !started && (includeBooked || !booked)) {
             slots.push({ date, start: clock(start), end: clock(end) });
           }
         }

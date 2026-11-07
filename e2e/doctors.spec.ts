@@ -333,8 +333,14 @@ test("the setup journey can be finished by keyboard alone", async ({
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/en\/doctors\/\d+$/);
 
-  await page.getByLabel(new RegExp(`^${f.amountLabel}`)).focus();
+  // The address changes before the page does, and the page's earlier copy is held, hidden, until then.
+  const fee = page.getByRole("textbox", {
+    name: new RegExp(`^${f.amountLabel}`),
+  });
+  await expect(fee).toBeVisible();
+  await fee.focus();
   await page.keyboard.type("350");
+  await expect(fee).toHaveValue("350");
   await page.keyboard.press("Enter");
   await expect(page.getByText(t.setupComplete)).toBeVisible();
 });
