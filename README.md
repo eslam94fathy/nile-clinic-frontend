@@ -4,7 +4,7 @@ Internal staff application for the Nile Clinic management system, for administra
 and doctors. Arabic and English, RTL and LTR. It is a frontend for the existing
 [Laravel API](https://github.com/eslam94fathy/nile-clinic); there is no patient portal.
 
-> **Status: Phase 6 appointments in progress.** Staff can sign in and change their password, an administrator can set up staff,
+> **Status: Phase 6 appointments complete.** Staff can sign in and change their password, an administrator can set up staff,
 > specialties, doctors, schedules, time off, and fees, reception can find, register, view, and correct patients, and book, find, move, and cancel their appointments, and doctors can see their own. Later phases' menu entries show "not available yet". See the [roadmap](docs/roadmap.md).
 
 ## Prerequisites

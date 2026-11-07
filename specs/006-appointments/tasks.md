@@ -200,7 +200,7 @@
 - [X] T055 Search `src/features/appointments`, and the new files in other features: no logging, no browser storage, no `GET /patients/{id}`, no compared message text, no `new Date` on a clinic date, no hard-coded text, and no check-in. Record the result
 - [X] T056 Update the documents listed in [plan.md](plan.md): `docs/frontend-blueprint.md`, including check-in moving to `/queue`; `docs/backend-integration.md`, with only what's observed; `docs/architecture.md`; `docs/development-guidelines.md`; `docs/roadmap.md`; and a note on FR-032 in `specs/005-patients/spec.md`
 - [ ] T057 Run `pnpm check` and `pnpm test:e2e:live`, record the results, and run the manual scenarios in [quickstart.md](quickstart.md) with the owner, recording which were done by a person
-- [ ] T058 Run `/code-review` on the branch, resolve the findings, then run the checks in T057 again and record the results
+- [X] T058 Run `/code-review` on the branch, resolve the findings, then run the checks in T057 again and record the results
 
 ---
 
@@ -234,7 +234,9 @@ Setup → Foundational → US8 → US2 → US1 → US4 → US5 → US6 → US3 �
 
 ## Results
 
-**Still open:** T057's manual scenarios, and T058's review with the checks after it. The accessibility test for booking had never run until T057's first full run, where it failed in all four language and theme combinations. Both causes were in the test: a selector that matched every time, then parsing that assumed the English wording of a time's name. No application code changed.
+**Status: accepted by the owner on 2026-11-07.** All automated checks pass, as reported by the owner. The owner reported no results for the manual scenarios in T057, so that task stays open and they're recorded as unconfirmed. That includes keyboard use, a screen reader, a computer in another time zone, the one-minute booking (SC-001), the Arabic wording, and typing a fee straight after saving working hours, whose test failure's cause was inferred.
+
+The accessibility test for booking had never run until T057's first full run, where it failed in all four language and theme combinations. Both causes were in the test: a selector that matched every time, then parsing that assumed the English wording of a time's name. No application code changed.
 
 **Found by the owner's full run, at 10:28 clinic time:** three more failures, none in application code. The fake backend offered times that had already started, which the API leaves out, so rescheduling moved an appointment into the past and the test failed on any day after 09:00; it had passed earlier only because that run was before 09:00. `design-system.spec.ts` measured contrast while a submit button was fading in. A test in `patients.spec.ts` matched the same text on the hidden, held page. A later run also showed the doctors keyboard journey typing into a field before its page had replaced the held copy: 4 of 8 attempts failed, and 16 of 16 passed once it waited for the visible field and checked the typed value. 
 
@@ -253,7 +255,7 @@ Setup → Foundational → US8 → US2 → US1 → US4 → US5 → US6 → US3 �
 
 Not changed: `readAllDoctors` still reads on each list render, which the last finding also raised, as it reads 100 doctors per page, so a clinic of this size makes one request. Also not changed: refusal-splitting code repeated across three lists, a cleanup the review set aside.
 
-**Not yet run after these fixes:** `pnpm check` and `pnpm test:e2e:live` in full, which leaves T057 and T058 open. Observed so far: the affected unit tests (`src/components/shared` and the appointments, patients, doctors, and scheduling features, before two corrected tests were rerun alone), typecheck, lint, formatting, and translations; and 260 of 260 in the affected end-to-end files on a production build.
+**After these fixes, at commit `8ca3642`:** the owner ran `pnpm check` and `pnpm test:e2e:live` on 2026-11-07 and reported that both passed with no failures. The totals weren't recorded. The results file from the live run, the later of the two, showed status `passed` and no failed tests.
 
 **Test order:** the foundation tests in T002 to T010 were written first and seen to fail. Most component and end-to-end tests were written with or after their code, not failing first as this file asks.
 

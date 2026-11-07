@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-07
 
-**Status**: Draft
+**Status**: Accepted
 
 **Input**: User description: "Start Phase 6" of `docs/roadmap.md`: appointments. Booking with slots, conflicts, reschedule, cancel, no-show, outside-availability, for administrators and receptionists, plus a doctor's own read-only appointments.
 
