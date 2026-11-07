@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   messagesByLocale,
@@ -111,6 +112,73 @@ describe("OwnQueueActions", () => {
     expect(dialog.textContent).toContain(irreversible);
     expect(dialog.textContent?.toLowerCase()).not.toContain("record");
     expect(dialog.textContent?.toLowerCase()).not.toContain("encounter");
+  });
+
+  it("won't finish someone other than the patient it named", async () => {
+    function Stage() {
+      const [entries, setEntries] = useState([entry(1, "with_doctor")]);
+      return (
+        <>
+          <button
+            onClick={() =>
+              setEntries([entry(1, "seen"), entry(2, "with_doctor")])
+            }
+          >
+            {"Change"}
+          </button>
+          <OwnQueueActions
+            entries={entries}
+            headingId="heading"
+            onAnswered={vi.fn()}
+            refresh={vi.fn().mockResolvedValue(undefined)}
+          />
+        </>
+      );
+    }
+    renderWithIntl(<Stage />);
+    press(t.own.finish.action);
+    const dialog = screen.getByRole("alertdialog");
+
+    // The dialog makes everything else inert, so this stands in for a refresh arriving.
+    fireEvent.click(screen.getByText("Change"));
+    expect(dialog.textContent).toContain("Synthetic 1");
+    inDialog(t.own.finish.confirm);
+
+    await screen.findByText(t.own.finish.changed);
+    expect(api.finishVisit).not.toHaveBeenCalled();
+  });
+
+  it("moves focus to the heading when a refresh removes the button holding it", () => {
+    function Stage() {
+      const [entries, setEntries] = useState([entry(1, "waiting")]);
+      return (
+        <>
+          <h2 id="heading" tabIndex={-1}>
+            {"Heading"}
+          </h2>
+          <button onClick={() => setEntries([entry(1, "left")])}>
+            {"Change"}
+          </button>
+          <OwnQueueActions
+            entries={entries}
+            headingId="heading"
+            onAnswered={vi.fn()}
+            refresh={vi.fn().mockResolvedValue(undefined)}
+          />
+        </>
+      );
+    }
+    renderWithIntl(<Stage />);
+    const action = screen.getByRole("button", { name: t.own.callNext.action });
+    action.focus();
+
+    // Clicking in a test doesn't move focus, so the button keeps it until it goes.
+    fireEvent.click(screen.getByText("Change"));
+
+    expect(
+      screen.queryByRole("button", { name: t.own.callNext.action }),
+    ).toBeNull();
+    expect(document.activeElement).toBe(screen.getByText("Heading"));
   });
 
   it("stays open with the API's message on a refusal, and reads again", async () => {

@@ -199,6 +199,12 @@ describe("checking in", () => {
     );
   });
 
+  it("offers no link for a past day's check-in, which today's list can't show", () => {
+    setUp(ON_THE_DAY, { status: "checked_in", date: "2026-11-01" });
+
+    expect(screen.queryByRole("link", { name: t.checkIn.seeList })).toBeNull();
+  });
+
   it("links a checked-in appointment to that doctor's list, offering no change", () => {
     setUp(ON_THE_DAY, { status: "checked_in" });
     const link = screen.getByRole("link", { name: t.checkIn.seeList });

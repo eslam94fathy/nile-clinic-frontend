@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/states/empty-state";
 import { ErrorState } from "@/components/shared/states/error-state";
@@ -13,6 +13,7 @@ import { type PageMeta, pageHref } from "@/lib/api/pagination";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { readClinicQueue, readDoctorQueue } from "../api/queue";
 import { groupByDoctor } from "../group-by-doctor";
+import { useKeepFocus } from "../hooks/use-keep-focus";
 import { useLiveList } from "../hooks/use-live-list";
 import type { EntryAction } from "../offered-entry-actions";
 import { QUEUE_STATUSES, type QueueEntry, type QueueFilters } from "../types";
@@ -73,7 +74,7 @@ export function ClinicQueue({
   });
 
   const heading = useRef<HTMLHeadingElement>(null);
-  const focusedEntry = useRef<string | null>(null);
+  const keepFocus = useKeepFocus(() => heading.current);
   const [request, setRequest] = useState<EntryActionRequest | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -86,7 +87,6 @@ export function ClinicQueue({
   const beyondTheEnd =
     meta !== null && entries.length === 0 && meta.current_page > meta.last_page;
   const pageLink = pageHref("/queue", { status: status ?? undefined });
-  const shownIds = entries.map(({ id }) => String(id)).join();
 
   // The list can shrink under someone on a later page. "Nobody here" would be untrue.
   useEffect(() => {
@@ -94,16 +94,6 @@ export function ClinicQueue({
     // `pageLink` is new each render, and is decided by `status`, which the address already follows.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [beyondTheEnd, meta?.last_page, router, status]);
-
-  // A row that goes while it holds the focus would drop it to the page's start. Nothing moves otherwise.
-  useLayoutEffect(() => {
-    const id = focusedEntry.current;
-    if (id === null || shownIds.split(",").includes(id)) return;
-    focusedEntry.current = null;
-    if (document.activeElement === document.body) {
-      heading.current?.focus({ preventScroll: true });
-    }
-  }, [shownIds]);
 
   function requestAction(entry: QueueEntry, action: EntryAction) {
     setRequest({ entry, action });
@@ -225,19 +215,7 @@ export function ClinicQueue({
               action={emptyActions}
             />
           ) : (
-            <div
-              className="flex flex-col gap-6"
-              onFocusCapture={(event) => {
-                focusedEntry.current =
-                  event.target
-                    .closest("[data-entry-row]")
-                    ?.getAttribute("data-entry-row") ?? null;
-              }}
-              onBlurCapture={(event) => {
-                // With nothing receiving it, the row may just have gone, which is what the layout effect is for.
-                if (event.relatedTarget !== null) focusedEntry.current = null;
-              }}
-            >
+            <div className="flex flex-col gap-6" {...keepFocus}>
               {groups.map((group, index) => (
                 <QueueGroup
                   key={`${group.doctor.id}-${index}`}

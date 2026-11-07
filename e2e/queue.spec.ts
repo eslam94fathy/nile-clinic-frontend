@@ -520,6 +520,41 @@ test.describe("staying current", () => {
     await expect(listHeading(page)).toBeFocused();
   });
 
+  test("a row staying while its button goes moves focus to the heading", async ({
+    page,
+  }) => {
+    const { id } = await seedEntry("patient=2");
+    await signIn(page, "receptionist");
+    await openWithClock(page, "/en/queue");
+    await button(page, t.left.action).focus();
+
+    await changeEntry(id, "status=with_doctor");
+    await nextRead(page);
+    await expect(button(page, t.left.action)).toHaveCount(0);
+    await expect(shown(page, BETA)).toBeVisible();
+    await expect(listHeading(page)).toBeFocused();
+  });
+
+  test("a row going after someone left it moves nothing", async ({ page }) => {
+    const { id } = await seedEntry("patient=2");
+    await seedEntry("patient=3");
+    await signIn(page, "receptionist");
+    await openWithClock(page, "/en/queue");
+    const row = page
+      .getByRole("row")
+      .filter({ hasText: BETA })
+      .locator("visible=true");
+    await row.getByRole("button", { name: t.left.action }).focus();
+    await page.getByRole("heading", { level: 1 }).click();
+    await expect(page.locator("body")).toBeFocused();
+
+    await changeEntry(id, "remove=1");
+    await nextRead(page);
+    await expect(row).toBeHidden();
+    await expect(listHeading(page)).not.toBeFocused();
+    await expect(page.locator("body")).toBeFocused();
+  });
+
   test("a refresh leaves the focus on a control that stays", async ({
     page,
   }) => {
@@ -931,6 +966,42 @@ test.describe("a doctor's list", () => {
     await expect(dialog(page)).toBeHidden();
     await expect(button(page, t.own.callNext.action)).toBeFocused();
     expect(await callsTo("doctors/me/queue/call-next")).toBe(0);
+  });
+
+  test("a refresh removing call next moves focus to the heading", async ({
+    page,
+  }) => {
+    const { id } = await seedEntry("patient=2");
+    await signIn(page, "doctor");
+    await openWithClock(page, "/en/my/queue");
+    await button(page, t.own.callNext.action).focus();
+
+    await changeEntry(id, "status=left");
+    await nextRead(page);
+    await expect(button(page, t.own.callNext.action)).toHaveCount(0);
+    await expect(ownHeading(page)).toBeFocused();
+  });
+
+  test("won't finish a visit once another patient is current", async ({
+    page,
+  }) => {
+    const { id } = await seedEntry("patient=2");
+    const { id: nextId } = await seedEntry("patient=3");
+    await changeEntry(id, "status=with_doctor");
+    await signIn(page, "doctor");
+    await openWithClock(page, "/en/my/queue");
+    await button(page, t.own.finish.action).click();
+    await expect(dialog(page)).toContainText(BETA);
+
+    await changeEntry(id, "status=seen");
+    await changeEntry(nextId, "status=with_doctor");
+    await nextRead(page);
+    await expect(shown(page, GAMMA)).toBeVisible();
+    await expect(dialog(page)).toContainText(BETA);
+
+    await confirm(page, t.own.finish.confirm);
+    await expect(dialog(page)).toContainText(t.own.finish.changed);
+    expect(await callsTo("doctors/me/queue/finish")).toBe(0);
   });
 });
 

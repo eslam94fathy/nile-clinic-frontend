@@ -24,7 +24,7 @@ import type { OwnQueueEntry } from "../types";
 import { EntryTimes } from "./entry-times";
 import { LastRead } from "./last-read";
 import { OwnQueueActions } from "./own-queue-actions";
-import { TimeRange } from "./time-range";
+import { TimeRange } from "@/components/shared/values/time-range";
 
 const OWN_QUEUE_KEY = ["queue", "own"];
 const HEADING_ID = "own-queue-heading";

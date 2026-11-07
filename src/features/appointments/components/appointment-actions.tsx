@@ -113,7 +113,9 @@ export function AppointmentActions({
   return (
     <section className="flex flex-col gap-3">
       <FormError messages={notices} />
-      {appointment.status === "checked_in" ? (
+      {appointment.status === "checked_in" &&
+      // Lists only cover today, so an earlier day's check-in wouldn't be on it.
+      clinicNow.startsWith(`${appointment.date} `) ? (
         <p>
           <Link
             href={`/queue?doctor_id=${appointment.doctor.id}`}

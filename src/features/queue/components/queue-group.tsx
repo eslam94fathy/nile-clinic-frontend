@@ -20,7 +20,7 @@ import {
 } from "../offered-entry-actions";
 import type { QueueEntry } from "../types";
 import { EntryTimes } from "./entry-times";
-import { TimeRange } from "./time-range";
+import { TimeRange } from "@/components/shared/values/time-range";
 
 /** Found again when a dialog closes, as a refresh may have replaced the button or removed it. */
 export const actionMarker = (entryId: number, action: EntryAction) =>
@@ -51,7 +51,7 @@ export function QueueGroup({
       id: "patient",
       header: t("fields.patient"),
       cell: (row) => (
-        <div data-entry-row={row.id} className="flex flex-col">
+        <div className="flex flex-col">
           <PatientLink id={row.patient.id}>
             <UserText>{row.patient.full_name}</UserText>
           </PatientLink>
@@ -73,18 +73,16 @@ export function QueueGroup({
       header: t("fields.appointment"),
       cell: (row) =>
         row.appointment ? (
-          <span data-entry-row={row.id}>
-            <Link
-              href={`/appointments/${row.appointment.id}`}
-              prefetch={false}
-              className="font-medium underline underline-offset-4"
-            >
-              <TimeRange
-                start={row.appointment.start}
-                end={row.appointment.end}
-              />
-            </Link>
-          </span>
+          <Link
+            href={`/appointments/${row.appointment.id}`}
+            prefetch={false}
+            className="font-medium underline underline-offset-4"
+          >
+            <TimeRange
+              start={row.appointment.start}
+              end={row.appointment.end}
+            />
+          </Link>
         ) : (
           t("walkIn")
         ),
@@ -105,7 +103,7 @@ export function QueueGroup({
       cell: (row) => {
         const offered = offeredEntryActions(row);
         return offered.length > 0 ? (
-          <div data-entry-row={row.id} className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {offered.map((action) => (
               <Button
                 key={action}

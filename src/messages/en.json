@@ -901,7 +901,8 @@
         "title": "Finish this visit?",
         "description": "They'll be marked as seen.",
         "confirm": "Finish visit",
-        "done": "Visit with {name} finished."
+        "done": "Visit with {name} finished.",
+        "changed": "The current patient has changed, so nothing was finished. Close this and check the list."
       }
     }
   }

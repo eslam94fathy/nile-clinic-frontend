@@ -7,7 +7,7 @@ import { LtrText } from "@/components/shared/values/ltr-text";
 import { UserText } from "@/components/shared/values/user-text";
 import type { OwnAppointment } from "../types";
 import { OutsideLabel } from "./outside-label";
-import { TimeRange } from "./time-range";
+import { TimeRange } from "@/components/shared/values/time-range";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (

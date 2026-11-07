@@ -199,6 +199,7 @@ export function WalkInForm({
             onChoose={(chosen) => {
               setDoctor(chosen);
               clearErrors("doctor_id");
+              doctorHeading.current?.focus();
             }}
           />
         )}
@@ -207,7 +208,11 @@ export function WalkInForm({
       {patient?.known && doctor ? (
         <form
           noValidate
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={(event) => {
+            // With nothing to validate here, a refusal left in place would stop the next attempt from sending.
+            clearErrors();
+            return handleSubmit(onSubmit)(event);
+          }}
           className="flex max-w-xl flex-col gap-4"
         >
           <p>{t("permanent")}</p>

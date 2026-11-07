@@ -8,15 +8,19 @@ import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
 import { allMessages, isOutcomeUnknown } from "@/lib/api/refusal";
 import { callNext, finishVisit } from "../api/queue";
+import { useKeepFocus } from "../hooks/use-keep-focus";
 import { offeredOwnAction } from "../offered-own-action";
 import type { OwnQueueEntry } from "../types";
 
-type Asking = { kind: "call_next" } | { kind: "finish"; patientName: string };
+type Asking =
+  | { kind: "call_next" }
+  | { kind: "finish"; entryId: number; patientName: string };
 
 /**
  * Call next and finish. Neither can be undone, as the API has no way to send a called patient back, so each asks
  * first (FR-023). "Call next" names nobody until the API answers, as the API decides who's next and may skip
- * someone. The dialog holds its own copy of what it's about, so a refresh can't change it (research R5).
+ * someone. The dialog holds its own copy of what it's about, so a refresh can't change it (research R5). Finishing
+ * names no entry to the API, which ends whichever visit is current, so it isn't sent once the list shows another.
  */
 export function OwnQueueActions({
   entries,
@@ -43,6 +47,7 @@ export function OwnQueueActions({
 
   const offered = offeredOwnAction(entries);
   const current = entries.find(({ status }) => status === "with_doctor");
+  const keepFocus = useKeepFocus(() => document.getElementById(headingId));
 
   function ask(next: Asking) {
     setAsking(next);
@@ -52,6 +57,11 @@ export function OwnQueueActions({
 
   async function confirm() {
     if (!asking || inFlight.current) return;
+    if (asking.kind === "finish" && current?.id !== asking.entryId) {
+      setError(t("finish.changed"));
+      void refresh();
+      return;
+    }
     inFlight.current = true;
     setPending(true);
     setError(undefined);
@@ -84,19 +94,23 @@ export function OwnQueueActions({
   return (
     <>
       {offered === "finish" && current ? (
-        <div>
+        <div {...keepFocus}>
           <Button
             ref={button}
             type="button"
             onClick={() =>
-              ask({ kind: "finish", patientName: current.patient.full_name })
+              ask({
+                kind: "finish",
+                entryId: current.id,
+                patientName: current.patient.full_name,
+              })
             }
           >
             {t("finish.action")}
           </Button>
         </div>
       ) : offered === "call_next" ? (
-        <div>
+        <div {...keepFocus}>
           <Button
             ref={button}
             type="button"

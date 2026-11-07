@@ -30,8 +30,10 @@ describe("applyEntry", () => {
     expect(applyEntry(list, answer)).toEqual([list[0], answer, list[2]]);
   });
 
-  it("leaves the list as it was when no row matches", () => {
+  it("adds an answer about someone who arrived since the last read", () => {
     const list = [entry(1, "waiting")];
-    expect(applyEntry(list, entry(9, "with_doctor"))).toEqual(list);
+    const answer = entry(9, "with_doctor");
+
+    expect(applyEntry(list, answer)).toEqual([list[0], answer]);
   });
 });

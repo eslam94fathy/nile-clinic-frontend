@@ -147,6 +147,39 @@ describe("WalkInForm", () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
+  it("sends again after a refusal, and clears the old message on success", async () => {
+    api.addWalkIn.mockResolvedValueOnce({
+      ok: false,
+      error: { status: 422, fieldErrors: { patient_id: ["Already here."] } },
+    });
+    api.addWalkIn.mockResolvedValueOnce({
+      ok: true,
+      status: 201,
+      data: { queue_number: 8 },
+    });
+    setUp();
+    choose();
+    press(t.submit);
+    await screen.findByText("Already here.");
+
+    press(t.submit);
+
+    await waitFor(() => expect(api.addWalkIn).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/queue"));
+    expect(screen.queryByText("Already here.")).toBeNull();
+  });
+
+  it("moves focus to the doctor's heading on choosing, as the button pressed has gone", () => {
+    setUp();
+    press("Pick patient");
+    screen.getByRole("button", { name: "Pick doctor" }).focus();
+    press("Pick doctor");
+
+    expect(document.activeElement).toBe(
+      screen.getByRole("heading", { name: t.doctorStep }),
+    );
+  });
+
   it("shows a refusal of the doctor", async () => {
     api.addWalkIn.mockResolvedValue({
       ok: false,
