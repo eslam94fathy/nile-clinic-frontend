@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-07
 
-**Status**: Draft
+**Status**: Accepted
 
 **Input**: User description: "Start Phase 7" of `docs/roadmap.md`: the queue. Check-in on an appointment's page, reception's live list with walk-ins, left, and undo check-in, and the doctor's call-next and finish flow, refreshing every 15 seconds while the tab is visible (roadmap decision Q4).
 
