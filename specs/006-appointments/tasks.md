@@ -234,6 +234,29 @@ Setup → Foundational → US8 → US2 → US1 → US4 → US5 → US6 → US3 �
 
 ## Results
 
+**Still open:** T057's manual scenarios, and T058's review with the checks after it. The accessibility test for booking had never run until T057's first full run, where it failed in all four language and theme combinations. Both causes were in the test: a selector that matched every time, then parsing that assumed the English wording of a time's name. No application code changed.
+
+**Found by the owner's full run, at 10:28 clinic time:** three more failures, none in application code. The fake backend offered times that had already started, which the API leaves out, so rescheduling moved an appointment into the past and the test failed on any day after 09:00; it had passed earlier only because that run was before 09:00. `design-system.spec.ts` measured contrast while a submit button was fading in. A test in `patients.spec.ts` matched the same text on the hidden, held page. A later run also showed the doctors keyboard journey typing into a field before its page had replaced the held copy: 4 of 8 attempts failed, and 16 of 16 passed once it waited for the visible field and checked the typed value. 
+
+**T058's review (`/code-review` at high effort, `origin/main...HEAD` and the working tree):** ten findings, each traced through the code, and nine fixed with tests written first:
+
+- A carried patient who hadn't loaded left the later steps active, with no name shown, and a failed read lost the way to change patient. Later steps now wait for the patient to be known, and the failure keeps its action.
+- A changed patient or doctor kept the last attempt's messages, whose links then pointed at the new patient. They're now cleared.
+- A bar of only private filters removed `page` from the address, so the patient filter's search moved the list behind it to page 1. It now leaves the address alone.
+- A page left open past midnight kept asking for free times from yesterday. A refusal under `from` now refreshes the page.
+- Paging or choosing in the choosers lost keyboard focus. It now moves to the results or the next step.
+- A `500` on cancelling or rescheduling discarded what was typed or chosen. Both now stay, as the API says nothing happened.
+- A page past the end of the doctor chooser said no doctors exist. It now reads the first page.
+- A free-times answer arriving after its doctor was changed could clear a time chosen since. It's now ignored.
+- A date typed outside the allowed range stayed on screen above other dates' times. It now shows the date being read on leaving the field.
+- A failed read of the doctors filter hid an appointment list that had loaded. The list now shows, with a message on the filter.
+
+Not changed: the same finding's concern that `readAllDoctors` reads on each list render, as it reads 100 doctors per page, so a clinic of this size makes one request. Also not changed: refusal-splitting code repeated across three lists, a cleanup the review set aside.
+
+**Not yet run after these fixes:** `pnpm check` and `pnpm test:e2e:live` in full, which leaves T057 and T058 open. Observed so far: the affected unit tests (`src/components/shared` and the appointments, patients, doctors, and scheduling features, before two corrected tests were rerun alone), typecheck, lint, formatting, and translations; and 260 of 260 in the affected end-to-end files on a production build.
+
+**Test order:** the foundation tests in T002 to T010 were written first and seen to fail. Most component and end-to-end tests were written with or after their code, not failing first as this file asks.
+
 Filled in as tasks run. Only observed results.
 
 | Task | Result |
@@ -242,5 +265,5 @@ Filled in as tasks run. Only observed results.
 | T010 | The new test passed with no code change, confirming research R9. `proxy.ts` passes only the path, and `safeReturnAddress` drops any query |
 | T017, T031, T039, T041, T043, T047, T050, T052, T053 | `e2e/appointments.spec.ts` on the production build and fake backend: 78 tests passed. One real bug found: unbroken text in a reason or note widened the dialog past the screen, hiding its confirm button. Fixed with a fixed-size field |
 | T024 | The hook extracted with `patient-search.test.tsx` unchanged, and it passes |
-| T023, T035, T039, T041, T044, T047, T050, T054 | `e2e/live/appointments.spec.ts`, against the running API: every operation matched the contract. Simultaneous bookings gave one `201` and one `409` `slot_booked`. Each change wrote one matching entry, and `patient.opened` stayed 0 unless a person opened the record. T044 ran for real: a no-show was refused before the start, and recorded after it passed. An out-of-date page then offered cancelling, which the API refused under `appointment`, and the page showed the no-show. After a full journey and sign-out, no synthetic detail was in any address visited, in storage, on the page reached by going back, or in the server's output. The scripted booking and move each took under a minute, as a guard only |
+| T023, T035, T039, T041, T044, T047, T050, T054 | `e2e/live/appointments.spec.ts`, against the running API: all 14 passed. Every operation exercised matched the contract. A time stayed on offer for a patient busy with another doctor, and was refused with `409` `patient_busy`. A doctor got `403` on every `/appointments` route, including `POST`. Simultaneous bookings gave one `201` and one `409` `slot_booked`. Each change wrote one matching entry, and `patient.opened` stayed 0 unless a person opened the record. T044 ran for real: a no-show was refused before the start, and recorded after it passed. An out-of-date page then offered cancelling, which the API refused under `appointment`, and the page showed the no-show. After a full journey and sign-out, no synthetic detail was in any address visited, in storage, on the page reached by going back, or in the server's output. The scripted booking and move each took under a minute, as a guard only |
 | T055 | Searched the new code: no logging, no browser storage, no `readPatient` or `patients/{id}` outside its existing place, no compared message text, no `new Date` on a clinic date, no hard-coded text, no check-in, and every link has `prefetch={false}` |

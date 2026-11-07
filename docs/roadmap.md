@@ -12,7 +12,7 @@ foundations that later work relies on.
 | 3 | Authentication and app shell | **Done** (accepted 2026-11-06, [spec](../specs/003-auth-app-shell/spec.md)) | 2 | Auth |
 | 4 | Clinic setup: staff, specialties, doctors, schedules, fees | **Done** (accepted 2026-11-06, [spec](../specs/004-clinic-setup/spec.md)) | 3 | Staff, Doctors, Scheduling, fee endpoints |
 | 5 | Patients | **Done** (accepted 2026-11-06, [spec](../specs/005-patients/spec.md)) | 3 | Patients |
-| 6 | Appointments | **Awaiting acceptance** ([spec](../specs/006-appointments/spec.md)) | 4, 5 | Appointments, slots |
+| 6 | Appointments | **In progress** ([spec](../specs/006-appointments/spec.md)) | 4, 5 | Appointments, slots |
 | 7 | Queue: reception and doctor | Not started | 6 | Queues |
 | 8 | Medical encounters | Not started | 7 | Encounters |
 | 9 | Billing and payments | Not started | 7 | Payments |

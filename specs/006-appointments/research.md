@@ -88,6 +88,8 @@ Only status, key, and `reason` are compared, never text. `useFormSubmit` hides t
 
 **Alternatives**: Extending `ConfirmedAction` with these rules adds options that only this feature uses (Principle IX).
 
+**Added by the code review**: a `500` closes the dialog and shows on the page like any other refusal, but keeps the typed reason, and the reschedule panel stays open with its chosen time, as the API defines a `500` as "the action did not happen".
+
 ## R9. Return after sign-in (FR-031)
 
 **Finding**: Already met. `proxy.ts` clears the query and passes only the path to `safeReturnAddress`, which also strips any query it's given. Appointment paths aren't in `opensAuditedRecord`, because they're not audited, so someone can return to `/appointments/5`. A unit test pins this for appointment addresses with `patient_id`.
