@@ -222,7 +222,7 @@ Administrators and receptionists have the same queue access. Doctors have only t
 - **FR-021**: Doctors MUST be able to see their own list for today, with the patient's number, name, sex, and date of birth, and MUST NOT see a phone or any other contact detail.
 - **FR-022**: The patient with the doctor MUST be set apart from the list as current. "Finish visit" MUST be offered while the list shows one, and "Call next" MUST be offered while it shows none and at least one waiting.
 - **FR-023**: "Call next" and "Finish visit" MUST ask for confirmation, as neither can be undone. "Call next" MUST NOT name a patient before the API answers, and after it answers, the application MUST show the patient the API returned.
-- **FR-024**: The doctor's page MUST offer no link to a patient record and no medical record. Those belong to Phase 8. It MUST NOT suggest that finishing a visit requires or creates a record.
+- **FR-024**: The doctor's page MUST offer no link to a patient record and no medical record. Those belong to Phase 8. It MUST NOT suggest that finishing a visit requires or creates a record. *Phase 8 replaced this as far as medical records go: see `specs/008-medical-encounters/spec.md`, FR-019 and FR-020. The page still has no link to a patient's own record.*
 - **FR-025**: A doctor with no profile MUST see the existing "profile not set up" state.
 
 **Walk-ins**

@@ -14,7 +14,7 @@ foundations that later work relies on.
 | 5 | Patients | **Done** (accepted 2026-11-06, [spec](../specs/005-patients/spec.md)) | 3 | Patients |
 | 6 | Appointments | **Done** (accepted 2026-11-07, [spec](../specs/006-appointments/spec.md)) | 4, 5 | Appointments, slots |
 | 7 | Queue: reception and doctor | **Done** (accepted 2026-11-07, [spec](../specs/007-queue/spec.md)) | 6 | Queues |
-| 8 | Medical encounters | Not started | 7 | Encounters |
+| 8 | Medical encounters | **Done** (accepted 2026-11-08, [spec](../specs/008-medical-encounters/spec.md), [privacy review](../specs/008-medical-encounters/privacy-review.md)) | 7 | Encounters |
 | 9 | Billing and payments | Not started | 7 | Payments |
 | 10 | Reports | Not started | 9 | Reports |
 | 11 | Audit log | Not started | 3 | Audit |
@@ -49,7 +49,7 @@ those endpoints. *Done when* an administrator can take a new doctor from account
 **7: Queue.** Check-in on an appointment's page, reception's live list, and the doctor's call-next and finish flow, with polling.
 
 **8: Medical encounters.** Draft, save strategy, finalize, addenda, history. The most sensitive phase, and
-it gets a dedicated privacy review.
+it gets a dedicated privacy review. Started from the Phase 7 branch, as that PR wasn't merged yet.
 
 **9: Billing and payments.** Visits, charges, payments, administrator discount and refund.
 
@@ -88,3 +88,7 @@ From the backend's own roadmap and this analysis:
 - Legal review of Egyptian health-data and data-protection obligations, including audit retention and whether
   network addresses are personal data. The backend has flagged this as outstanding.
 - Session secret generated and stored in a secret manager; HTTPS everywhere.
+- **Build an inactivity lock for clinical pages,** so that a record doesn't stay on an unattended screen, designed so that it can't lose unsaved text. The owner required this in Phase 8's [privacy review](../specs/008-medical-encounters/privacy-review.md), for Phase 13.
+- Raise a version check on saving a draft with the backend (gap G9), as nothing in the frontend can warn before one tab overwrites another's.
+- Manage browser extensions on clinic computers, as an extension can ignore what clinical fields ask of it.
+- Put the questions in Phase 8's privacy review to the legal review.

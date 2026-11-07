@@ -38,9 +38,9 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/my/queue` | D | Own queue, call next, finish | `/doctors/me/queue*` |
 | `/my/appointments`, `/my/appointments/[id]` | D | Own appointments, read only | `/doctors/me/appointments*` |
 | `/my/schedule` | D | Own hours and time off, read only | `/doctors/me/schedule`, `/slots`, `/time-off` |
-| `/my/visits` | D | Past visits, including those needing a record | `/doctors/me/visits` |
-| `/my/encounters/[id]` | D | Write, finalize, add addenda | `/doctors/me/encounters/*` |
-| `/my/patients/[id]/history` | D | A patient's permitted records | `/doctors/me/patients/{id}/encounters` |
+| `/my/visits` | D | Visits, including those needing a record, with start, continue, or open | `/doctors/me/visits` |
+| `/my/encounters/[id]` | D | Write, finalize, add addenda, with history beside a draft in a panel | `/doctors/me/encounters/*`, `/doctors/me/patients/{id}/encounters` |
+| `/my/patients/[id]/history` | D | A patient's permitted records, offered only where the API is expected to allow it, as a refused read writes a permanent entry | `/doctors/me/patients/{id}/encounters` |
 
 There is deliberately no patient-portal route, no doctor patient directory (the API refuses it), and no
 clinical screen for administrators or receptionists.
@@ -85,7 +85,7 @@ and keep the patient, doctor, and note. Choosing a patient never opens their rec
 
 **Arrival.** On today's appointment's page, check in, which gives a queue number and needs no confirmation, as it can be undone from the queue. Without an appointment, add as a walk-in to a doctor's list, which can't be removed afterwards, only marked as left.
 
-**Doctor's visit.** Call next → the record opens for that patient → write → finish. Finishing and
+**Doctor's visit.** Call next → start the record, one further click, as calling never creates one → write → finish. Finishing and
 finalizing are separate actions, and the API doesn't require a record to finish. The UI must make the
 difference clear. The patient's permitted history sits alongside the record.
 

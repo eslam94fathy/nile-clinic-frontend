@@ -73,6 +73,8 @@ ADR 0005's other rules still apply: no prefetching, no automatic retry, use what
 
 Phases 8 and 11 have audited reads too, and should start from this ADR. TanStack Query still arrives with the queue's polling in Phase 7.
 
+**Phase 8 made this read shared,** as its second consumer: `lib/use-audited-read.ts`, `lib/audited-opening.ts`, and `components/shared/audited-link.tsx`. Patients use them too, with their live counts unchanged. See [ADR 0014](0014-writing-medical-records.md).
+
 ## Two readings of the constitution
 
 The project owner decided both on 2026-11-06.

@@ -121,6 +121,10 @@ The query cache is memory only, is never persisted, and is cleared at sign-out a
 
 **Patient reads** are the exception to server reads ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). Records and patient search run in Client Components through the same-origin route, and no patient API call exists on the server. A server read of a record writes a false "opened" entry after a refresh and the back button, and search terms can't reach the server without entering the address. Everything else reads on the server, under [ADR 0011](decisions/0011-server-reads-and-refresh.md).
 
+**Medical records** follow the same rule, more strictly ([ADR 0014](decisions/0014-writing-medical-records.md)). Clinical content is only ever in a Client Component's state: never read on the server, never in the query cache, sent `no-store`, and gone at sign-out's full page load. A record or a history uses the guarded read, `useAuditedRead` in `lib`, which patients use too. In the panel beside a draft, each read runs directly in a click's handler, so nothing can repeat it. "My visits" holds no clinical content, so it reads on the server like other lists, and "My queue" reads the same list live for record statuses.
+
+**Text that's only on screen.** A draft exists only in the page until a doctor saves it, as nothing saves by itself and nothing is kept in the browser. So `UnsavedChangesGuard` warns on every way out it can catch: links, in one place, sign-out, closing, and back and forward through the Navigation API. A `401` on a change is answered rather than acted on, a `403` or `404` doesn't re-decide the page, and fields go read-only during a request. A deliberate sign-out in any tab still leaves at once.
+
 ## Authentication and authorization
 
 ```text
@@ -140,7 +144,7 @@ A single `lib/auth/permissions.ts` holds the capability map, transcribed from th
 
 **Session end.** Any `401` does a full navigation through `/api/auth/session-ended`, which clears the cookie, as a Server Component can't, and sends
 the person to sign-in with a safe, same-origin return path. Pages that write an audit entry when opened aren't returned to. Other tabs follow through a
-`BroadcastChannel`. Sign-out calls Laravel, then always clears the cookie, even if the call fails.
+`BroadcastChannel`. Sign-out calls Laravel, then always clears the cookie, even if the call fails. A page writing a medical record is the one exception to leaving at once, when nobody chose the ending and text would be lost ([ADR 0014](decisions/0014-writing-medical-records.md)).
 
 **Header.** It can't go in the root layout, because a catch-all route can't prerender the language switch. Public pages use `PublicHeader`, and the
 signed-in top bar sits inside the shell's `<Suspense>`.

@@ -18,6 +18,7 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0011](0011-server-reads-and-refresh.md) | Server reads, then refresh, with no client cache yet | Accepted |
 | [0012](0012-audited-reads-in-the-browser.md) | Audited reads and patient search in the browser, an exception to 0011 that reverses part of 0005 | Accepted |
 | [0013](0013-live-reads.md) | Live reads through TanStack Query, on the queue's pages only | Accepted |
+| [0014](0014-writing-medical-records.md) | Saving by a person's action only, a guard on leaving, and answering a `401` while writing a record | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.

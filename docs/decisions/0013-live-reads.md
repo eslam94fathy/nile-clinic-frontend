@@ -16,7 +16,7 @@ audited reads out of TanStack Query. Only the "live" kind is left to build.
 ## Decision
 
 - Lists that must stay current read in the browser, through TanStack Query, under one `live` policy in `lib/api/live-query.ts`.
-- **Only unaudited reads may use it.** At present those are `GET /queue`, `GET /doctors/{id}/queue`, and `GET /doctors/me/queue`.
+- **Only unaudited reads may use it.** At present those are `GET /queue`, `GET /doctors/{id}/queue`, `GET /doctors/me/queue`, and, from Phase 8, `GET /doctors/me/visits`, for "My queue"'s record statuses.
   Each new use must be checked against the backend's audit list first.
 - The provider sits on the pages that use it, not in the app's layout, so other pages don't carry the library.
 - There's no server read of these lists, and so no hydration.
