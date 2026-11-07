@@ -457,7 +457,15 @@
     "bookableUnknown": "Couldn't check whether this doctor can be booked.",
     "setupComplete": "Setup is complete.",
     "setupUnknown": "Couldn't check whether setup is complete.",
-    "chargeWarning": "Visits can't be charged until a fee is set."
+    "chargeWarning": "Visits can't be charged until a fee is set.",
+    "chooser": {
+      "caption": "Doctors",
+      "find": "Find doctors",
+      "choose": "Choose",
+      "chooseNamed": "Choose {name}",
+      "emptyTitle": "No doctors found",
+      "emptyDescription": "Try another name or specialty."
+    }
   },
   "scheduling": {
     "hoursHeading": "Working hours",
@@ -526,7 +534,17 @@
     "removeDescription": "The hours it covered are offered again.",
     "removed": "Time off removed.",
     "myTitle": "My schedule",
-    "myDescription": "Your hours and time off. An administrator makes any changes."
+    "myDescription": "Your hours and time off. An administrator makes any changes.",
+    "freeTimes": {
+      "heading": "Free times",
+      "from": "From date",
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "refresh": "Refresh free times",
+      "slotName": "{date}, {start} to {end}",
+      "emptyTitle": "No free times these days",
+      "emptyDescription": "This doctor has nothing to offer on these dates. Try other dates."
+    }
   },
   "fees": {
     "title": "Fees",
@@ -634,6 +652,148 @@
       "checkFailedTitle": "The phone number couldn't be checked",
       "checkFailedDescription": "It isn't known whether this person is already recorded.",
       "tryAgain": "Try again"
+    },
+    "recordLinks": {
+      "book": "Book appointment",
+      "view": "View appointments"
+    },
+    "chooser": {
+      "caption": "Patients found",
+      "choose": "Choose",
+      "chooseNamed": "Choose {name}"
+    },
+    "chosen": {
+      "notFound": "No patient was found with this number."
+    }
+  },
+  "appointments": {
+    "title": "Appointments",
+    "description": "Find appointments, book new ones, and move or cancel them.",
+    "book": "Book appointment",
+    "caption": "Appointments",
+    "fields": {
+      "number": "Appointment number",
+      "date": "Date",
+      "time": "Time",
+      "patient": "Patient",
+      "patientNumber": "Patient number",
+      "doctor": "Doctor",
+      "status": "Status",
+      "phone": "Phone",
+      "sex": "Sex",
+      "dateOfBirth": "Date of birth",
+      "from": "From",
+      "to": "To",
+      "note": "Note"
+    },
+    "sex": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "filters": {
+      "anyDoctor": "Any doctor",
+      "anyStatus": "Any status",
+      "inactiveDoctor": "{name} (inactive)",
+      "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to filter by doctor."
+    },
+    "views": {
+      "label": "Which appointments to show",
+      "all": "All",
+      "needingMove": "Needing a move"
+    },
+    "outsideLabel": "Outside availability",
+    "empty": {
+      "todayTitle": "No appointments today",
+      "todayDescription": "Nothing is booked for today yet.",
+      "filteredTitle": "No appointments match",
+      "filteredDescription": "Try other dates or filters, or book a new appointment.",
+      "moveTitle": "Nothing needs moving",
+      "moveDescription": "Every upcoming appointment fits its doctor's current hours."
+    },
+    "patientFilter": {
+      "open": "Filter by patient",
+      "close": "Close patient search",
+      "clear": "Clear patient",
+      "heading": "Showing appointments for this patient"
+    },
+    "details": {
+      "title": "Appointment {number}",
+      "back": "Back to appointments",
+      "heading": "Details",
+      "bookedBy": "Booked by",
+      "bookedAt": "Booked at",
+      "rescheduledBy": "Last moved by",
+      "rescheduledAt": "Last moved at",
+      "statusChangedBy": "Status changed by",
+      "statusChangedAt": "Status changed at",
+      "cancellationReason": "Cancellation reason",
+      "notRecorded": "Not recorded"
+    },
+    "outsideNotice": {
+      "title": "This appointment is outside the doctor's availability",
+      "description": "It still stands, and the patient isn't told automatically. Move or cancel it, then contact the patient."
+    },
+    "actions": {
+      "heading": "Actions",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel appointment",
+      "noShow": "No-show",
+      "unknownOutcome": "The connection failed, so we can't tell whether this was saved. The page now shows the appointment as the clinic has it."
+    },
+    "reschedule": {
+      "heading": "Move to another time",
+      "current": "Current time: {date}, {start} to {end}",
+      "sameDoctor": "The appointment stays with the same doctor. To change doctor, cancel it and book again.",
+      "submit": "Move appointment",
+      "submitting": "Moving…",
+      "keep": "Keep this time",
+      "moved": "The appointment was moved.",
+      "chooseTime": "Choose a free time first.",
+      "seePatient": "See this patient's appointments on that date"
+    },
+    "cancel": {
+      "title": "Cancel this appointment?",
+      "description": "Its time will be offered to others.",
+      "reasonLabel": "Reason (optional)",
+      "reasonTooLong": "The reason can be at most 255 characters.",
+      "confirm": "Cancel appointment",
+      "done": "The appointment was cancelled."
+    },
+    "noShow": {
+      "title": "Record a no-show?",
+      "description": "This records that the patient didn't come.",
+      "confirm": "Record no-show",
+      "done": "The no-show was recorded."
+    },
+    "booking": {
+      "title": "Book an appointment",
+      "description": "Choose the patient, then the doctor, then a free time.",
+      "patientStep": "1. Patient",
+      "doctorStep": "2. Doctor",
+      "timeStep": "3. Time",
+      "chooseDoctorFirst": "Choose a patient first.",
+      "chooseTimeFirst": "Choose a doctor first.",
+      "change": "Change",
+      "noteLabel": "Note (optional)",
+      "noteTooLong": "The note can be at most 500 characters.",
+      "chooseTime": "Choose a free time first.",
+      "submit": "Book appointment",
+      "submitting": "Booking…",
+      "booked": "The appointment was booked.",
+      "patientMissing": "No patient was found with that number. Search for them below.",
+      "seePatient": "See this patient's appointments on that date",
+      "unknownOutcome": "The connection failed, so we can't tell whether this was saved. Check this patient's appointments before trying again.",
+      "seeAppointments": "See this patient's appointments"
+    },
+    "own": {
+      "title": "My appointments",
+      "description": "Who's booked with you. To change one, ask reception.",
+      "caption": "My appointments",
+      "emptyTodayTitle": "No appointments today",
+      "emptyTodayDescription": "Nothing is booked with you today.",
+      "emptyFilteredTitle": "No appointments match",
+      "emptyFilteredDescription": "Try other dates or another status.",
+      "outsideDescription": "This no longer fits your hours. Reception will move or cancel it."
     }
   }
 }

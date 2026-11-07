@@ -26,6 +26,8 @@ export function ConfirmDialog({
   onConfirm,
   open,
   onOpenChange,
+  onCloseAutoFocus,
+  children,
 }: {
   /** Must accept a ref, such as a `Button`. Focus returns here on closing. */
   trigger: ReactNode;
@@ -40,6 +42,10 @@ export function ConfirmDialog({
   onConfirm: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Prevent the event's default where the trigger may be gone, and focus belongs somewhere else. */
+  onCloseAutoFocus?: (event: Event) => void;
+  /** Anything the person can fill in before confirming. */
+  children?: ReactNode;
 }) {
   const t = useTranslations("shared.confirm");
 
@@ -52,6 +58,7 @@ export function ConfirmDialog({
     >
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent
+        {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
         onEscapeKeyDown={(event) => {
           if (pending) event.preventDefault();
         }}
@@ -68,6 +75,7 @@ export function ConfirmDialog({
             ) : null}
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {children}
         {error ? (
           <p role="alert" className="font-medium text-destructive">
             {error}

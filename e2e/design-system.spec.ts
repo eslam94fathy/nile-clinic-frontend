@@ -3,6 +3,11 @@ import { expect, type Page, test } from "@playwright/test";
 import { messages } from "./support/messages";
 
 async function seriousIssues(page: Page) {
+  // A form's submit fades in once hydrated. Measured mid-fade, its contrast reads lower than it is.
+  for (const submit of await page.locator('button[type="submit"]').all()) {
+    await expect(submit).toHaveCSS("opacity", "1");
+  }
+
   const { violations } = await new AxeBuilder({ page }).analyze();
   return violations
     .filter(({ impact }) => impact === "serious" || impact === "critical")

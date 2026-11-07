@@ -69,6 +69,8 @@ work from memory or from these docs alone.
 - No optimistic updates for money, medical records, or bookings: show what the server confirmed.
 - Read an audited record the way `features/patients/components/patient-record.tsx` does, in the browser and guarded, and count real entries in a live test on a production build ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)).
 - Link to a patient's record only with `PatientLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
+- Show or choose a patient without opening them with `ChosenPatient` and `PatientChooser`. Never read the record just to show who someone is.
+- Treat a change that fails with status `0` or `502` and above as possibly saved, and say so. A `500` means it did not happen.
 
 ## Signed-in pages
 

@@ -92,4 +92,20 @@ describe("ConfirmDialog", () => {
     expect(screen.getByRole("alert").textContent).toBe("It has payments.");
     expect(screen.getByRole("alertdialog")).toBeTruthy();
   });
+
+  it("shows what's given to fill in, before the error", () => {
+    renderWithIntl(
+      <Example error="Refused.">
+        <label>
+          {"Reason"}
+          <input />
+        </label>
+      </Example>,
+    );
+    const field = screen.getByLabelText("Reason");
+    const alert = screen.getByRole("alert");
+    expect(
+      field.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });

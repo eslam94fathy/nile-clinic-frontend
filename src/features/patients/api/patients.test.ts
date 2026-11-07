@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   findByPhone,
+  findPatientById,
   readPatient,
   registerPatient,
   searchPatients,
@@ -36,6 +37,17 @@ const meta = {
 const answer = (data: unknown) => ({ ok: true, status: 200, data });
 
 beforeEach(() => browserApi.mockReset());
+
+describe("findPatientById", () => {
+  it("uses the list, which isn't audited, and never the record", async () => {
+    browserApi.mockResolvedValue(answer({ data: [summary], meta }));
+
+    const result = await findPatientById(5, "en");
+
+    expect(browserApi).toHaveBeenCalledWith("patients?id=5", { locale: "en" });
+    expect(result.ok && result.data.data[0]?.id).toBe(5);
+  });
+});
 
 describe("searchPatients", () => {
   it("leaves blank terms out, and asks for the page", async () => {

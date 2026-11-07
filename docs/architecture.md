@@ -91,6 +91,10 @@ first, so that a link's prefetch can't reach the API ([ADR 0010](decisions/0010-
 origin. The proxy adds the bearer token and `Accept-Language`, then returns the status and body unchanged. The form then calls
 `router.refresh()`, which also updates pages opened earlier and still mounted ([ADR 0011](decisions/0011-server-reads-and-refresh.md)).
 
+**Showing a patient without opening them.** Appointment screens use `PatientChooser` and `ChosenPatient` from `features/patients`, which read
+through the unaudited list, including `GET /patients?id=N` for one number. Reading the record there would write an opening nobody asked for.
+Appointments themselves aren't audited, so they follow the server read and refresh above.
+
 **Reading in a Client Component.** Planned for the queue's polling in Phase 7, with a feature hook over TanStack Query. Nothing does this yet.
 
 **Proxy rules**

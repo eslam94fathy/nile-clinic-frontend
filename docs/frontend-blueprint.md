@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system, app shell, and clinic setup exist.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system, app shell, clinic setup, patients, and appointments exist.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -28,14 +28,14 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/doctors/[id]` | A R | Profile, schedule, time off, fee. Read-only for R | `/doctors/{id}`, `/schedule`, `/time-off`, `/fee` |
 | `/fees` | A R | All fees | `GET /fees` |
 | `/patients`, `/patients/new`, `/patients/[id]` | A R | Search, register, view, and edit on the record's own page | `/patients*` |
-| `/appointments`, `/appointments/[id]` | A R | Find, book, reschedule, cancel, no-show, check in | `/appointments*`, `/doctors/{id}/slots` |
-| `/queue` | A R | Today's clinic queue, walk-ins, left, undo | `/queue*`, `/doctors/{id}/queue` |
+| `/appointments`, `/appointments/new`, `/appointments/[id]` | A R | Find, book, reschedule, cancel, no-show | `/appointments*`, `/doctors/{id}/slots` |
+| `/queue` | A R | Today's clinic queue, check-in, walk-ins, left, undo | `/appointments/{id}/check-in`, `/queue*`, `/doctors/{id}/queue` |
 | `/billing` | A R | A date's visits and balances, charge a visit | `GET /visits`, `POST /visits/{id}/charge` |
 | `/charges`, `/charges/[id]` | A R | Find charges, payments. Discount and refund for A | `/charges*` |
 | `/reports/*` | A | Money collected, billing, activity, times | `/reports/*` |
 | `/audit` | A | Search the trail | `GET /audit-entries` |
 | `/my/queue` | D | Own queue, call next, finish | `/doctors/me/queue*` |
-| `/my/appointments` | D | Own appointments, read only | `/doctors/me/appointments*` |
+| `/my/appointments`, `/my/appointments/[id]` | D | Own appointments, read only | `/doctors/me/appointments*` |
 | `/my/schedule` | D | Own hours and time off, read only | `/doctors/me/schedule`, `/slots`, `/time-off` |
 | `/my/visits` | D | Past visits, including those needing a record | `/doctors/me/visits` |
 | `/my/encounters/[id]` | D | Write, finalize, add addenda | `/doctors/me/encounters/*` |
@@ -79,9 +79,10 @@ specified after the modules it draws on.
 ## Key workflows
 
 **Book.** Find the patient by name, phone, national ID, or number; registering is one step away if not
-found. Choose a doctor and date, then pick from free slots. On `409`, show why and refresh the slots.
+found. Choose a doctor, then pick from seven days of free times. On a refusal about the time, show why, read the free times again,
+and keep the patient, doctor, and note. Choosing a patient never opens their record, so it writes no audit entry.
 
-**Arrival.** On today's appointment, check in. Without an appointment, add as a walk-in to a doctor's list.
+**Arrival.** On today's appointment, check in, which Phase 7 builds with the queue, as the API creates a queue entry. Without an appointment, add as a walk-in to a doctor's list.
 
 **Doctor's visit.** Call next → the record opens for that patient → write → finish. Finishing and
 finalizing are separate actions, and the API doesn't require a record to finish. The UI must make the
@@ -145,9 +146,9 @@ Phase 3 added `Can` for role-based visibility, in `features/app-shell`, and Phas
 audit log, the only list with no total (Phase 11).
 
 **Lists.** Filters and page live in the URL so that they survive reload and the back button, with one
-exception: patient search. Its terms and page stay in the component's state and out of the address, so
-a reload clears them, and going back restores them while the page is held
-([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). The patient number may be in an address.
+exception: patient search, including where it's used to choose a patient. Its terms and page stay in the component's state and out of the
+address, so a reload clears them, and going back restores them while the page is held
+([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). The patient number may be in an address, as the appointment list's filter does.
 
 **Responsive.** Reception and back office are desktop first, down to tablet. Doctor screens are also
 usable on a tablet. Tables collapse to cards on narrow screens.

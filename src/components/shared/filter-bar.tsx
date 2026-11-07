@@ -21,6 +21,8 @@ type FilterBase = {
    * forgetting a flag (constitution II).
    */
   inAddress: boolean;
+  /** Shown when the address has no value, and restored on reset. For a filter that always has a value. */
+  defaultValue?: string;
 };
 
 export type FilterDefinition = FilterBase &
@@ -71,7 +73,7 @@ export function FilterBar({
   const addressKey = JSON.stringify(
     filters
       .filter((filter) => filter.inAddress)
-      .map((filter) => searchParams.get(filter.name)),
+      .map((filter) => [searchParams.get(filter.name), filter.defaultValue]),
   );
   const syncedKey = useRef(addressKey);
 
@@ -85,12 +87,16 @@ export function FilterBar({
     for (const filter of filters) {
       const field = fields.get(filter.name);
       if (field && filter.inAddress) {
-        field.value = searchParams.get(filter.name) ?? "";
+        field.value =
+          searchParams.get(filter.name) ?? filter.defaultValue ?? "";
       }
     }
   }, [addressKey, filters, searchParams]);
 
   function navigate(applied: FilterValues) {
+    // Nothing here belongs in the address, so any page number there belongs to something else on the screen.
+    if (!filters.some((filter) => filter.inAddress)) return;
+
     const current = searchParams.toString();
     const next = new URLSearchParams(current);
     // A different filter means a different list, so its page number no longer applies.
@@ -122,9 +128,11 @@ export function FilterBar({
   }
 
   function reset() {
-    fieldsIn(form.current).forEach((field) => {
-      field.value = "";
-    });
+    const fields = fieldsIn(form.current);
+    for (const filter of filters) {
+      const field = fields.get(filter.name);
+      if (field) field.value = filter.defaultValue ?? "";
+    }
     navigate({});
     if (onReset) onReset();
     else onApply?.({});
@@ -135,7 +143,9 @@ export function FilterBar({
     // A private filter has no `name`, so submitting before JavaScript has loaded can't put it in the
     // address: the browser only sends named fields.
     ...(filter.inAddress ? { name: filter.name } : { autoComplete: "off" }),
-    defaultValue: filter.inAddress ? (searchParams.get(filter.name) ?? "") : "",
+    defaultValue: filter.inAddress
+      ? (searchParams.get(filter.name) ?? filter.defaultValue ?? "")
+      : "",
   });
 
   return (

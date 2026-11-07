@@ -201,7 +201,7 @@ Administrators and receptionists have the same patient access. Doctors have none
 - **FR-029**: Patient search and form fields MUST ask the browser not to remember or suggest what was typed, because reception computers are shared.
 - **FR-030**: Patient details and search terms MUST NOT be written to logs, analytics, or error reports, and tests MUST use synthetic data only.
 - **FR-031**: Digits typed in Arabic form MUST be converted to Western digits in phone, national ID, and patient number fields before quick feedback and sending. Names and addresses MUST NOT be altered.
-- **FR-032**: No appointment, encounter, or billing information MUST be shown on patient pages in this phase.
+- **FR-032**: No appointment, encounter, or billing information MUST be shown on patient pages in this phase. Phase 6's [FR-024](../006-appointments/spec.md) adds two links to appointments, and still no appointment information.
 
 ### Key Entities
 

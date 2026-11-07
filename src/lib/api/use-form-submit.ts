@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { useRouter } from "@/lib/i18n/navigation";
-import type { ApiResult } from "./api-error";
+import type { ApiError, ApiResult } from "./api-error";
 import { mapFieldErrors } from "./map-field-errors";
 
 /**
@@ -27,6 +27,8 @@ export function useFormSubmit<Values extends FieldValues>({
   async function submit<Data>(
     call: () => Promise<ApiResult<Data>>,
     onSuccess: (data: Data) => void,
+    /** After the failure is shown, for what only the caller knows to do. It may replace `formErrors`. */
+    onFailure?: (error: ApiError) => void,
   ) {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -48,6 +50,7 @@ export function useFormSubmit<Values extends FieldValues>({
     if (result.error.status === 403 || result.error.status === 404) {
       router.refresh();
     }
+    onFailure?.(result.error);
   }
 
   return { working, formErrors, setFormErrors, submit };

@@ -104,6 +104,23 @@ beforeEach(() => {
   takeHandedOver(5);
 });
 
+describe("links to appointments", () => {
+  it("carry the patient, ask for nothing ahead, and read nothing", async () => {
+    readPatient.mockResolvedValue({ ok: true, status: 200, data: record });
+    render(stage());
+    const book = await screen.findByRole("link", {
+      name: t.recordLinks.book,
+    });
+    const view = screen.getByRole("link", { name: t.recordLinks.view });
+
+    expect(book.getAttribute("href")).toBe("/appointments/new?patient_id=5");
+    expect(view.getAttribute("href")).toBe("/appointments?patient_id=5");
+    expect(book.getAttribute("data-prefetch")).toBe("false");
+    expect(view.getAttribute("data-prefetch")).toBe("false");
+    expect(readPatient).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("when the record is read", () => {
   it("reads once on opening, and shows the record", async () => {
     await shown();

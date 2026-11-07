@@ -1195,7 +1195,10 @@ test.describe("when the API refuses part way through", () => {
     await page.goBack();
 
     await expect(page).toHaveURL(/\/en\/patients$/);
-    await expect(page.getByText(forbiddenHeading)).toBeVisible();
+    // The page just left is held, hidden, and says the same.
+    await expect(
+      page.getByText(forbiddenHeading).locator("visible=true"),
+    ).toBeVisible();
     await expect(result).toHaveCount(0);
     await expect(page.getByRole("table")).toHaveCount(0);
     expect(await openings(2)).toBe(0);

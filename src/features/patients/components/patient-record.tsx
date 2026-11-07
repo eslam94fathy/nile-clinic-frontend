@@ -116,11 +116,26 @@ export function PatientRecord({
         title={<UserText>{record.full_name}</UserText>}
         description={t("record.numberLine", { number: String(record.id) })}
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/patients" prefetch={false}>
-              {t("backToSearch")}
-            </Link>
-          </Button>
+          <>
+            <Button variant="outline" asChild>
+              <Link
+                href={`/appointments/new?patient_id=${id}`}
+                prefetch={false}
+              >
+                {t("recordLinks.book")}
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/appointments?patient_id=${id}`} prefetch={false}>
+                {t("recordLinks.view")}
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/patients" prefetch={false}>
+                {t("backToSearch")}
+              </Link>
+            </Button>
+          </>
         }
       />
       {failure ? (
