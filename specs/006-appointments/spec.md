@@ -228,11 +228,11 @@ Administrators and receptionists have the same appointment access. Doctors have 
 - **FR-020**: No-show MUST ask for confirmation and say that it can't be undone.
 - **FR-021**: On a scheduled appointment, the page MUST offer reschedule and cancel until its start passes on the clinic's clock, and no-show from then on. Any other status MUST offer no action. This only decides what's offered: the API's answer MUST win.
 - **FR-022**: After any change, the page MUST show the appointment's new state, and lists MUST show new values when returned to. Reading an appointment again to do so is allowed, as it isn't audited.
-- **FR-023**: Check-in MUST NOT be offered in this phase. It belongs to Phase 7.
+- **FR-023**: Check-in MUST NOT be offered in this phase. It belongs to Phase 7. *Phase 7 has since added it: see [its FR-001](../007-queue/spec.md).*
 
 **Patient page**
 
-- **FR-024**: The patient's page MUST gain "Book appointment" and "View appointments" links, including when a record is shown after registering. It MUST NOT show any appointment information itself. This narrows Phase 5's FR-032, whose other exclusions stay.
+- **FR-024**: The patient's page MUST gain "Book appointment" and "View appointments" links, including when a record is shown after registering. It MUST NOT show any appointment information itself. This narrows Phase 5's FR-032, whose other exclusions stay. *Phase 7 adds a third link: see [its FR-029a](../007-queue/spec.md).*
 - **FR-025**: These links MUST NOT cause any further read of the record, and following them MUST write no opening.
 
 **Doctors**

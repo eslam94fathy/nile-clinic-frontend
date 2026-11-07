@@ -17,6 +17,7 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0010](0010-session-and-guards.md) | How sessions are read, ended, and checked | Accepted |
 | [0011](0011-server-reads-and-refresh.md) | Server reads, then refresh, with no client cache yet | Accepted |
 | [0012](0012-audited-reads-in-the-browser.md) | Audited reads and patient search in the browser, an exception to 0011 that reverses part of 0005 | Accepted |
+| [0013](0013-live-reads.md) | Live reads through TanStack Query, on the queue's pages only | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.

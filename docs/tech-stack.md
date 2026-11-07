@@ -65,13 +65,17 @@ See [ADR 0001](decisions/0001-authentication-bff.md) and [ADR 0010](decisions/00
 | `react-hook-form` | 7.91.0 | Sign-in and password forms; API `422`s map to fields through `setError` |
 | `@hookform/resolvers` | 7.0.3 | Connects those forms to Zod 4. Confirmed working together in Phase 3 |
 
+## Installed (Phase 7)
+
+See [ADR 0013](decisions/0013-live-reads.md).
+
+| Package | Version | Why it is needed |
+|---|---|---|
+| `@tanstack/react-query` | 5.106.1 | The queue's polling: request ordering, cancelling a read after a change, keeping the last list when a read fails, and stopping on hidden tabs and pages. Used only on the queue's pages, and only for reads the backend doesn't audit. Screens that read on the server and then refresh don't need it ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) |
+
 ## Planned
 
-Added by the phase that needs them; versions were checked on 2026-11-05.
-
-| Package | Checked | Why it is needed | Added in |
-|---|---|---|---|
-| `@tanstack/react-query` | 5.106.1 | Polling, with its audit-safe query policy. The queue has to poll. Phase 4 found that screens that read on the server and then refresh don't need it ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) | Phase 7 |
+Nothing at present. A package is added by the phase that needs it.
 
 ## Rejected or deferred
 

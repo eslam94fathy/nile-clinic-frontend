@@ -13,7 +13,7 @@ foundations that later work relies on.
 | 4 | Clinic setup: staff, specialties, doctors, schedules, fees | **Done** (accepted 2026-11-06, [spec](../specs/004-clinic-setup/spec.md)) | 3 | Staff, Doctors, Scheduling, fee endpoints |
 | 5 | Patients | **Done** (accepted 2026-11-06, [spec](../specs/005-patients/spec.md)) | 3 | Patients |
 | 6 | Appointments | **Done** (accepted 2026-11-07, [spec](../specs/006-appointments/spec.md)) | 4, 5 | Appointments, slots |
-| 7 | Queue: reception and doctor | Not started | 6 | Queues |
+| 7 | Queue: reception and doctor | **Done** (accepted 2026-11-07, [spec](../specs/007-queue/spec.md)) | 6 | Queues |
 | 8 | Medical encounters | Not started | 7 | Encounters |
 | 9 | Billing and payments | Not started | 7 | Payments |
 | 10 | Reports | Not started | 9 | Reports |

@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { FormError } from "@/components/shared/form/form-error";
 import { Button } from "@/components/ui/button";
 import { type FreeTime, FreeTimes } from "@/features/scheduling/public";
+import { allMessages, isOutcomeUnknown } from "@/lib/api/refusal";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { rescheduleAppointment } from "../api/appointments";
-import { allMessages, isAboutTheTime, isOutcomeUnknown } from "../refusal";
+import { isAboutTheTime } from "../refusal";
 import type { Appointment } from "../types";
 
 /** The same doctor, always: the API has no way to reassign, so no choice of doctor is offered (FR-018). */

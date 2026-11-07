@@ -23,9 +23,10 @@ import {
 import { type FreeTime, FreeTimes } from "@/features/scheduling/public";
 import type { ApiError } from "@/lib/api/api-error";
 import { useFormSubmit } from "@/lib/api/use-form-submit";
+import { isOutcomeUnknown } from "@/lib/api/refusal";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { bookAppointment } from "../api/appointments";
-import { isAboutTheTime, isOutcomeUnknown } from "../refusal";
+import { isAboutTheTime } from "../refusal";
 import { bookingNoteSchema, toBookingBody } from "../schemas/appointment";
 
 /** Only the note is typed. The rest are places for the API's refusals to appear. */

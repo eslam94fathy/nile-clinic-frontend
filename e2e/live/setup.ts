@@ -55,10 +55,13 @@ export default async function setup() {
     doctor: await createStaff("doctor", "doctor"),
     newDoctor: await createStaff("newdoctor", "doctor"),
     disposable: await createStaff("disposable", "receptionist"),
+    passwordChange: await createStaff("passwordchange", "receptionist"),
     // Unique names, so that a test can find this run's doctor among any left by a run that was interrupted.
     bookingDoctor: await createStaff(`bookingdoctor${stamp}`, "doctor"),
     secondDoctor: await createStaff(`seconddoctor${stamp}`, "doctor"),
     noShowDoctor: await createStaff(`noshowdoctor${stamp}`, "doctor"),
+    queueDoctor: await createStaff(`queuedoctor${stamp}`, "doctor"),
+    secondQueueDoctor: await createStaff(`secondqueue${stamp}`, "doctor"),
   };
 
   async function createDoctor(account: LiveAccount): Promise<number> {
@@ -78,12 +81,15 @@ export default async function setup() {
   }
 
   // Hours on every day, so that free times exist whatever day the suite runs.
-  async function setHours(doctorId: number) {
+  async function setHours(
+    doctorId: number,
+    { minutes = 20, start = "09:00", end = "17:00" } = {},
+  ) {
     const response = await api(`doctors/${doctorId}/schedule`, {
       method: "PUT",
       token,
       body: {
-        appointment_minutes: 20,
+        appointment_minutes: minutes,
         periods: [
           "sunday",
           "monday",
@@ -92,7 +98,7 @@ export default async function setup() {
           "thursday",
           "friday",
           "saturday",
-        ].map((day) => ({ day, start: "09:00", end: "17:00" })),
+        ].map((day) => ({ day, start, end })),
       },
     });
     if (response.status !== 200) {
@@ -104,11 +110,19 @@ export default async function setup() {
     booking: await createDoctor(accounts.bookingDoctor),
     second: await createDoctor(accounts.secondDoctor),
     noShow: await createDoctor(accounts.noShowDoctor),
+    queue: await createDoctor(accounts.queueDoctor),
+    secondQueue: await createDoctor(accounts.secondQueueDoctor),
     bookingName: `Synthetic Live bookingdoctor${stamp}`,
     secondName: `Synthetic Live seconddoctor${stamp}`,
+    queueName: `Synthetic Live queuedoctor${stamp}`,
+    secondQueueName: `Synthetic Live secondqueue${stamp}`,
   };
   await setHours(doctors.booking);
   await setHours(doctors.second);
+  // Check-in needs an appointment today, so these have free times whatever hour the suite runs.
+  const allDay = { minutes: 5, start: "00:00", end: "24:00" };
+  await setHours(doctors.queue, allDay);
+  await setHours(doctors.secondQueue, allDay);
 
   const profile = await api("doctors", {
     method: "POST",

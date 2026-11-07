@@ -9,10 +9,15 @@ export type LiveAccounts = {
   newDoctor: LiveAccount;
   /** Used up by the tests that end sessions. */
   disposable: LiveAccount;
+  /** The test that changes a password uses this, so that `receptionist` stays usable in every spec. */
+  passwordChange: LiveAccount;
   /** Doctors whose schedules only the appointment tests touch. */
   bookingDoctor: LiveAccount;
   secondDoctor: LiveAccount;
   noShowDoctor: LiveAccount;
+  /** Doctors only the queue tests use, whose lists those tests clear between them. */
+  queueDoctor: LiveAccount;
+  secondQueueDoctor: LiveAccount;
 };
 
 /** Those doctors' profile ids, which differ from their account ids. */
@@ -20,8 +25,12 @@ export type LiveDoctors = {
   booking: number;
   second: number;
   noShow: number;
+  queue: number;
+  secondQueue: number;
   bookingName: string;
   secondName: string;
+  queueName: string;
+  secondQueueName: string;
 };
 
 function requireEnv(name: string): string {

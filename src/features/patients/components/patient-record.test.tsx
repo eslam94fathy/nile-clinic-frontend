@@ -119,6 +119,18 @@ describe("links to appointments", () => {
     expect(view.getAttribute("data-prefetch")).toBe("false");
     expect(readPatient).toHaveBeenCalledTimes(1);
   });
+
+  it("carries the patient to the walk-in form, and reads nothing more", async () => {
+    readPatient.mockResolvedValue({ ok: true, status: 200, data: record });
+    render(stage());
+    const link = await screen.findByRole("link", {
+      name: t.recordLinks.addToQueue,
+    });
+
+    expect(link.getAttribute("href")).toBe("/queue/walk-in?patient_id=5");
+    expect(link.getAttribute("data-prefetch")).toBe("false");
+    expect(readPatient).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("when the record is read", () => {

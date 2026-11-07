@@ -129,7 +129,7 @@ test.describe("who can reach appointment pages", () => {
 
   test("later phases' placeholders are unchanged", async ({ page }) => {
     await signIn(page, "receptionist");
-    await page.goto("/en/queue");
+    await page.goto("/en/billing");
     await expect(shown(page, m.shell.placeholderHeading)).toBeVisible();
   });
 });

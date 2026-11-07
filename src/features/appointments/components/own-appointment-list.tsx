@@ -20,7 +20,7 @@ import {
   type OwnAppointmentSummary,
 } from "../types";
 import { OutsideLabel } from "./outside-label";
-import { TimeRange } from "./time-range";
+import { TimeRange } from "@/components/shared/values/time-range";
 
 const FILTER_FIELDS = new Set(["from", "to", "status"]);
 

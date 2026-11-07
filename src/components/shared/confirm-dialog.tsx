@@ -29,8 +29,11 @@ export function ConfirmDialog({
   onCloseAutoFocus,
   children,
 }: {
-  /** Must accept a ref, such as a `Button`. Focus returns here on closing. */
-  trigger: ReactNode;
+  /**
+   * Must accept a ref, such as a `Button`. Focus returns here on closing. Left out where the button can
+   * disappear while the dialog is open, in which case `onCloseAutoFocus` decides where focus goes.
+   */
+  trigger?: ReactNode;
   title: ReactNode;
   description: ReactNode;
   confirmLabel: ReactNode;
@@ -56,7 +59,9 @@ export function ConfirmDialog({
         if (!pending) onOpenChange(next);
       }}
     >
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger ? (
+        <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      ) : null}
       <AlertDialogContent
         {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
         onEscapeKeyDown={(event) => {

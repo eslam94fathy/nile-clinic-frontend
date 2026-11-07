@@ -95,7 +95,9 @@ origin. The proxy adds the bearer token and `Accept-Language`, then returns the 
 through the unaudited list, including `GET /patients?id=N` for one number. Reading the record there would write an opening nobody asked for.
 Appointments themselves aren't audited, so they follow the server read and refresh above.
 
-**Reading in a Client Component.** Planned for the queue's polling in Phase 7, with a feature hook over TanStack Query. Nothing does this yet.
+**A list that stays current.** The queue's lists read themselves every 15 seconds while on screen, through `useLiveList` in `features/queue`, over TanStack Query, with the `live` policy in `lib/api/live-query.ts` and a provider only on those pages ([ADR 0013](decisions/0013-live-reads.md)). **Only reads the backend doesn't audit may do this.** Measured: nothing is read while a tab is hidden, or while the person is on another page and the list is kept mounted. Actions keep the project's own pattern, and refresh the lists afterwards. A failed read keeps the last list with a notice, and a `403` or `404` clears it and stops.
+
+**A confirmation sits above anything a refresh can remove.** The queue's dialogs hold their own copy of what they're about, because a refresh could otherwise close one under someone, or change what it says.
 
 **Proxy rules**
 
@@ -111,11 +113,11 @@ Appointments themselves aren't audited, so they follow the server read and refre
 
 | Kind | Examples | Behavior |
 |---|---|---|
-| Live | Queue | Polls only while the tab is visible |
-| Normal | Lists, reference data | Standard stale times |
-| Audited | Patient, encounter, history, audit search | No automatic refetch, no retry, no link prefetch |
+| Live | Queue | Polls only while the tab and the page are visible |
+| Normal | Lists, reference data | Not a query: read on the server, then refresh ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) |
+| Audited | Patient, encounter, history, audit search | No automatic refetch, no retry, no link prefetch ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)) |
 
-The query cache is memory only, is never persisted, and is cleared at sign-out and on `401`.
+The query cache is memory only, is never persisted, and is cleared at sign-out and on `401`, both of which load a whole new page.
 
 **Patient reads** are the exception to server reads ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). Records and patient search run in Client Components through the same-origin route, and no patient API call exists on the server. A server read of a record writes a false "opened" entry after a refresh and the back button, and search terms can't reach the server without entering the address. Everything else reads on the server, under [ADR 0011](decisions/0011-server-reads-and-refresh.md).
 

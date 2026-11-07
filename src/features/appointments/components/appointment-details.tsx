@@ -8,7 +8,7 @@ import { UserText } from "@/components/shared/values/user-text";
 import { PatientLink } from "@/features/patients/public";
 import type { Appointment } from "../types";
 import { OutsideLabel } from "./outside-label";
-import { TimeRange } from "./time-range";
+import { TimeRange } from "@/components/shared/values/time-range";
 
 /** The heading that takes focus after a change, because the control pressed may no longer exist. */
 export const DETAILS_HEADING_ID = "appointment-details-heading";
