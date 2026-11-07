@@ -178,6 +178,12 @@
       "irreversible": "This can't be undone.",
       "working": "Working…"
     },
+    "unsaved": {
+      "title": "Leave without saving?",
+      "description": "What you've written since the last save will be lost.",
+      "stay": "Stay on this page",
+      "leave": "Leave without saving"
+    },
     "theme": {
       "label": "Theme",
       "light": "Light",
@@ -903,7 +909,154 @@
         "confirm": "Finish visit",
         "done": "Visit with {name} finished.",
         "changed": "The current patient has changed, so nothing was finished. Close this and check the list."
+      },
+      "recordsUnavailable": "Record statuses can't be shown right now. The queue works as normal.",
+      "recordHeading": "Medical record",
+      "notFinalizedNote": "This visit's record isn't finalized. You can still complete it later."
+    }
+  },
+  "encounters": {
+    "title": "Medical record",
+    "patientLine": "Patient number {number}",
+    "visitDate": "Visit date",
+    "author": "Written by",
+    "sex": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "dateOfBirth": "Date of birth",
+    "started": "Started",
+    "lastSaved": "Last saved",
+    "finalized": "Finalized",
+    "form": {
+      "chiefComplaint": "Chief complaint",
+      "examinationFindings": "Examination findings",
+      "diagnosis": "Diagnosis",
+      "treatmentPlan": "Treatment plan",
+      "textHint": "Up to 10,000 characters.",
+      "noAutomaticSave": "Nothing saves by itself. Save often, as what isn't saved is lost if the browser closes.",
+      "lines": {
+        "heading": "Prescription",
+        "empty": "No medications added.",
+        "add": "Add a line",
+        "remove": "Remove line {number}",
+        "lineHeading": "Line {number}",
+        "medication": "Medication",
+        "dosage": "Dosage",
+        "frequency": "Frequency",
+        "duration": "Duration",
+        "instructions": "Instructions",
+        "hint": "Up to 500 characters. At most 20 lines."
       }
+    },
+    "status": {
+      "unsaved": "Unsaved changes",
+      "saved": "All changes saved",
+      "savedAt": "Last saved"
+    },
+    "save": {
+      "action": "Save",
+      "working": "Saving…",
+      "done": "Record saved."
+    },
+    "failure": {
+      "saveUnknown": "We couldn't confirm the save, so it may or may not have happened. Everything you wrote is still here, and saving again is safe.",
+      "notSaved": "Nothing was saved. Everything you wrote is still here.",
+      "finalizeUnknown": "We couldn't confirm whether this record was finalized. Everything you wrote is still here. Opening the record shows where it stands, and writes an entry in the audit trail.",
+      "notFinalized": "The record wasn't finalized. Everything you wrote is still here.",
+      "stopped": "This record can't be saved from here. Everything you wrote is still on screen, so you can copy it.",
+      "openAsItStands": "Open the record as it now stands",
+      "openNote": "It opens beside what you wrote, and writes an entry in the audit trail."
+    },
+    "sessionEnded": {
+      "heading": "Your session has ended",
+      "description": "Nothing more was saved. What you wrote is still on screen, and it will be gone once you sign in, so copy anything you need first.",
+      "signIn": "Sign in"
+    },
+    "finalize": {
+      "action": "Finalize",
+      "title": "Finalize this record?",
+      "description": "It's locked for good. Later corrections can only be added as addenda. This doesn't finish the visit.",
+      "confirm": "Finalize the record",
+      "done": "Record finalized.",
+      "differs": "What was locked isn't exactly what was on screen, which another tab can cause. This is what the record now holds."
+    },
+    "view": {
+      "empty": "No text was written here.",
+      "linesHeading": "Prescription",
+      "noLines": "No medications were prescribed.",
+      "reload": "Read again",
+      "reloading": "Reading…",
+      "reloadHint": "Reading again writes an entry in the audit trail.",
+      "outOfDate": "This may be out of date, as the latest read failed."
+    },
+    "addenda": {
+      "heading": "Addenda",
+      "empty": "No addenda.",
+      "addedAt": "Added",
+      "label": "New addendum",
+      "hint": "Up to 10,000 characters. An addendum can't be changed or removed.",
+      "add": "Add addendum",
+      "title": "Add this addendum?",
+      "description": "It can't be changed or removed, only followed by another. The record itself stays as it is.",
+      "confirm": "Add the addendum",
+      "working": "Adding…",
+      "done": "Addendum added.",
+      "unknown": "We couldn't confirm whether this was added. Your text is still here. Adding it again could add it twice, so open the record to check first, which writes an entry in the audit trail.",
+      "notAdded": "Nothing was added. Your text is still here.",
+      "openRecord": "Open the record"
+    },
+    "actions": {
+      "start": "Start record",
+      "starting": "Starting…",
+      "continue": "Continue record",
+      "open": "Open record",
+      "history": "History",
+      "startUnknown": "We couldn't confirm whether the record was started. The list has been read again."
+    },
+    "visits": {
+      "title": "My visits",
+      "description": "Your visits, including those still needing a record. Oldest first, as the API sends them.",
+      "caption": "Your visits",
+      "from": "From",
+      "to": "To",
+      "recordStatus": "Record",
+      "anyStatus": "Any record status",
+      "date": "Date",
+      "patient": "Patient",
+      "kind": "Kind",
+      "walkIn": "Walk-in",
+      "booked": "Booked",
+      "times": "Times",
+      "arrived": "Arrived",
+      "called": "Called",
+      "finished": "Finished",
+      "action": "Action",
+      "emptyTitle": "No visits",
+      "emptyDescription": "No visits match these dates and filters."
+    },
+    "history": {
+      "title": "Patient history",
+      "description": "Finalized records you may read. Each opening writes an entry in the audit trail.",
+      "heading": "Earlier records",
+      "caption": "Earlier records",
+      "date": "Date",
+      "doctor": "Doctor",
+      "specialties": "Specialties",
+      "open": "Open",
+      "emptyTitle": "No records can be shown",
+      "emptyDescription": "There's nothing to show for this patient.",
+      "previous": "Previous page",
+      "next": "Next page",
+      "pageLine": "Page {page} of {last}"
+    },
+    "panel": {
+      "open": "History",
+      "close": "Close history",
+      "heading": "Patient history",
+      "recordHeading": "Earlier record",
+      "back": "Back to history",
+      "hint": "Each opening writes an entry in the audit trail. What you're writing stays as it is."
     }
   }
 }
