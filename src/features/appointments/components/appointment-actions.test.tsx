@@ -239,6 +239,21 @@ describe("rescheduling", () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 
+  it("when the API says it didn't happen: stays open, keeping the time", async () => {
+    api.rescheduleAppointment.mockResolvedValue({
+      ok: false,
+      error: { status: 500, fieldErrors: {}, message: "It didn't happen." },
+    });
+    setUp();
+    press(t.actions.reschedule);
+    press("Pick time");
+    press(t.reschedule.submit);
+
+    await screen.findByText("It didn't happen.");
+    expect(screen.getByText(t.reschedule.heading)).toBeTruthy();
+    expect(screen.getByText("Time: 10:00")).toBeTruthy();
+  });
+
   it("on an unknown outcome: says it can't tell, and refreshes", async () => {
     api.rescheduleAppointment.mockResolvedValue({
       ok: false,
@@ -351,6 +366,26 @@ describe("cancelling", () => {
     await waitFor(() =>
       expect(document.activeElement?.id).toBe(DETAILS_HEADING_ID),
     );
+  });
+
+  it("when the API says it didn't happen: keeps the reason for another try", async () => {
+    api.cancelAppointment.mockResolvedValue({
+      ok: false,
+      error: { status: 500, fieldErrors: {}, message: "It didn't happen." },
+    });
+    setUp();
+    press(t.actions.cancel);
+    fireEvent.change(screen.getByLabelText(t.cancel.reasonLabel), {
+      target: { value: "Travelling" },
+    });
+    press(t.cancel.confirm);
+
+    await screen.findByText("It didn't happen.");
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    press(t.actions.cancel);
+    expect(
+      screen.getByLabelText<HTMLTextAreaElement>(t.cancel.reasonLabel).value,
+    ).toBe("Travelling");
   });
 
   it("says when it can't tell", async () => {

@@ -238,3 +238,63 @@ function WithSignal() {
     </>
   );
 }
+
+describe("FreeTimes, when the day or the screen has moved on", () => {
+  it("refreshes the page when the API refuses the first date, as today may have changed", async () => {
+    readFreeTimes.mockResolvedValue({
+      ok: false,
+      error: { status: 422, fieldErrors: { from: ["Too early."] } },
+    });
+    setUp();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+  });
+
+  it("doesn't refresh for any other refusal", async () => {
+    readFreeTimes.mockResolvedValue({
+      ok: false,
+      error: { status: 422, fieldErrors: { to: ["Too far."] } },
+    });
+    setUp();
+
+    await waitFor(() => expect(readFreeTimes).toHaveBeenCalled());
+    await act(async () => {});
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it("ignores an answer that arrives after it's gone", async () => {
+    let answer: (value: ReturnType<typeof found>) => void = () => {};
+    readFreeTimes.mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
+    const { onChange, unmount } = setUp({
+      value: { date: "2026-11-08", start: "09:00" },
+    });
+
+    unmount();
+    await act(async () => answer(found()));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["past the API's limit", "2027-06-01", "2027-02-05"],
+    ["before today", "2026-01-01", today],
+    ["cleared", "", today],
+  ])(
+    "on leaving a date %s, shows the date being read",
+    async (_, typed, shown) => {
+      readFreeTimes.mockResolvedValue(found());
+      setUp();
+      const from = screen.getByLabelText<HTMLInputElement>(t.from);
+
+      fireEvent.change(from, { target: { value: typed } });
+      fireEvent.blur(from);
+
+      expect(from.value).toBe(shown);
+      await act(async () => {});
+    },
+  );
+});

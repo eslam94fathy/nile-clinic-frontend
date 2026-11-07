@@ -52,10 +52,10 @@ export function ConfirmedChange({
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
 
-  function close() {
+  function close({ keepEntries = false } = {}) {
     leaving.current = true;
     setOpen(false);
-    onReset?.();
+    if (!keepEntries) onReset?.();
   }
 
   async function confirm() {
@@ -77,7 +77,8 @@ export function ConfirmedChange({
     }
     if (onFieldError?.(result.error)) return;
 
-    close();
+    // A `500` means nothing happened, so trying again shouldn't mean typing the reason again.
+    close({ keepEntries: result.error.status === 500 });
     if (isOutcomeUnknown(result.error)) onUnknownOutcome();
     else onRefused(allMessages(result.error, shared("generalFailure")));
     router.refresh();

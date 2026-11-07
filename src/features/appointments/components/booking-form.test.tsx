@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   messagesByLocale,
@@ -40,22 +40,34 @@ const doctor = {
   is_active: true,
   specialties: [],
 };
+const reading = vi.hoisted(() => ({ answers: true }));
 vi.mock("@/features/patients/public", () => ({
   ChosenPatient: ({
     id,
+    known,
     action,
+    onFound,
     onMissing,
   }: {
     id: number;
+    known?: unknown;
     action: React.ReactNode;
+    onFound: (found: typeof patient) => void;
     onMissing: () => void;
-  }) => (
-    <div>
-      <span>{`Chosen patient ${id}`}</span>
-      {action}
-      <button onClick={onMissing}>{"Report missing"}</button>
-    </div>
-  ),
+  }) => {
+    useEffect(() => {
+      if (!known && reading.answers) onFound({ ...patient, id });
+      // Once, as the real one reads once.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return (
+      <div>
+        <span>{`Chosen patient ${id}`}</span>
+        {action}
+        <button onClick={onMissing}>{"Report missing"}</button>
+      </div>
+    );
+  },
   PatientChooser: ({
     onChoose,
   }: {
@@ -105,6 +117,7 @@ beforeEach(() => {
   router.refresh.mockReset();
   toast.success.mockReset();
   freeTimes.signal = 0;
+  reading.answers = true;
 });
 afterEach(cleanup);
 
@@ -412,5 +425,95 @@ describe("BookingForm", () => {
     fireEvent.click(change[change.length - 1] as HTMLElement);
     fireEvent.click(screen.getByRole("button", { name: "Pick doctor" }));
     expect(screen.getByText("Time: none")).toBeTruthy();
+  });
+});
+
+describe("BookingForm, keeping attempts with the right person", () => {
+  const change = (which: 0 | 1) =>
+    fireEvent.click(screen.getAllByRole("button", { name: t.change })[which]!);
+
+  it("offers no further step until a carried patient is known", () => {
+    reading.answers = false;
+    setUp({ carriedPatient: 12 });
+
+    expect(screen.getByText("Chosen patient 12")).toBeTruthy();
+    expect(screen.getByText(t.chooseDoctorFirst)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Pick doctor" })).toBeNull();
+  });
+
+  it("still knows a carried patient after booking, as the page stays held", async () => {
+    bookAppointment.mockResolvedValue({
+      ok: true,
+      status: 201,
+      data: { id: 7 },
+    });
+    setUp({ carriedPatient: 12 });
+    fireEvent.click(screen.getByRole("button", { name: "Pick doctor" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pick time" }));
+    submit();
+
+    await waitFor(() => expect(router.push).toHaveBeenCalled());
+    expect(screen.getByRole("button", { name: "Pick doctor" })).toBeTruthy();
+  });
+
+  it.each([
+    ["the patient", 0 as const, "Pick patient"],
+    ["the doctor", 1 as const, "Pick doctor"],
+  ])(
+    "changing %s drops an unknown outcome, and its link",
+    async (_, which, pick) => {
+      refuse({ status: 502 });
+      setUp();
+      chooseAll();
+      submit();
+      await screen.findByText(t.unknownOutcome);
+
+      change(which);
+      fireEvent.click(screen.getByRole("button", { name: pick }));
+
+      expect(screen.queryByText(t.unknownOutcome)).toBeNull();
+      expect(
+        screen.queryByRole("link", { name: t.seeAppointments }),
+      ).toBeNull();
+    },
+  );
+
+  it("changing the patient drops a refusal about the last one", async () => {
+    refuse({
+      status: 409,
+      reason: "patient_busy",
+      message: "This patient already has an appointment at this time.",
+    });
+    setUp();
+    chooseAll();
+    submit();
+    await screen.findByRole("link", { name: t.seePatient });
+
+    change(0);
+    fireEvent.click(screen.getByRole("button", { name: "Pick patient" }));
+
+    expect(
+      screen.queryByText(
+        "This patient already has an appointment at this time.",
+      ),
+    ).toBeNull();
+    expect(screen.queryByRole("link", { name: t.seePatient })).toBeNull();
+  });
+
+  it("moves focus to the next step, as the button pressed is gone", () => {
+    setUp();
+    const focused = () => document.activeElement?.textContent;
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick patient" }));
+    expect(focused()).toBe(t.doctorStep);
+
+    fireEvent.click(screen.getByRole("button", { name: "Pick doctor" }));
+    expect(focused()).toBe(t.timeStep);
+
+    change(1);
+    expect(focused()).toBe(t.doctorStep);
+
+    change(0);
+    expect(focused()).toBe(t.patientStep);
   });
 });

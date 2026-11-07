@@ -140,3 +140,53 @@ describe("DoctorChooser", () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 });
+
+describe("DoctorChooser, paging", () => {
+  const paged = (rows: (typeof doctor)[], current: number, last: number) => {
+    const answer = page(...rows);
+    return {
+      ...answer,
+      data: {
+        data: rows,
+        meta: { ...answer.data.meta, current_page: current, last_page: last },
+      },
+    };
+  };
+  const next = () =>
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+  it("reads the first page when there's nothing on the one asked for", async () => {
+    browserApi
+      .mockResolvedValueOnce(paged([doctor], 1, 2))
+      .mockResolvedValueOnce(paged([], 2, 1))
+      .mockResolvedValueOnce(paged([doctor], 1, 1));
+    renderWithIntl(<DoctorChooser specialties={[]} onChoose={() => {}} />);
+
+    await screen.findByRole("table");
+    next();
+
+    await waitFor(() => expect(browserApi).toHaveBeenCalledTimes(3));
+    await screen.findAllByRole("button", {
+      name: t.chooser.chooseNamed.replace("{name}", doctor.name),
+    });
+    expect(screen.queryByText(t.chooser.emptyTitle)).toBeNull();
+  });
+
+  it("moves focus to the results, as the button pressed is replaced", async () => {
+    browserApi
+      .mockResolvedValueOnce(paged([doctor], 1, 2))
+      .mockResolvedValueOnce(paged([doctor], 2, 2));
+    renderWithIntl(<DoctorChooser specialties={[]} onChoose={() => {}} />);
+
+    await screen.findByRole("table");
+    next();
+
+    await waitFor(() => expect(browserApi).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(document.body);
+      expect(document.activeElement?.contains(screen.getByRole("table"))).toBe(
+        true,
+      );
+    });
+  });
+});

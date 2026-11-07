@@ -45,6 +45,8 @@ export function DoctorChooser({
   const [answer, setAnswer] = useState<Answer>({ kind: "reading" });
   const newest = useRef(0);
   const started = useRef(false);
+  const paging = useRef(false);
+  const results = useRef<HTMLDivElement>(null);
   const last = useRef<{ terms: ActiveDoctorTerms; page: number }>({
     terms: {},
     page: 1,
@@ -57,7 +59,17 @@ export function DoctorChooser({
       last.current = { terms, page };
       setAnswer({ kind: "reading" });
 
-      const result = await searchActiveDoctors(terms, page, locale);
+      let result = await searchActiveDoctors(terms, page, locale);
+      // A change can leave fewer pages than there were, and "no doctors found" would then be untrue.
+      if (
+        request === newest.current &&
+        page > 1 &&
+        result.ok &&
+        result.data.data.length === 0
+      ) {
+        last.current = { terms, page: 1 };
+        result = await searchActiveDoctors(terms, 1, locale);
+      }
       if (request !== newest.current) return;
 
       if (!result.ok && result.error.status === 403) router.refresh();
@@ -75,6 +87,13 @@ export function DoctorChooser({
     started.current = true;
     void run({}, 1);
   }, [run]);
+
+  // Paging replaces the button that was pressed, so keyboard focus would otherwise fall to the page's start.
+  useEffect(() => {
+    if (!paging.current || answer.kind === "reading") return;
+    paging.current = false;
+    results.current?.focus();
+  }, [answer]);
 
   if (answer.kind === "failed" && answer.error.status === 403) {
     return <ApiFailureState error={answer.error} />;
@@ -188,25 +207,30 @@ export function DoctorChooser({
         />
       ) : null}
       {answer.kind === "found" ? (
-        <DataTable
-          caption={t("chooser.caption")}
-          columns={columns}
-          rows={answer.page.data}
-          getRowKey={(doctor) => String(doctor.id)}
-          state={answer.page.data.length === 0 ? "empty" : "ready"}
-          emptyState={
-            <EmptyState
-              title={t("chooser.emptyTitle")}
-              description={t("chooser.emptyDescription")}
-            />
-          }
-          pagination={{
-            page: answer.page.meta.current_page,
-            lastPage: answer.page.meta.last_page,
-            total: answer.page.meta.total,
-            onPage: (page) => void run(last.current.terms, page),
-          }}
-        />
+        <div ref={results} tabIndex={-1} className="outline-none">
+          <DataTable
+            caption={t("chooser.caption")}
+            columns={columns}
+            rows={answer.page.data}
+            getRowKey={(doctor) => String(doctor.id)}
+            state={answer.page.data.length === 0 ? "empty" : "ready"}
+            emptyState={
+              <EmptyState
+                title={t("chooser.emptyTitle")}
+                description={t("chooser.emptyDescription")}
+              />
+            }
+            pagination={{
+              page: answer.page.meta.current_page,
+              lastPage: answer.page.meta.last_page,
+              total: answer.page.meta.total,
+              onPage: (page) => {
+                paging.current = true;
+                void run(last.current.terms, page);
+              },
+            }}
+          />
+        </div>
       ) : null}
     </div>
   );

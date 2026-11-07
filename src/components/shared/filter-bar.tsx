@@ -94,6 +94,9 @@ export function FilterBar({
   }, [addressKey, filters, searchParams]);
 
   function navigate(applied: FilterValues) {
+    // Nothing here belongs in the address, so any page number there belongs to something else on the screen.
+    if (!filters.some((filter) => filter.inAddress)) return;
+
     const current = searchParams.toString();
     const next = new URLSearchParams(current);
     // A different filter means a different list, so its page number no longer applies.

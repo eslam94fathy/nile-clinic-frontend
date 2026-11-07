@@ -693,7 +693,8 @@
     "filters": {
       "anyDoctor": "Any doctor",
       "anyStatus": "Any status",
-      "inactiveDoctor": "{name} (inactive)"
+      "inactiveDoctor": "{name} (inactive)",
+      "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to filter by doctor."
     },
     "views": {
       "label": "Which appointments to show",

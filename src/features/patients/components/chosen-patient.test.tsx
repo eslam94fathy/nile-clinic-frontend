@@ -118,3 +118,32 @@ describe("ChosenPatient", () => {
     expect(screen.getByRole("button", { name: "Change" })).toBeTruthy();
   });
 });
+
+describe("ChosenPatient, for a screen that waits on who it is", () => {
+  it("says who it found", async () => {
+    findPatientById.mockResolvedValue(found(patient));
+    const onFound = vi.fn();
+    renderWithIntl(<ChosenPatient id={5} onFound={onFound} />);
+
+    await screen.findByText("Synthetic Patient");
+    expect(onFound).toHaveBeenCalledWith(patient);
+  });
+
+  it("keeps its action when the read fails, and reports nobody", async () => {
+    findPatientById.mockResolvedValue({
+      ok: false,
+      error: { status: 500, fieldErrors: {} },
+    });
+    const onFound = vi.fn();
+    renderWithIntl(
+      <ChosenPatient
+        id={5}
+        onFound={onFound}
+        action={<button>{"Change"}</button>}
+      />,
+    );
+
+    await screen.findByRole("button", { name: "Change" });
+    expect(onFound).not.toHaveBeenCalled();
+  });
+});

@@ -8,7 +8,7 @@ import { AppointmentList } from "@/features/appointments/components/appointment-
 import { AppointmentPatientFilter } from "@/features/appointments/components/appointment-patient-filter";
 import { AppointmentViewLinks } from "@/features/appointments/components/appointment-view-links";
 import { resolveRange } from "@/features/appointments/resolve-range";
-import { ApiFailureState, ScreenGate } from "@/features/auth/public-server";
+import { ScreenGate } from "@/features/auth/public-server";
 import { readAllDoctors } from "@/features/doctors/api/doctors-server";
 import { firstParam } from "@/lib/api/read-resource";
 import { getEnv } from "@/lib/config/env";
@@ -58,28 +58,22 @@ async function Appointments({
           </Button>
         }
       />
-      {doctors.ok ? (
-        <>
-          <AppointmentViewLinks filters={filters} />
-          <ScopedMessages
-            locale={locale}
-            namespaces={["appointments", "patients", "auth"]}
-          >
-            <AppointmentPatientFilter
-              key={filters.patient_id ?? "none"}
-              {...(filters.patient_id ? { value: filters.patient_id } : {})}
-            />
-          </ScopedMessages>
-          <AppointmentList
-            result={appointments}
-            filters={filters}
-            range={range}
-            doctors={doctors.data}
-          />
-        </>
-      ) : (
-        <ApiFailureState error={doctors.error} />
-      )}
+      <AppointmentViewLinks filters={filters} />
+      <ScopedMessages
+        locale={locale}
+        namespaces={["appointments", "patients", "auth"]}
+      >
+        <AppointmentPatientFilter
+          key={filters.patient_id ?? "none"}
+          {...(filters.patient_id ? { value: filters.patient_id } : {})}
+        />
+      </ScopedMessages>
+      <AppointmentList
+        result={appointments}
+        filters={filters}
+        range={range}
+        doctors={doctors.ok ? doctors.data : null}
+      />
     </>
   );
 }

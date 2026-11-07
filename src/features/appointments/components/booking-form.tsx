@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/form/form-error";
@@ -41,6 +41,7 @@ const FIELDS = ["patient_id", "doctor_id", "date", "start", "note"] as const;
 type ChosenPerson = { id: number; known?: PatientSummary };
 
 const LINK = "font-medium underline underline-offset-4";
+const STEP_HEADING = "text-xl font-semibold outline-none";
 
 /**
  * Patient, then doctor, then time, in order. Nothing here reads a patient's record, so booking writes no
@@ -75,6 +76,10 @@ export function BookingForm({
   const [refreshSignal, setRefreshSignal] = useState(0);
   const [busyDate, setBusyDate] = useState<string | null>(null);
   const [uncertain, setUncertain] = useState(false);
+  // Choosing and changing remove the button pressed, so focus goes to a heading that stays.
+  const patientHeading = useRef<HTMLHeadingElement>(null);
+  const doctorHeading = useRef<HTMLHeadingElement>(null);
+  const timeHeading = useRef<HTMLHeadingElement>(null);
 
   const schema = useMemo(
     () => bookingNoteSchema({ noteTooLong: t("noteTooLong") }),
@@ -101,10 +106,25 @@ export function BookingForm({
   // This page stays held, and the link that opened it still means this patient.
   function startOver() {
     reset();
-    setPatient(carriedPatient === null ? null : { id: carriedPatient });
+    // The same patient stays known, as nothing reads them again.
+    setPatient((chosen) =>
+      carriedPatient === null
+        ? null
+        : chosen?.id === carriedPatient
+          ? chosen
+          : { id: carriedPatient },
+    );
     setPatientMissing(false);
     setDoctor(null);
     setTime(null);
+    setNeedsTime(false);
+    setBusyDate(null);
+    setUncertain(false);
+    setFormErrors([]);
+  }
+
+  // What the last attempt said was about that patient and doctor, and its links would now mean someone else.
+  function forgetAttempt() {
     setNeedsTime(false);
     setBusyDate(null);
     setUncertain(false);
@@ -125,7 +145,7 @@ export function BookingForm({
   }
 
   function onSubmit({ note }: { note: string }) {
-    if (!patient || !doctor) return;
+    if (!patient?.known || !doctor) return;
     if (!time) {
       setNeedsTime(true);
       return;
@@ -159,7 +179,9 @@ export function BookingForm({
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">{t("patientStep")}</h2>
+        <h2 ref={patientHeading} tabIndex={-1} className={STEP_HEADING}>
+          {t("patientStep")}
+        </h2>
         {errors.patient_id?.message ? (
           <FormError messages={[errors.patient_id.message]} />
         ) : null}
@@ -168,6 +190,7 @@ export function BookingForm({
             key={patient.id}
             id={patient.id}
             known={patient.known}
+            onFound={(found) => setPatient({ id: found.id, known: found })}
             onMissing={() => {
               setPatient(null);
               setPatientMissing(true);
@@ -179,7 +202,9 @@ export function BookingForm({
                 size="sm"
                 onClick={() => {
                   setPatient(null);
-                  clearErrors("patient_id");
+                  forgetAttempt();
+                  clearErrors(["patient_id", "date", "start"]);
+                  patientHeading.current?.focus();
                 }}
               >
                 {t("change")}
@@ -194,6 +219,7 @@ export function BookingForm({
                 setPatient({ id: chosen.id, known: chosen });
                 setPatientMissing(false);
                 clearErrors("patient_id");
+                doctorHeading.current?.focus();
               }}
             />
           </>
@@ -201,11 +227,13 @@ export function BookingForm({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">{t("doctorStep")}</h2>
+        <h2 ref={doctorHeading} tabIndex={-1} className={STEP_HEADING}>
+          {t("doctorStep")}
+        </h2>
         {errors.doctor_id?.message ? (
           <FormError messages={[errors.doctor_id.message]} />
         ) : null}
-        {!patient ? (
+        {!patient?.known ? (
           <p className="text-muted-foreground">{t("chooseDoctorFirst")}</p>
         ) : doctor ? (
           <div className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
@@ -223,7 +251,9 @@ export function BookingForm({
               onClick={() => {
                 setDoctor(null);
                 setTime(null);
+                forgetAttempt();
                 clearErrors(["doctor_id", "date", "start"]);
+                doctorHeading.current?.focus();
               }}
             >
               {t("change")}
@@ -236,14 +266,17 @@ export function BookingForm({
               setDoctor(chosen);
               setTime(null);
               clearErrors("doctor_id");
+              timeHeading.current?.focus();
             }}
           />
         )}
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-semibold">{t("timeStep")}</h2>
-        {!patient || !doctor ? (
+        <h2 ref={timeHeading} tabIndex={-1} className={STEP_HEADING}>
+          {t("timeStep")}
+        </h2>
+        {!patient?.known || !doctor ? (
           <p className="text-muted-foreground">{t("chooseTimeFirst")}</p>
         ) : (
           <>

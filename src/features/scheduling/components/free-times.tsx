@@ -59,6 +59,14 @@ export function FreeTimes({
     current.current = { value, onChange };
   });
 
+  // An answer arriving after this has gone could otherwise clear a time chosen with another doctor.
+  useEffect(
+    () => () => {
+      newest.current += 1;
+    },
+    [],
+  );
+
   const window = freeTimeWindow(typed || today, today);
   const { from, to } = window;
 
@@ -71,7 +79,11 @@ export function FreeTimes({
     if (request !== newest.current) return;
 
     if (!result.ok) {
-      if (result.error.status === 403) router.refresh();
+      // A refused first date means this page's today has passed, on a page left open overnight. A new one
+      // moves the window, which reads again. Otherwise, this person may no longer have access.
+      if (result.error.status === 403 || result.error.fieldErrors.from) {
+        router.refresh();
+      }
       setAnswer({ kind: "failed", error: result.error });
       return;
     }
@@ -114,6 +126,8 @@ export function FreeTimes({
                 max={freeTimeWindow("9999-12-31", today).from}
                 value={typed}
                 onChange={(event) => setTyped(event.target.value)}
+                // Once finished, a date outside what can be asked for shows what's being read instead.
+                onBlur={() => setTyped(from)}
               />
             )}
           </FormField>

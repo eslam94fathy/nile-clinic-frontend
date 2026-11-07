@@ -73,6 +73,11 @@ export function ReschedulePanel({
       router.refresh();
       return;
     }
+    // Nothing happened and nothing about the appointment is known to have changed, so this can be tried again.
+    if (error.status === 500) {
+      setFormErrors(allMessages(error, shared("generalFailure")));
+      return;
+    }
     if (!isAboutTheTime(error)) {
       onRefused(allMessages(error, shared("generalFailure")));
       router.refresh();

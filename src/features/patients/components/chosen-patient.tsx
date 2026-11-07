@@ -31,12 +31,15 @@ export function ChosenPatient({
   id,
   known,
   action,
+  onFound,
   onMissing,
 }: {
   id: number;
   /** Already in hand from a list, so nothing is read. */
   known?: PatientSummary | undefined;
   action?: ReactNode;
+  /** Once the read has said who this is, for a screen that shouldn't go on until then. */
+  onFound?: (patient: PatientSummary) => void;
   /** Instead of the message here, for a screen that shows its own. */
   onMissing?: () => void;
 }) {
@@ -61,11 +64,12 @@ export function ChosenPatient({
     const [patient] = result.data.data;
     if (patient) {
       setAnswer({ kind: "found", patient });
+      onFound?.(patient);
       return;
     }
     if (onMissing) onMissing();
     else setAnswer({ kind: "missing" });
-  }, [id, locale, onMissing, router]);
+  }, [id, locale, onFound, onMissing, router]);
 
   useEffect(() => {
     if (asked.current) return;
@@ -75,7 +79,12 @@ export function ChosenPatient({
 
   if (answer.kind === "reading") return <LoadingState />;
   if (answer.kind === "failed") {
-    return <ApiFailureState error={answer.error} onRetry={() => void read()} />;
+    return (
+      <div className="flex flex-col gap-3">
+        <ApiFailureState error={answer.error} onRetry={() => void read()} />
+        {action ? <div>{action}</div> : null}
+      </div>
+    );
   }
 
   return (

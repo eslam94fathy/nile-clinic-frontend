@@ -42,7 +42,8 @@ export function AppointmentList({
   filters: AppointmentFilters;
   /** The dates being read, which the filter shows even when the address has none. */
   range: { from: string; to: string };
-  doctors: DoctorOption[];
+  /** `null` when they couldn't be read: the appointments still show, with less to filter by. */
+  doctors: DoctorOption[] | null;
 }) {
   const t = useTranslations("appointments");
   const tStatus = useTranslations("shared.status.appointment");
@@ -189,14 +190,20 @@ export function AppointmentList({
             label: t("fields.doctor"),
             type: "select",
             inAddress: true,
+            ...(doctors ? {} : { hint: t("filters.doctorsUnavailable") }),
             options: [
               { value: "", label: t("filters.anyDoctor") },
-              ...doctors.map((doctor) => ({
-                value: String(doctor.id),
-                label: doctor.is_active
-                  ? doctor.name
-                  : t("filters.inactiveDoctor", { name: doctor.name }),
-              })),
+              ...(doctors
+                ? doctors.map((doctor) => ({
+                    value: String(doctor.id),
+                    label: doctor.is_active
+                      ? doctor.name
+                      : t("filters.inactiveDoctor", { name: doctor.name }),
+                  }))
+                : // Without this, a list narrowed to one doctor would look like everyone's.
+                  filters.doctor_id
+                  ? [{ value: filters.doctor_id, label: filters.doctor_id }]
+                  : []),
             ],
           },
           {

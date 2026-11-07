@@ -188,6 +188,24 @@ describe("AppointmentList", () => {
   });
 });
 
+describe("AppointmentList, when the doctors can't be read", () => {
+  it("still shows the appointments, and says why the filter is short", () => {
+    renderWithIntl(
+      <AppointmentList
+        result={found(row)}
+        filters={{ doctor_id: "3" }}
+        range={range}
+        doctors={null}
+      />,
+    );
+
+    expect(within(screen.getByRole("table")).getByRole("link")).toBeTruthy();
+    expect(screen.getByText(t.filters.doctorsUnavailable)).toBeTruthy();
+    // Still says the list is narrowed, rather than appearing to show everyone's.
+    expect(screen.getByRole("option", { name: "3" })).toBeTruthy();
+  });
+});
+
 describe("AppointmentViewLinks", () => {
   it("drops the dates and keeps the doctor and patient", () => {
     renderWithIntl(

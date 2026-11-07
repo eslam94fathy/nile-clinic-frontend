@@ -273,3 +273,21 @@ describe("a filter with a default", () => {
     );
   });
 });
+
+describe("a bar with only private filters", () => {
+  const search: FilterDefinition[] = [
+    { name: "phone", label: "Phone", type: "text", inAddress: false },
+  ];
+
+  it("leaves the address alone, including the list behind it's page", () => {
+    query = "page=3";
+    const onApply = vi.fn();
+    renderWithIntl(<FilterBar filters={search} onApply={onApply} />);
+
+    apply();
+    fireEvent.click(screen.getByRole("button", { name: text.reset }));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(onApply).toHaveBeenCalled();
+  });
+});

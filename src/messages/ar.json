@@ -693,7 +693,8 @@
     "filters": {
       "anyDoctor": "أي طبيب",
       "anyStatus": "أي حالة",
-      "inactiveDoctor": "{name} (غير نشط)"
+      "inactiveDoctor": "{name} (غير نشط)",
+      "doctorsUnavailable": "تعذّرت قراءة قائمة الأطباء. أعد تحميل الصفحة للتصفية حسب الطبيب."
     },
     "views": {
       "label": "المواعيد المعروضة",
