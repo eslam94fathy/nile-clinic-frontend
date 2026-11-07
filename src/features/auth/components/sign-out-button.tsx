@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { leaveAfterSignOut } from "@/lib/auth/session-end";
+import { askWithoutDiscarding } from "@/lib/unsaved-changes";
 import { signOut } from "../api/sign-out";
 
 export function SignOutButton({
@@ -36,7 +37,7 @@ export function SignOutButton({
       type="button"
       variant="outline"
       aria-disabled={working}
-      onClick={handleClick}
+      onClick={() => askWithoutDiscarding(() => void handleClick())}
       className="aria-disabled:opacity-70"
     >
       {working ? workingLabel : label}

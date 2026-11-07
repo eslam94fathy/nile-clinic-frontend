@@ -19,6 +19,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel,
   irreversible,
   destructive,
   pending,
@@ -37,6 +38,8 @@ export function ConfirmDialog({
   title: ReactNode;
   description: ReactNode;
   confirmLabel: ReactNode;
+  /** The safe choice's wording, where "Keep it" wouldn't make sense. */
+  cancelLabel?: ReactNode;
   irreversible?: boolean;
   destructive?: boolean;
   pending: boolean;
@@ -94,7 +97,7 @@ export function ConfirmDialog({
               if (pending) event.preventDefault();
             }}
           >
-            {t("cancel")}
+            {cancelLabel ?? t("cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             aria-disabled={pending}

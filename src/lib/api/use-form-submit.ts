@@ -8,16 +8,19 @@ import { mapFieldErrors } from "./map-field-errors";
 
 /**
  * Every form's change: one request at a time, progress, and errors on their fields or at form level. A
- * `403` or `404` also refreshes the page, so that the gate or the page itself can re-decide what to show.
+ * `403` or `404` also refreshes the page, so that the gate or the page itself can re-decide what to show, unless
+ * `keepOnRefusal` says that would remove text that's only on screen (ADR 0014).
  */
 export function useFormSubmit<Values extends FieldValues>({
   fields,
   setError,
   generalFailure,
+  keepOnRefusal = false,
 }: {
   fields: readonly Path<Values>[];
   setError: UseFormSetError<Values>;
   generalFailure: string;
+  keepOnRefusal?: boolean;
 }) {
   const router = useRouter();
   const inFlight = useRef(false);
@@ -47,7 +50,10 @@ export function useFormSubmit<Values extends FieldValues>({
     setFormErrors(
       mapFieldErrors(result.error, fields, setError, generalFailure),
     );
-    if (result.error.status === 403 || result.error.status === 404) {
+    if (
+      !keepOnRefusal &&
+      (result.error.status === 403 || result.error.status === 404)
+    ) {
       router.refresh();
     }
     onFailure?.(result.error);

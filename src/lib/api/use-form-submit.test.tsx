@@ -23,6 +23,37 @@ const refused = {
 };
 
 describe("useFormSubmit", () => {
+  it.each([403, 404])(
+    "refreshes on a %i, unless told that would lose text",
+    async (status) => {
+      const failure = {
+        ok: false as const,
+        error: { status, fieldErrors: {}, message: "No." },
+      };
+      router.refresh.mockClear();
+
+      const { result: keeping } = renderHook(() =>
+        useFormSubmit<{ note: string }>({
+          fields: ["note"],
+          setError: vi.fn(),
+          generalFailure: "General",
+          keepOnRefusal: true,
+        }),
+      );
+      await act(() =>
+        keeping.current.submit(() => Promise.resolve(failure), vi.fn()),
+      );
+      expect(router.refresh).not.toHaveBeenCalled();
+      expect(keeping.current.formErrors).toEqual(["No."]);
+
+      const { result } = setUp();
+      await act(() =>
+        result.current.submit(() => Promise.resolve(failure), vi.fn()),
+      );
+      expect(router.refresh).toHaveBeenCalledOnce();
+    },
+  );
+
   it("tells the caller about a failure, after showing it", async () => {
     const { result } = setUp();
     const onFailure = vi.fn();
