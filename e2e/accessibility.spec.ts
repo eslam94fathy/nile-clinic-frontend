@@ -465,6 +465,89 @@ for (const locale of ["ar", "en"] as const) {
         expect(await seriousIssues(page)).toEqual([]);
       });
 
+      test("queue: reception's list, with its states and a dialog", async ({
+        page,
+      }) => {
+        const q = t.queue;
+        await control("clinic/queue-entry?patient=2&start=09:00");
+        await control("clinic/queue-entry?patient=3&status=seen");
+        await signIn(page, "receptionist", locale);
+
+        await page.goto(`/${locale}/queue?status=left`);
+        await expect(
+          page.getByText(q.empty.filteredTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/queue`);
+        await expect(page.getByRole("table").first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await script("queue", 500);
+        await page
+          .getByRole("button", { name: q.lastRead.refresh, exact: true })
+          .click();
+        await expect(
+          page.getByText(q.lastRead.outOfDate, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+        await script("queue", 0);
+
+        await page
+          .getByRole("button", { name: q.undo.action, exact: true })
+          .locator("visible=true")
+          .click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("queue: adding a walk-in", async ({ page }) => {
+        const q = t.queue;
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/queue/walk-in`);
+        await expect(
+          page.getByText(q.walkInForm.choosePatientFirst, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/queue/walk-in?patient_id=2`);
+        const choose = page
+          .getByRole("button", { name: t.doctors.chooser.choose })
+          .locator("visible=true")
+          .first();
+        await choose.click();
+        await expect(
+          page.getByText(q.walkInForm.permanent, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("queue: a doctor's list, with a current patient and a dialog", async ({
+        page,
+      }) => {
+        const q = t.queue;
+        await signIn(page, "doctor", locale);
+        await page.goto(`/${locale}/my/queue`);
+        await expect(
+          page.getByText(q.own.emptyTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await control("clinic/queue-entry?patient=2&status=with_doctor");
+        await control("clinic/queue-entry?patient=3&start=09:00");
+        await page.reload();
+        await expect(
+          page.getByRole("region", { name: q.own.currentHeading }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page
+          .getByRole("button", { name: q.own.finish.action, exact: true })
+          .click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
       test("API failing", async ({ page }) => {
         await signIn(page, "doctor", locale);
         await script("auth/me", 500);

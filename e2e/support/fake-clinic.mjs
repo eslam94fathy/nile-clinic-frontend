@@ -147,6 +147,8 @@ function freshClinic() {
     ],
     patientOpenings: new Map(),
     appointments: [],
+    queue: [],
+    queueNumbers: new Map(),
   };
 }
 
@@ -737,7 +739,281 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     appointment: ["This appointment can no longer be changed."],
   };
 
+  // The queue. Refusals use the keys in QueueService and DoctorQueueService, and its order is the API's: each
+  // booked patient by appointment start, each walk-in by arrival, then by number.
+  const ENTRY_NOT_CHANGEABLE = {
+    entry: ["This queue entry can no longer be changed."],
+  };
+  const orderMinute = (entry) =>
+    entry.appointment_id === null
+      ? entry.arrival_minute
+      : minutes(
+          clinic.appointments.find(({ id }) => id === entry.appointment_id)
+            .start,
+        );
+  const inQueueOrder = (a, b) =>
+    orderMinute(a) - orderMinute(b) || a.queue_number - b.queue_number;
+  const queueBase = (entry) => {
+    const appointment = clinic.appointments.find(
+      ({ id }) => id === entry.appointment_id,
+    );
+    return {
+      id: entry.id,
+      queue_number: entry.queue_number,
+      status: entry.status,
+      walk_in: entry.appointment_id === null,
+      arrived_at: entry.arrived_at,
+      called_at: entry.called_at,
+      finished_at: entry.finished_at,
+      left_at: entry.left_at,
+      appointment: appointment
+        ? { id: appointment.id, start: appointment.start, end: appointment.end }
+        : null,
+    };
+  };
+  const queueBody = (entry) => {
+    const patient = clinic.patients.find(({ id }) => id === entry.patient_id);
+    return {
+      ...queueBase(entry),
+      doctor: reference(
+        clinic.doctors.find(({ id }) => id === entry.doctor_id),
+      ),
+      patient: {
+        id: patient.id,
+        full_name: patient.full_name,
+        phone: patient.phone,
+      },
+    };
+  };
+  const ownQueueBody = (entry) => {
+    const patient = clinic.patients.find(({ id }) => id === entry.patient_id);
+    return {
+      ...queueBase(entry),
+      patient: {
+        id: patient.id,
+        full_name: patient.full_name,
+        sex: patient.sex,
+        date_of_birth: patient.date_of_birth,
+      },
+    };
+  };
+  function addEntry({ doctorId, patientId, appointmentId = null, status }) {
+    const number = (clinic.queueNumbers.get(doctorId) ?? 0) + 1;
+    clinic.queueNumbers.set(doctorId, number);
+    const entry = {
+      id: nextId++,
+      doctor_id: doctorId,
+      patient_id: patientId,
+      appointment_id: appointmentId,
+      queue_number: number,
+      status: status ?? "waiting",
+      arrival_minute: minutes(clinicClock()),
+      arrived_at: LATER,
+      called_at: status === "with_doctor" || status === "seen" ? LATER : null,
+      finished_at: status === "seen" ? LATER : null,
+      left_at: status === "left" ? LATER : null,
+    };
+    clinic.queue.push(entry);
+    return entry;
+  }
+  const withEntry = (handler) =>
+    reception((request, response, me, match) => {
+      const entry = clinic.queue.find(({ id }) => id === Number(match[1]));
+      return entry
+        ? handler(request, response, me, entry)
+        : send(response, 404, { message: "No queue entry was found." });
+    });
+
   const routes = [
+    // Queue
+    [
+      "POST",
+      /^appointments\/(\d+)\/check-in$/,
+      withAppointment((_request, response, _me, appointment) => {
+        if (
+          appointment.status !== "scheduled" ||
+          appointment.date !== clinicToday()
+        ) {
+          return refuse(response, {
+            appointment: ["This appointment can't be checked in."],
+          });
+        }
+        appointment.status = "checked_in";
+        const entry = addEntry({
+          doctorId: appointment.doctor_id,
+          patientId: appointment.patient_id,
+          appointmentId: appointment.id,
+        });
+        return send(response, 201, { data: queueBody(entry) });
+      }),
+    ],
+    [
+      "GET",
+      /^queue$/,
+      reception((_request, response, _me, _match, query) => {
+        const status = query.get("status");
+        if (
+          status &&
+          !["waiting", "with_doctor", "seen", "left"].includes(status)
+        ) {
+          return refuse(response, { status: ["The status is not valid."] });
+        }
+        const rows = clinic.queue
+          .filter((entry) => !status || entry.status === status)
+          .sort((a, b) => a.doctor_id - b.doctor_id || inQueueOrder(a, b))
+          .map(queueBody);
+        return paginate(response, rows, query, "queue");
+      }),
+    ],
+    [
+      "POST",
+      /^queue\/walk-ins$/,
+      reception(async (request, response) => {
+        const body = await readJson(request);
+        const doctor = clinic.doctors.find(({ id }) => id === body.doctor_id);
+        if (!doctor) {
+          return refuse(response, { doctor_id: ["No doctor was found."] });
+        }
+        if (!isActiveDoctor(doctor)) {
+          return refuse(response, {
+            doctor_id: ["This doctor is not active."],
+          });
+        }
+        if (!clinic.patients.some(({ id }) => id === body.patient_id)) {
+          return refuse(response, {
+            patient_id: ["No patient was found with this patient number."],
+          });
+        }
+        if (
+          clinic.queue.some(
+            (entry) =>
+              entry.doctor_id === doctor.id &&
+              entry.patient_id === body.patient_id &&
+              ["waiting", "with_doctor"].includes(entry.status),
+          )
+        ) {
+          return refuse(response, {
+            patient_id: ["This patient is already in this doctor's queue."],
+          });
+        }
+        const entry = addEntry({
+          doctorId: doctor.id,
+          patientId: body.patient_id,
+        });
+        return send(response, 201, { data: queueBody(entry) });
+      }),
+    ],
+    [
+      "POST",
+      /^queue\/(\d+)\/leave$/,
+      withEntry((_request, response, _me, entry) => {
+        if (entry.status !== "waiting") {
+          return refuse(response, ENTRY_NOT_CHANGEABLE);
+        }
+        entry.status = "left";
+        entry.left_at = LATER;
+        return send(response, 200, { data: queueBody(entry) });
+      }),
+    ],
+    [
+      "DELETE",
+      /^queue\/(\d+)$/,
+      withEntry((_request, response, _me, entry) => {
+        if (entry.status !== "waiting" || entry.appointment_id === null) {
+          return refuse(response, ENTRY_NOT_CHANGEABLE);
+        }
+        if (entry.has_active_charge) {
+          return refuse(response, {
+            entry: ["This visit has an active charge."],
+          });
+        }
+        clinic.appointments.find(
+          ({ id }) => id === entry.appointment_id,
+        ).status = "scheduled";
+        clinic.queue = clinic.queue.filter((row) => row !== entry);
+        response.writeHead(204);
+        return response.end();
+      }),
+    ],
+    [
+      "GET",
+      /^doctors\/(\d+)\/queue$/,
+      reception(
+        withDoctor((_request, response, _me, doctor) =>
+          send(response, 200, {
+            data: clinic.queue
+              .filter((entry) => entry.doctor_id === doctor.id)
+              .sort(inQueueOrder)
+              .map(queueBody),
+          }),
+        ),
+      ),
+    ],
+    [
+      "GET",
+      /^doctors\/me\/queue$/,
+      ownDoctor((_request, response, _me, doctor) =>
+        send(response, 200, {
+          data: clinic.queue
+            .filter((entry) => entry.doctor_id === doctor.id)
+            .sort(inQueueOrder)
+            .map(ownQueueBody),
+        }),
+      ),
+    ],
+    [
+      "POST",
+      /^doctors\/me\/queue\/call-next$/,
+      ownDoctor((_request, response, _me, doctor) => {
+        const own = clinic.queue.filter(
+          (entry) => entry.doctor_id === doctor.id,
+        );
+        if (own.some((entry) => entry.status === "with_doctor")) {
+          return refuse(response, {
+            queue: ["Finish the current visit first."],
+          });
+        }
+        const next = own
+          .filter((entry) => entry.status === "waiting")
+          .sort(inQueueOrder)
+          .find(
+            (entry) =>
+              !clinic.queue.some(
+                (other) =>
+                  other.patient_id === entry.patient_id &&
+                  other.status === "with_doctor",
+              ),
+          );
+        if (!next) {
+          return refuse(response, { queue: ["Nobody is waiting."] });
+        }
+        next.status = "with_doctor";
+        next.called_at = LATER;
+        return send(response, 200, { data: ownQueueBody(next) });
+      }),
+    ],
+    [
+      "POST",
+      /^doctors\/me\/queue\/finish$/,
+      ownDoctor((_request, response, _me, doctor) => {
+        const current = clinic.queue.find(
+          (entry) =>
+            entry.doctor_id === doctor.id && entry.status === "with_doctor",
+        );
+        if (!current) {
+          return refuse(response, { queue: ["Nobody is with you."] });
+        }
+        if (current.appointment_id !== null) {
+          clinic.appointments.find(
+            ({ id }) => id === current.appointment_id,
+          ).status = "completed";
+        }
+        current.status = "seen";
+        current.finished_at = LATER;
+        return send(response, 200, { data: ownQueueBody(current) });
+      }),
+    ],
+
     // Appointments
     [
       "GET",
@@ -1688,6 +1964,53 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
           date: appointment.date,
           start: appointment.start,
         });
+        return true;
+      }
+      case "/__control/clinic/queue-entry": {
+        // An entry already on a list, for tests that aren't about how it got there. With `start`, it comes from
+        // an appointment today at that time. Otherwise it's a walk-in.
+        const doctorId = Number(query.get("doctor") ?? 1);
+        const patientId = Number(query.get("patient") ?? 2);
+        const status = query.get("status") ?? "waiting";
+        let appointmentId = null;
+        if (query.has("start")) {
+          const start = query.get("start");
+          const appointment = {
+            id: nextId++,
+            doctor_id: doctorId,
+            patient_id: patientId,
+            date: clinicToday(),
+            start,
+            end: clock(minutes(start) + 20),
+            status: "checked_in",
+            outside_availability: false,
+            note: null,
+            booked_by: { id: 2, name: "Synthetic Reception" },
+            booked_at: NOW,
+            rescheduled_by: null,
+            rescheduled_at: null,
+            status_changed_by: null,
+            status_changed_at: null,
+            cancellation_reason: null,
+          };
+          clinic.appointments.push(appointment);
+          appointmentId = appointment.id;
+        }
+        const entry = addEntry({ doctorId, patientId, appointmentId, status });
+        send(response, 200, { id: entry.id, appointmentId });
+        return true;
+      }
+      case "/__control/clinic/change-entry": {
+        // Someone else acts on another computer, after this screen has read the list.
+        const entry = clinic.queue.find(
+          ({ id }) => id === Number(query.get("id")),
+        );
+        if (query.get("remove") === "1") {
+          clinic.queue = clinic.queue.filter((row) => row !== entry);
+        }
+        if (query.has("status")) entry.status = query.get("status");
+        if (query.get("charge") === "1") entry.has_active_charge = true;
+        send(response, 200, {});
         return true;
       }
       case "/__control/clinic/take-time": {
