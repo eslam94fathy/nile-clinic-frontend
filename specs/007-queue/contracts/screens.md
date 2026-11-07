@@ -17,7 +17,7 @@ Header: title, description, "Add walk-in", and "Today's appointments", which lea
 | `403` | "Not allowed". Patient details removed, and reading stops |
 | `404`, doctor | Neutral not-found, with a link to all doctors. Reading stops |
 | `401` | The usual sign-in redirect |
-| Doctors for the filter failed | The list works, with the status filter only |
+| Doctors for the filter failed | The list works. The doctor filter says the doctors couldn't be read, and keeps any doctor already chosen, as Appointments does |
 
 **Row**: number; status; arrived; appointment's start and end, linking to it, or "Walk-in"; called, finished, or left where they exist; patient number, name as a link to their record, and phone; and any action.
 

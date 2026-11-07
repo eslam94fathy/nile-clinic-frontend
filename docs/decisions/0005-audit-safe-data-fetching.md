@@ -39,6 +39,9 @@ Further rules for audited reads:
 - Refreshing is an explicit action by the person. It does record another opening, which is true.
 - Audit searches run when submitted, not while typing.
 
+Only the "live" kind was ever built, as [ADR 0013](0013-live-reads.md) records. [ADR 0011](0011-server-reads-and-refresh.md) found that ordinary
+screens need no client cache, and [ADR 0012](0012-audited-reads-in-the-browser.md) took audited reads out of TanStack Query.
+
 For all kinds: the cache is in memory only, is never persisted, and is cleared at sign-out and on `401`.
 Mutations never retry automatically.
 

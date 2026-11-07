@@ -71,6 +71,8 @@ work from memory or from these docs alone.
 - Link to a patient's record only with `PatientLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
 - Show or choose a patient without opening them with `ChosenPatient` and `PatientChooser`. Never read the record just to show who someone is.
 - Treat a change that fails with status `0` or `502` and above as possibly saved, and say so. A `500` means it did not happen.
+- Write a list that must stay current with `useLiveList` and the `live` policy, which only reads the backend doesn't audit may use ([ADR 0013](decisions/0013-live-reads.md)). Don't replace the list with a loading state on a refresh, and don't announce refreshes to assistive technology.
+- Put a confirmation above anything a refresh can remove, with its own copy of what it's about, and say where focus goes if the button has gone.
 
 ## Signed-in pages
 

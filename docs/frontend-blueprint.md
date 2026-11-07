@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system, app shell, clinic setup, patients, and appointments exist.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, and the queue exist.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -28,8 +28,9 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/doctors/[id]` | A R | Profile, schedule, time off, fee. Read-only for R | `/doctors/{id}`, `/schedule`, `/time-off`, `/fee` |
 | `/fees` | A R | All fees | `GET /fees` |
 | `/patients`, `/patients/new`, `/patients/[id]` | A R | Search, register, view, and edit on the record's own page | `/patients*` |
-| `/appointments`, `/appointments/new`, `/appointments/[id]` | A R | Find, book, reschedule, cancel, no-show | `/appointments*`, `/doctors/{id}/slots` |
-| `/queue` | A R | Today's clinic queue, check-in, walk-ins, left, undo | `/appointments/{id}/check-in`, `/queue*`, `/doctors/{id}/queue` |
+| `/appointments`, `/appointments/new`, `/appointments/[id]` | A R | Find, book, reschedule, cancel, no-show, and check in on the appointment's page | `/appointments*`, `/doctors/{id}/slots` |
+| `/queue` | A R | Today's clinic queue, left, undo | `GET /queue`, `/queue/{entry}*`, `/doctors/{id}/queue` |
+| `/queue/walk-in` | A R | Add a walk-in, with a patient carried from their page | `POST /queue/walk-ins` |
 | `/billing` | A R | A date's visits and balances, charge a visit | `GET /visits`, `POST /visits/{id}/charge` |
 | `/charges`, `/charges/[id]` | A R | Find charges, payments. Discount and refund for A | `/charges*` |
 | `/reports/*` | A | Money collected, billing, activity, times | `/reports/*` |
@@ -82,7 +83,7 @@ specified after the modules it draws on.
 found. Choose a doctor, then pick from seven days of free times. On a refusal about the time, show why, read the free times again,
 and keep the patient, doctor, and note. Choosing a patient never opens their record, so it writes no audit entry.
 
-**Arrival.** On today's appointment, check in, which Phase 7 builds with the queue, as the API creates a queue entry. Without an appointment, add as a walk-in to a doctor's list.
+**Arrival.** On today's appointment's page, check in, which gives a queue number and needs no confirmation, as it can be undone from the queue. Without an appointment, add as a walk-in to a doctor's list, which can't be removed afterwards, only marked as left.
 
 **Doctor's visit.** Call next → the record opens for that patient → write → finish. Finishing and
 finalizing are separate actions, and the API doesn't require a record to finish. The UI must make the

@@ -2,7 +2,7 @@
 
 Findings come from the backend's source and contracts at the analyzed commit `dff2dca`, this repository's code, and the Next.js documentation in `node_modules`. Nothing here has run against the live API yet. The live suite confirms each of these during implementation ([quickstart.md](quickstart.md)), and `docs/backend-integration.md` records only what's observed.
 
-**TanStack Query's behaviour below is from knowledge of its version 5, and hasn't been run in this project.** The package isn't installed yet. Each point has a test in the order of work, and R2 is measured before anything depends on it.
+**TanStack Query's behaviour below was written from knowledge of its version 5, before it was installed.** Each point has since run in this project, and R2 and R3 record where measuring changed anything.
 
 ## R1. Reading the queue: in the browser, through TanStack Query
 
@@ -24,6 +24,8 @@ Findings come from the backend's source and contracts at the analyzed commit `df
 
 **If it fails**: a `useLayoutEffect` in the hook sets a flag on hiding and clears it on showing, and the flag drives `enabled`. Effects are what the documentation guarantees to run on hiding, so this can't fail the same way. ADR 0013 would record it.
 
+**Measured** (2026-11-07, production build, fake backend): it holds. Left for another page with the list confirmed still in the DOM, two real intervals gave 0 reads, with at least one read on the previous interval and one on returning. The tab hidden for one real interval gave 0 reads, with one on showing it. 2 minutes of test clock, and a doctor's list, gave the same. The fallback wasn't needed. `e2e/queue.spec.ts` keeps all of these.
+
 **Returning**: A list shown again resubscribes, and with `staleTime: 0` it reads at once. A tab shown again reads through `refetchOnWindowFocus`, which in version 5 listens for `visibilitychange`. The timer isn't restarted by this, so the next read can come sooner than 15 seconds later, which is harmless. The spec was reworded to allow it.
 
 ## R3. What a refresh's failure does
@@ -37,7 +39,7 @@ Findings come from the backend's source and contracts at the analyzed commit `df
 | `404`, a chosen doctor | Neutral not-found state, with a link to all doctors | Stops, for that doctor |
 | `404`, own list | The page refreshes, and the gate shows "profile not set up" | Stops |
 
-**How stopping works**: `refetchInterval` and `refetchOnWindowFocus` take functions in version 5, but that leaves the data in the cache. So the hook, on `403` or `404`, removes the query and holds the error in its own state, which sets `enabled: false`. Otherwise removing it would make the query read again at once.
+**How stopping works**: `enabled` takes a function of the query in version 5, and it sees the stored error, which stops the timer, focus, and returning to the page alike. That alone would leave the data in the cache, so the query function clears the data before it throws a `403` or `404`. This replaced the first plan, of removing the query and holding the error in the hook's own state, which needed an effect and gained nothing.
 
 **`networkMode: "always"`**: By default, TanStack Query pauses when `navigator.onLine` is false, with no error, so the notice wouldn't appear on a computer that says it's offline. Failing visibly is the requirement (FR-017).
 
@@ -132,7 +134,7 @@ From `QueueService` and `DoctorQueueService`:
 
 **Last read**: `dataUpdatedAt` is a browser clock reading of when the read finished. It's a moment, not a clinic value, so it goes through the existing `Instant` with the clinic's zone, passed from the page. The clock may be wrong by however much the computer is, which is harmless for "last read".
 
-**`Instant`** needs its format checked against the need to show seconds or not during implementation: a time in minutes suits a 15-second list, as seconds would change the screen constantly.
+**`Instant`**'s format shows a date and a time to the minute. That suits a 15-second list, as seconds would change the screen constantly, so it's used as it is.
 
 ## R11. Assistive technology
 

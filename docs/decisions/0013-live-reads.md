@@ -27,11 +27,23 @@ audited reads out of TanStack Query. Only the "live" kind is left to build.
 The policy: every 15 seconds, not in the background, `staleTime` 0, one retry on no response or `5xx`, and `networkMode: "always"`, so a
 browser reporting itself offline shows a failure rather than quietly pausing.
 
-## Unmeasured at the time of writing
+## Measured
 
-That polling stops on a page Next.js keeps hidden under `<Activity>` is expected, as hiding runs effect cleanups, but it hasn't been
-measured. Phase 7 measures it before anything depends on it, and keeps that as a permanent test. If it doesn't hold, a `useLayoutEffect`
-flag drives `enabled`, and this record is updated with what was found.
+This record was written before anything was run. Phase 7 then measured what it depended on, on a production build, with
+`e2e/queue.spec.ts` keeping each as a permanent test:
+
+| Situation | Reads |
+|---|---|
+| Left for another page in the application, with the list confirmed to be still in the DOM, for two real intervals | 0, and one on returning |
+| The same, for 2 minutes of test clock | 0, and one on returning |
+| A doctor's list, left the same way | 0, and one on returning |
+| The tab hidden, for one real interval | 0, and one on showing it |
+
+So `useQuery` alone stops on a hidden page, and the `useLayoutEffect` fallback named in the plan wasn't needed. If a later version of
+either changes this, those tests fail.
+
+**Stopping** is done by `enabled` seeing the stored error, with the data cleared before the error is stored. The plan had the hook remove
+the query and keep the error in its own state. That turned out to need an effect, and nothing else.
 
 ## Alternatives
 

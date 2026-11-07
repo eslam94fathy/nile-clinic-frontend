@@ -48,5 +48,5 @@ Hidden pages keep their state as well as their data, which matters more than the
 
 ## When to revisit
 
-If `router.refresh()` stops reaching hidden pages in a later Next.js version, the permanent test fails. Phase 7 adds TanStack Query
-for polling only, and this flow can stay for everything else.
+If `router.refresh()` stops reaching hidden pages in a later Next.js version, the permanent test fails. Phase 7 added TanStack Query
+for polling only ([ADR 0013](0013-live-reads.md)), and this flow stays for everything else.
