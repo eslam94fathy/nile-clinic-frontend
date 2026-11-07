@@ -149,6 +149,15 @@ function freshClinic() {
     appointments: [],
     queue: [],
     queueNumbers: new Map(),
+    encounters: [],
+    // Each read here is a permanent entry on the real API, so tests count them.
+    encounterReads: {
+      opened: 0,
+      history: 0,
+      saves: 0,
+      finalized: 0,
+      addenda: 0,
+    },
   };
 }
 
@@ -797,11 +806,18 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
       },
     };
   };
-  function addEntry({ doctorId, patientId, appointmentId = null, status }) {
+  function addEntry({
+    doctorId,
+    patientId,
+    appointmentId = null,
+    status,
+    date = clinicToday(),
+  }) {
     const number = (clinic.queueNumbers.get(doctorId) ?? 0) + 1;
     clinic.queueNumbers.set(doctorId, number);
     const entry = {
       id: nextId++,
+      date,
       doctor_id: doctorId,
       patient_id: patientId,
       appointment_id: appointmentId,
@@ -815,6 +831,186 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
     };
     clinic.queue.push(entry);
     return entry;
+  }
+  // Medical records follow contract 008. Everything here checks the doctor first, as the API does.
+  const forDoctor = (handler) => (request, response, me, match, query) => {
+    if (me.role !== "doctor") return forbid(response);
+    let doctor = clinic.doctors.find(({ userId }) => userId === me.id);
+    if (!doctor && me.hasProfile) {
+      doctor = addDoctor(me.id, "Consultant", null, [1]);
+    }
+    return doctor
+      ? handler(request, response, me, doctor, match, query)
+      : missing(response);
+  };
+  const nowUtc = () => new Date().toISOString().replace("Z", "000Z");
+  const noRecord = (response) =>
+    send(response, 404, { message: "No medical record was found." });
+  const patientOnList = (doctor, patientId) =>
+    clinic.queue.some(
+      (entry) =>
+        entry.doctor_id === doctor.id &&
+        entry.patient_id === patientId &&
+        entry.date === clinicToday() &&
+        ["waiting", "with_doctor", "seen"].includes(entry.status),
+    );
+  const readableEncounter = (doctor, id) => {
+    const encounter = clinic.encounters.find(
+      (record) => record.id === Number(id),
+    );
+    if (!encounter) return null;
+    if (encounter.doctor_id === doctor.id) return encounter;
+    return encounter.status === "finalized" &&
+      patientOnList(doctor, encounter.patient_id)
+      ? encounter
+      : null;
+  };
+  function addEncounter({
+    visitId,
+    doctorId,
+    patientId,
+    date,
+    status = "draft",
+    content = {},
+  }) {
+    const encounter = {
+      id: nextId++,
+      visit_id: visitId,
+      doctor_id: doctorId,
+      patient_id: patientId,
+      date,
+      status,
+      chief_complaint: null,
+      examination_findings: null,
+      diagnosis: null,
+      treatment_plan: null,
+      prescriptions: [],
+      addenda: [],
+      started_at: nowUtc(),
+      last_saved_at: nowUtc(),
+      finalized_at: status === "finalized" ? nowUtc() : null,
+      ...content,
+    };
+    clinic.encounters.push(encounter);
+    return encounter;
+  }
+  const recordPatient = (id) => {
+    const patient = clinic.patients.find((row) => row.id === id);
+    return {
+      id: patient.id,
+      full_name: patient.full_name,
+      sex: patient.sex,
+      date_of_birth: patient.date_of_birth,
+    };
+  };
+  const doctorOf = (id) => clinic.doctors.find((doctor) => doctor.id === id);
+  const accountName = (doctor) =>
+    accounts().find(({ id }) => id === doctor.userId)?.name ??
+    "Synthetic Doctor";
+  const encounterBody = (encounter) => {
+    const doctor = doctorOf(encounter.doctor_id);
+    return {
+      id: encounter.id,
+      visit_id: encounter.visit_id,
+      status: encounter.status,
+      date: encounter.date,
+      // The account's id, because this fake's `GET doctors/me` answers with that as the doctor's own number.
+      doctor: {
+        id: doctor.userId,
+        name: accountName(doctor),
+        title: doctor.title,
+      },
+      patient: recordPatient(encounter.patient_id),
+      chief_complaint: encounter.chief_complaint,
+      examination_findings: encounter.examination_findings,
+      diagnosis: encounter.diagnosis,
+      treatment_plan: encounter.treatment_plan,
+      prescriptions: encounter.prescriptions,
+      addenda: encounter.addenda,
+      started_at: encounter.started_at,
+      last_saved_at: encounter.last_saved_at,
+      finalized_at: encounter.finalized_at,
+    };
+  };
+  const historyBody = (encounter) => {
+    const doctor = doctorOf(encounter.doctor_id);
+    return {
+      id: encounter.id,
+      date: encounter.date,
+      doctor: {
+        id: doctor.userId,
+        name: accountName(doctor),
+        specialties: clinic.specialties.filter(({ id }) =>
+          doctor.specialtyIds.includes(id),
+        ),
+      },
+    };
+  };
+  const visitBody = (entry) => {
+    const encounter = clinic.encounters.find(
+      ({ visit_id }) => visit_id === entry.id,
+    );
+    return {
+      id: entry.id,
+      date: entry.date,
+      walk_in: entry.appointment_id === null,
+      arrived_at: entry.arrived_at,
+      called_at: entry.called_at,
+      finished_at: entry.finished_at,
+      record_status: encounter?.status ?? "none",
+      encounter_id: encounter?.id ?? null,
+      patient: recordPatient(entry.patient_id),
+    };
+  };
+  const CONTENT_KEYS = [
+    "chief_complaint",
+    "examination_findings",
+    "diagnosis",
+    "treatment_plan",
+  ];
+  const LINE_KEYS = [
+    "medication",
+    "dosage",
+    "frequency",
+    "duration",
+    "instructions",
+  ];
+  /** Every key must be sent, so that a client can't erase what it forgot. */
+  function contentErrors(body) {
+    const errors = {};
+    for (const key of [...CONTENT_KEYS, "prescriptions"]) {
+      if (!(key in body)) errors[key] = [`The ${key} must be present.`];
+    }
+    for (const key of CONTENT_KEYS) {
+      if ([...(body[key] ?? "")].length > 10_000) {
+        errors[key] = [`The ${key} is too long.`];
+      }
+    }
+    if ((body.prescriptions ?? []).length > 20) {
+      errors.prescriptions = ["A record can have at most 20 lines."];
+    }
+    (body.prescriptions ?? []).forEach((line, index) => {
+      if (!line.medication?.trim()) {
+        errors[`prescriptions.${index}.medication`] = [
+          "The medication is required.",
+        ];
+      }
+      for (const key of LINE_KEYS) {
+        if ([...(line[key] ?? "")].length > 500) {
+          errors[`prescriptions.${index}.${key}`] = [`The ${key} is too long.`];
+        }
+      }
+    });
+    return errors;
+  }
+  function cleanContent(body) {
+    const clean = (text) => text?.trim() || null;
+    return {
+      ...Object.fromEntries(CONTENT_KEYS.map((key) => [key, clean(body[key])])),
+      prescriptions: body.prescriptions.map((line) =>
+        Object.fromEntries(LINE_KEYS.map((key) => [key, clean(line[key])])),
+      ),
+    };
   }
   const withEntry = (handler) =>
     reception((request, response, me, match) => {
@@ -955,7 +1151,10 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
       ownDoctor((_request, response, _me, doctor) =>
         send(response, 200, {
           data: clinic.queue
-            .filter((entry) => entry.doctor_id === doctor.id)
+            .filter(
+              (entry) =>
+                entry.doctor_id === doctor.id && entry.date === clinicToday(),
+            )
             .sort(inQueueOrder)
             .map(ownQueueBody),
         }),
@@ -1011,6 +1210,196 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         current.status = "seen";
         current.finished_at = LATER;
         return send(response, 200, { data: ownQueueBody(current) });
+      }),
+    ],
+
+    // Medical records
+    [
+      "GET",
+      /^doctors\/me\/visits$/,
+      forDoctor((_request, response, _me, doctor, _match, query) => {
+        const from = query.get("from");
+        const to = query.get("to");
+        const errors = {
+          ...(DATE.test(from ?? "")
+            ? {}
+            : { from: ["The from date is needed."] }),
+          ...(DATE.test(to ?? "") ? {} : { to: ["The to date is needed."] }),
+        };
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+        if (dayNumber(to) - dayNumber(from) + 1 > 92) {
+          return refuse(response, {
+            to: ["The range can't be longer than 92 days."],
+          });
+        }
+        const status = query.get("record_status");
+        const rows = clinic.queue
+          .filter(
+            (entry) =>
+              entry.doctor_id === doctor.id &&
+              ["with_doctor", "seen"].includes(entry.status) &&
+              entry.date >= from &&
+              entry.date <= to,
+          )
+          .sort(
+            (a, b) =>
+              dayNumber(a.date) - dayNumber(b.date) || inQueueOrder(a, b),
+          )
+          .map(visitBody)
+          .filter(({ record_status }) => !status || record_status === status);
+        return paginate(response, rows, query, "doctors/me/visits");
+      }),
+    ],
+    [
+      "POST",
+      /^doctors\/me\/visits\/(\d+)\/encounter$/,
+      forDoctor((_request, response, _me, doctor, match) => {
+        const entry = clinic.queue.find(({ id }) => id === Number(match[1]));
+        if (entry?.doctor_id !== doctor.id) {
+          return send(response, 404, { message: "No visit was found." });
+        }
+        if (!["with_doctor", "seen"].includes(entry.status)) {
+          return refuse(response, {
+            visit: [
+              "A record can start only when the patient is with the doctor or has been seen.",
+            ],
+          });
+        }
+        if (clinic.encounters.some(({ visit_id }) => visit_id === entry.id)) {
+          return refuse(response, {
+            visit: ["This visit already has a medical record."],
+          });
+        }
+        const encounter = addEncounter({
+          visitId: entry.id,
+          doctorId: doctor.id,
+          patientId: entry.patient_id,
+          date: entry.date,
+        });
+        return send(response, 201, { data: encounterBody(encounter) });
+      }),
+    ],
+    [
+      "GET",
+      /^doctors\/me\/encounters\/(\d+)$/,
+      forDoctor((_request, response, _me, doctor, match) => {
+        const encounter = readableEncounter(doctor, match[1]);
+        if (!encounter) return noRecord(response);
+        clinic.encounterReads.opened += 1;
+        return send(response, 200, { data: encounterBody(encounter) });
+      }),
+    ],
+    [
+      "PUT",
+      /^doctors\/me\/encounters\/(\d+)$/,
+      forDoctor(async (request, response, _me, doctor, match) => {
+        const body = await readJson(request);
+        const errors = contentErrors(body);
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+
+        const encounter = readableEncounter(doctor, match[1]);
+        if (!encounter) return noRecord(response);
+        if (encounter.doctor_id !== doctor.id) return forbid(response);
+        if (encounter.status !== "draft") {
+          return refuse(response, {
+            encounter: ["A finalized medical record cannot be changed."],
+          });
+        }
+        Object.assign(encounter, cleanContent(body), {
+          last_saved_at: nowUtc(),
+        });
+        clinic.encounterReads.saves += 1;
+        return send(response, 200, { data: encounterBody(encounter) });
+      }),
+    ],
+    [
+      "POST",
+      /^doctors\/me\/encounters\/(\d+)\/finalize$/,
+      forDoctor((_request, response, _me, doctor, match) => {
+        const encounter = readableEncounter(doctor, match[1]);
+        if (!encounter) return noRecord(response);
+        if (encounter.doctor_id !== doctor.id) return forbid(response);
+        if (encounter.status !== "draft") {
+          return refuse(response, {
+            encounter: ["A finalized medical record cannot be changed."],
+          });
+        }
+        const errors = {};
+        for (const field of ["chief_complaint", "diagnosis"]) {
+          if (!encounter[field]) {
+            errors[field] = [
+              `The ${field} is required to finalize this record.`,
+            ];
+          }
+        }
+        encounter.prescriptions.forEach((line, index) => {
+          for (const field of ["dosage", "frequency", "duration"]) {
+            if (!line[field]) {
+              errors[`prescriptions.${index}.${field}`] = [
+                `The ${field} is required to finalize this record.`,
+              ];
+            }
+          }
+        });
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+
+        encounter.status = "finalized";
+        encounter.finalized_at = nowUtc();
+        clinic.encounterReads.finalized += 1;
+        return send(response, 200, { data: encounterBody(encounter) });
+      }),
+    ],
+    [
+      "POST",
+      /^doctors\/me\/encounters\/(\d+)\/addenda$/,
+      forDoctor(async (request, response, _me, doctor, match) => {
+        const body = await readJson(request);
+        const text = typeof body.text === "string" ? body.text.trim() : "";
+        if (!text) return refuse(response, { text: ["The text is required."] });
+        if ([...text].length > 10_000) {
+          return refuse(response, { text: ["The text is too long."] });
+        }
+
+        const encounter = readableEncounter(doctor, match[1]);
+        if (!encounter) return noRecord(response);
+        if (encounter.doctor_id !== doctor.id) return forbid(response);
+        if (encounter.status !== "finalized") {
+          return refuse(response, {
+            encounter: ["Only a finalized medical record can have addenda."],
+          });
+        }
+        const addendum = { id: nextId++, text, created_at: nowUtc() };
+        encounter.addenda.push(addendum);
+        clinic.encounterReads.addenda += 1;
+        return send(response, 201, { data: addendum });
+      }),
+    ],
+    [
+      "GET",
+      /^doctors\/me\/patients\/(\d+)\/encounters$/,
+      forDoctor((_request, response, _me, doctor, match, query) => {
+        const patientId = Number(match[1]);
+        const onList = patientOnList(doctor, patientId);
+        const rows = clinic.encounters
+          .filter(
+            (encounter) =>
+              encounter.patient_id === patientId &&
+              encounter.status === "finalized" &&
+              (onList || encounter.doctor_id === doctor.id),
+          )
+          .sort((a, b) => dayNumber(b.date) - dayNumber(a.date));
+        if (!onList && rows.length === 0) {
+          return send(response, 404, {
+            message: "No medical records were found for this patient.",
+          });
+        }
+        clinic.encounterReads.history += 1;
+        return paginate(
+          response,
+          rows.map(historyBody),
+          query,
+          `doctors/me/patients/${patientId}/encounters`,
+        );
       }),
     ],
 
@@ -1996,8 +2385,61 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
           clinic.appointments.push(appointment);
           appointmentId = appointment.id;
         }
-        const entry = addEntry({ doctorId, patientId, appointmentId, status });
+        const entry = addEntry({
+          doctorId,
+          patientId,
+          appointmentId,
+          status,
+          ...(query.has("date") ? { date: query.get("date") } : {}),
+        });
         send(response, 200, { id: entry.id, appointmentId });
+        return true;
+      }
+      case "/__control/clinic/encounter": {
+        // A record already written, for tests that aren't about how it got there. Its visit comes with it, unless
+        // `visit` names one. `doctor` is whose it is.
+        const doctorId = Number(query.get("doctor") ?? 1);
+        const patientId = Number(query.get("patient") ?? 2);
+        const date = query.get("date") ?? clinicToday();
+        const visitId = query.has("visit")
+          ? Number(query.get("visit"))
+          : addEntry({ doctorId, patientId, status: "seen", date }).id;
+        const encounter = addEncounter({
+          visitId,
+          doctorId,
+          patientId,
+          date,
+          status: query.get("status") ?? "draft",
+          content: JSON.parse(query.get("content") ?? "{}"),
+        });
+        send(response, 200, { id: encounter.id, visitId });
+        return true;
+      }
+      case "/__control/clinic/change-encounter": {
+        // The same doctor, in another tab, after this one read the record.
+        const encounter = clinic.encounters.find(
+          ({ id }) => id === Number(query.get("id")),
+        );
+        if (query.has("status")) {
+          encounter.status = query.get("status");
+          encounter.finalized_at = nowUtc();
+        }
+        Object.assign(encounter, JSON.parse(query.get("content") ?? "{}"));
+        send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/encounter-reads": {
+        send(response, 200, clinic.encounterReads);
+        return true;
+      }
+      case "/__control/clinic/own-doctor": {
+        // The clinic's own number for an account, which queue entries and records use.
+        const accountId = accounts().find(
+          ({ email }) => email === query.get("email"),
+        )?.id;
+        let doctor = clinic.doctors.find(({ userId }) => userId === accountId);
+        doctor ??= addDoctor(accountId, "Consultant", null, [1]);
+        send(response, 200, { id: doctor.id });
         return true;
       }
       case "/__control/clinic/change-entry": {

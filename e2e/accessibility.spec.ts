@@ -548,6 +548,136 @@ for (const locale of ["ar", "en"] as const) {
         expect(await seriousIssues(page)).toEqual([]);
       });
 
+      test("medical records: my visits, in each state", async ({ page }) => {
+        const e = t.encounters;
+        await signIn(page, "doctor", locale);
+        await page.goto(`/${locale}/my/visits`);
+        await expect(
+          page.getByText(e.visits.emptyTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await control("clinic/queue-entry?patient=2&status=seen");
+        await control("clinic/encounter?patient=3");
+        await control(
+          `clinic/encounter?patient=1&status=finalized&content=${encodeURIComponent(
+            JSON.stringify({ diagnosis: "Synthetic" }),
+          )}`,
+        );
+        await page.reload();
+        await expect(
+          page
+            .getByRole("button", { name: e.actions.start, exact: true })
+            .locator("visible=true"),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("medical records: a draft, with errors, a dialog, and the panel", async ({
+        page,
+      }) => {
+        const e = t.encounters;
+        const { id } = (await control(
+          "clinic/queue-entry?patient=2&status=with_doctor",
+        )) as { id: number };
+        const record = (await control(
+          `clinic/encounter?patient=2&visit=${id}`,
+        )) as { id: number };
+        await control(
+          `clinic/encounter?patient=2&status=finalized&date=2026-01-15&content=${encodeURIComponent(
+            JSON.stringify({ diagnosis: "Synthetic" }),
+          )}`,
+        );
+        await signIn(page, "doctor", locale);
+        await page.goto(`/${locale}/my/encounters/${record.id}`);
+        const button = (name: string) =>
+          page.getByRole("button", { name, exact: true });
+        await expect(button(e.save.action)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await button(e.form.lines.add).click();
+        await page.getByLabel(e.form.lines.dosage).fill("Synthetic");
+        await button(e.save.action).click();
+        await expect(page.locator('[aria-invalid="true"]')).not.toHaveCount(0);
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await button(e.finalize.action).click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: t.shared.confirm.cancel, exact: true })
+          .click();
+
+        await button(e.panel.open).click();
+        await expect(
+          page.getByRole("region", { name: e.panel.heading }),
+        ).toBeVisible();
+        await expect(button(e.history.open).first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await button(e.history.open).first().click();
+        await expect(button(e.panel.back)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.getByRole("link", { name: t.shell.nav.mySchedule }).click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("medical records: a finalized record with addenda, and a history", async ({
+        page,
+      }) => {
+        const e = t.encounters;
+        const { id } = (await control(
+          `clinic/encounter?patient=2&status=finalized&content=${encodeURIComponent(
+            JSON.stringify({
+              chief_complaint: "Synthetic complaint",
+              diagnosis: "Synthetic diagnosis",
+              prescriptions: [
+                {
+                  medication: "Synthetic",
+                  dosage: "One",
+                  frequency: "Daily",
+                  duration: "A week",
+                  instructions: null,
+                },
+              ],
+              addenda: [
+                {
+                  id: 9001,
+                  text: "Synthetic addendum",
+                  created_at: "2026-02-02T10:00:00.000000Z",
+                },
+              ],
+            }),
+          )}`,
+        )) as { id: number };
+        await signIn(page, "doctor", locale);
+        await page.goto(`/${locale}/my/encounters/${id}`);
+        await expect(
+          page.getByText("Synthetic addendum", { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.getByLabel(e.addenda.label).fill("Synthetic");
+        await page
+          .getByRole("button", { name: e.addenda.add, exact: true })
+          .click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: t.shared.confirm.cancel, exact: true })
+          .click();
+
+        await page.goto(`/${locale}/my/patients/2/history`);
+        await expect(
+          page.getByRole("link", { name: e.history.open, exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
       test("API failing", async ({ page }) => {
         await signIn(page, "doctor", locale);
         await script("auth/me", 500);
