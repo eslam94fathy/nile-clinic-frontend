@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/states/error-state";
 import { LoadingState } from "@/components/shared/states/loading-state";
@@ -10,20 +10,16 @@ import { Button } from "@/components/ui/button";
 import { ApiFailureState } from "@/features/auth/public";
 import type { ApiError } from "@/lib/api/api-error";
 import { Link, useRouter } from "@/lib/i18n/navigation";
+import { losesTheRecord, useAuditedRead } from "@/lib/use-audited-read";
 import { readPatient } from "../api/patients";
 import { takeAsked, takeHandedOver } from "../opening";
 import type { Patient } from "../types";
 import { PatientDetails } from "./patient-details";
 import { PatientEditForm } from "./patient-edit-form";
 
-/** After these, the person may not see this record at all, so nothing already on screen can stay. */
-const losesTheRecord = (error: ApiError) =>
-  error.status === 403 || error.status === 404;
-
 /**
- * The reader. Each read writes a permanent `patient.opened` entry, so this reads only on first being
- * shown, after a click on `PatientLink`, and when the person asks. Nothing else: a refresh or being shown
- * again from hidden leaves the state as it is (ADR 0012, and `e2e/live/patients.spec.ts` measures it).
+ * The reader. Each read writes a permanent `patient.opened` entry, so it uses the guarded read, and links to it
+ * use `PatientLink` (ADR 0012, and `e2e/live/patients.spec.ts` measures it).
  */
 export function PatientRecord({
   id,
@@ -35,59 +31,34 @@ export function PatientRecord({
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("patients");
-  const [record, setRecord] = useState<Patient | null>(null);
-  const [failure, setFailure] = useState<ApiError | null>(null);
-  const [reading, setReading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const opened = useRef(false);
-  const newest = useRef(0);
   const editButton = useRef<HTMLButtonElement>(null);
   const wasEditing = useRef(false);
 
-  const lose = useCallback((error: ApiError) => {
-    // A read still on its way mustn't put back what was just removed.
-    newest.current += 1;
-    setReading(false);
-    setFailure(error);
-    setRecord(null);
+  const {
+    data: record,
+    failure,
+    reading,
+    read,
+    lose: loseRecord,
+    replace,
+    clearFailure,
+  } = useAuditedRead<Patient>({
+    id,
+    read: () => readPatient(id, locale),
+    takeAsked,
+    takeHandedOver,
+    onFailure: (error) => {
+      if (losesTheRecord(error)) setEditing(false);
+      // So that the gate and the navigation re-decide. Nothing about a patient is read on the server.
+      if (error.status === 403) router.refresh();
+    },
+  });
+
+  const lose = (error: ApiError) => {
+    loseRecord(error);
     setEditing(false);
-  }, []);
-
-  const read = useCallback(async () => {
-    newest.current += 1;
-    const request = newest.current;
-    setReading(true);
-
-    const result = await readPatient(id, locale);
-    if (request !== newest.current) return;
-
-    setReading(false);
-    if (result.ok) {
-      setRecord(result.data);
-      setFailure(null);
-      return;
-    }
-    if (losesTheRecord(result.error)) lose(result.error);
-    else setFailure(result.error);
-    // So that the gate and the navigation re-decide. Nothing about a patient is read on the server.
-    if (result.error.status === 403) router.refresh();
-  }, [id, locale, lose, router]);
-
-  // This runs on mounting, and again each time a held page is shown. The ref and the mark are what decide.
-  useEffect(() => {
-    const asked = takeAsked(id);
-    if (opened.current && !asked) return;
-    opened.current = true;
-
-    const handedOver = takeHandedOver(id);
-    if (handedOver) {
-      // This comes from outside React, and taking it during render could use it up on a hidden prerender.
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronizing with that outside value
-      setRecord(handedOver);
-      return;
-    }
-    void read();
-  }, [id, read]);
+  };
 
   // Saving or cancelling removes the focused button, so focus returns to the one that started this.
   useEffect(() => {
@@ -101,7 +72,7 @@ export function PatientRecord({
         error={failure}
         onRetry={() => {
           // Loading replaces the button, as a second press would write a second opening.
-          setFailure(null);
+          clearFailure();
           void read();
         }}
       />
@@ -158,11 +129,7 @@ export function PatientRecord({
             if (losesTheRecord(error)) lose(error);
           }}
           onSaved={(saved) => {
-            // Whatever a read still on its way says, it's older than this.
-            newest.current += 1;
-            setReading(false);
-            setRecord(saved);
-            setFailure(null);
+            replace(saved);
             setEditing(false);
           }}
         />
