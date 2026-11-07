@@ -238,7 +238,7 @@ Setup → Foundational → US8 → US2 → US1 → US4 → US5 → US6 → US3 �
 
 **Found by the owner's full run, at 10:28 clinic time:** three more failures, none in application code. The fake backend offered times that had already started, which the API leaves out, so rescheduling moved an appointment into the past and the test failed on any day after 09:00; it had passed earlier only because that run was before 09:00. `design-system.spec.ts` measured contrast while a submit button was fading in. A test in `patients.spec.ts` matched the same text on the hidden, held page. A later run also showed the doctors keyboard journey typing into a field before its page had replaced the held copy: 4 of 8 attempts failed, and 16 of 16 passed once it waited for the visible field and checked the typed value. 
 
-**T058's review (`/code-review` at high effort, `origin/main...HEAD` and the working tree):** ten findings, each traced through the code, and nine fixed with tests written first:
+**T058's review (`/code-review` at high effort, `origin/main...HEAD` and the working tree):** ten findings, each traced through the code, and all fixed, with tests written first and seen to fail:
 
 - A carried patient who hadn't loaded left the later steps active, with no name shown, and a failed read lost the way to change patient. Later steps now wait for the patient to be known, and the failure keeps its action.
 - A changed patient or doctor kept the last attempt's messages, whose links then pointed at the new patient. They're now cleared.
@@ -251,7 +251,7 @@ Setup → Foundational → US8 → US2 → US1 → US4 → US5 → US6 → US3 �
 - A date typed outside the allowed range stayed on screen above other dates' times. It now shows the date being read on leaving the field.
 - A failed read of the doctors filter hid an appointment list that had loaded. The list now shows, with a message on the filter.
 
-Not changed: the same finding's concern that `readAllDoctors` reads on each list render, as it reads 100 doctors per page, so a clinic of this size makes one request. Also not changed: refusal-splitting code repeated across three lists, a cleanup the review set aside.
+Not changed: `readAllDoctors` still reads on each list render, which the last finding also raised, as it reads 100 doctors per page, so a clinic of this size makes one request. Also not changed: refusal-splitting code repeated across three lists, a cleanup the review set aside.
 
 **Not yet run after these fixes:** `pnpm check` and `pnpm test:e2e:live` in full, which leaves T057 and T058 open. Observed so far: the affected unit tests (`src/components/shared` and the appointments, patients, doctors, and scheduling features, before two corrected tests were rerun alone), typecheck, lint, formatting, and translations; and 260 of 260 in the affected end-to-end files on a production build.
 
