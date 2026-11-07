@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { getDoctorProfileStatus } from "./doctor-profile";
+import { getDoctorProfileStatus, getOwnDoctorId } from "./doctor-profile";
 
 const serverApi = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api/server-api", () => ({ serverApi }));
@@ -25,5 +25,29 @@ describe("getDoctorProfileStatus", () => {
       error: { status, fieldErrors: {} },
     });
     expect(await getDoctorProfileStatus("en")).toBe(expected);
+  });
+});
+
+describe("getOwnDoctorId", () => {
+  it("gives the profile's id", async () => {
+    serverApi.mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: { data: { id: 42 } },
+    });
+    expect(await getOwnDoctorId("en")).toBe(42);
+  });
+
+  it("gives nothing for a body it doesn't recognise", async () => {
+    serverApi.mockResolvedValue({ ok: true, status: 200, data: {} });
+    expect(await getOwnDoctorId("en")).toBeNull();
+  });
+
+  it("gives nothing on a failure", async () => {
+    serverApi.mockResolvedValue({
+      ok: false,
+      error: { status: 404, fieldErrors: {} },
+    });
+    expect(await getOwnDoctorId("en")).toBeNull();
   });
 });

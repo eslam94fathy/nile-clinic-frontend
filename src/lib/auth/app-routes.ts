@@ -118,7 +118,21 @@ export const APP_ROUTES = [
     capability: "medicalRecords",
     labelKey: "myVisits",
     inNavigation: true,
-    built: false,
+    built: true,
+  },
+  {
+    path: "my/encounters",
+    capability: "medicalRecords",
+    labelKey: "myVisits",
+    inNavigation: false,
+    built: true,
+  },
+  {
+    path: "my/patients",
+    capability: "medicalRecords",
+    labelKey: "myVisits",
+    inNavigation: false,
+    built: true,
   },
   {
     path: "my/schedule",

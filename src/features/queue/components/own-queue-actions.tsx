@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
+import type { RecordStatus } from "@/features/encounters/public";
 import { allMessages, isOutcomeUnknown } from "@/lib/api/refusal";
 import { callNext, finishVisit } from "../api/queue";
 import { useKeepFocus } from "../hooks/use-keep-focus";
@@ -25,11 +26,14 @@ type Asking =
 export function OwnQueueActions({
   entries,
   headingId,
+  currentRecordStatus,
   onAnswered,
   refresh,
 }: {
   entries: OwnQueueEntry[];
   headingId: string;
+  /** Undefined when it isn't known, in which case nothing is said about it. */
+  currentRecordStatus?: RecordStatus | undefined;
   /** Puts the API's answer on screen, even if the read that follows fails. */
   onAnswered: (entry: OwnQueueEntry) => void;
   refresh: () => Promise<void>;
@@ -128,6 +132,10 @@ export function OwnQueueActions({
               <UserText>{asking.patientName}</UserText>
               {" — "}
               {t("finish.description")}
+              {currentRecordStatus === "none" ||
+              currentRecordStatus === "draft" ? (
+                <> {t("notFinalizedNote")}</>
+              ) : null}
             </>
           ) : (
             t("callNext.description")

@@ -1,4 +1,10 @@
+import { standAside, tellSessionEnded } from "@/lib/unsaved-changes";
+
 const CHANNEL_NAME = "nile-clinic-session";
+/** The session ended by itself, which nobody chose. */
+const ENDED = "ended";
+/** A person signed out, and meant it. */
+const SIGNED_OUT = "signed-out";
 
 let ending = false;
 let channel: BroadcastChannel | undefined;
@@ -22,8 +28,9 @@ function activeLocale(): string {
 export function endSession(): void {
   if (ending) return;
   ending = true;
+  standAside();
 
-  sharedChannel()?.postMessage("ended");
+  sharedChannel()?.postMessage(ENDED);
 
   const query = new URLSearchParams({
     locale: activeLocale(),
@@ -36,22 +43,29 @@ export function endSession(): void {
 export function leaveAfterSignOut(): void {
   if (ending) return;
   ending = true;
+  standAside();
 
-  sharedChannel()?.postMessage("ended");
+  sharedChannel()?.postMessage(SIGNED_OUT);
   window.location.replace(`/${activeLocale()}/sign-in`);
 }
 
-/** Another tab ended the session, so this one leaves too. Returns the way to stop listening. */
+/**
+ * Another tab ended the session, so this one leaves too. Returns the way to stop listening. Text that's only on
+ * screen stays if the session ended by itself, and goes if someone signed out, as they meant it (ADR 0014).
+ */
 export function followSessionEndInOtherTabs(): () => void {
   const shared = sharedChannel();
   if (!shared) return () => {};
 
-  const leave = () => {
+  const follow = (event: MessageEvent) => {
     if (ending) return;
+    if (event.data === ENDED && tellSessionEnded()) return;
+
     ending = true;
+    standAside();
     window.location.replace(`/${activeLocale()}/sign-in`);
   };
 
-  shared.addEventListener("message", leave);
-  return () => shared.removeEventListener("message", leave);
+  shared.addEventListener("message", follow);
+  return () => shared.removeEventListener("message", follow);
 }

@@ -287,6 +287,17 @@ From the source only, not exercised: `422` under `date`, `patient_id`, `doctor_i
 
 From the source only, not exercised: `409` `patient_with_another_doctor`, `409` `already_checked_in`, the walk-in's `409`, undo refused for an active charge, and a walk-in's `422` under `doctor_id`. The fake backend covers how each appears.
 
+**Medical records, confirmed on the running API** (2026-11-07, commit `dff2dca`, by `e2e/live/encounters.spec.ts`):
+
+- `GET /doctors/me/visits` holds no clinical content and writes no entry. Its rows give `encounter_id` and `record_status`.
+- Starting, saving a change, finalizing, and adding an addendum each write one entry of their own (`encounter.started`, `encounter.draft_saved`, `encounter.finalized`, `encounter.addendum_added`), and no `encounter.opened`. An identical `PUT` writes nothing.
+- `GET` of a record writes one `encounter.opened`, and of a history one `encounter.history_viewed`. Audit entries hold no clinical text.
+- A refused read of a record that exists writes `encounter.opened` with outcome `refused`, and of a history only if the patient has a finalized record. Reading a history for a patient with none writes nothing.
+- Each clinical field keeps 10,000 characters, with 20 lines of 500 characters each. Arabic and line breaks come back as written. Spaces at the ends are trimmed, and empty text becomes `null`.
+- Administrators and receptionists get `403` on all seven operations. Another doctor's draft gives a `404` with a body identical to an unknown id's.
+- Another doctor's finalized record reads only while the patient is on this doctor's list today, and stops once they're marked as left. Changing it, or adding to it, is `403`.
+- Finalizing an incomplete record is `422`, naming every missing field at once, with lines numbered as sent, such as `prescriptions.0.dosage`. Saving over a finalized record is `422` under `encounter`. A save missing a key is `422`, and a draft refuses an addendum with `422`.
+
 **"No medical details" fields.** The API asks that time-off reason, appointment note, and charge
 reasons hold no medical details. Time-off reasons are readable by all staff. These fields need a
 visible hint.
@@ -307,8 +318,8 @@ TanStack Query's default refetch on focus, a retry, or a prefetched link would t
 A read on the server would too, after a refresh and the back button, so patient records are read in the
 browser. See [ADR 0012](decisions/0012-audited-reads-in-the-browser.md), which Phases 8 and 11 should start from.
 
-Every `PUT` of a draft also writes `encounter.draft_saved`, so timer-based autosave would flood the
-trail. To be decided in the encounters spec.
+A `PUT` that changes a draft also writes `encounter.draft_saved`, and an identical one writes nothing, as confirmed on the running API,
+so timer-based autosave would flood the trail. Drafts save only when a doctor chooses to ([ADR 0014](decisions/0014-writing-medical-records.md)).
 
 ### H2. A server-side proxy hides the real client IP
 
@@ -338,7 +349,8 @@ kept in step, which is a deployment concern.
 
 Queue entries have no `encounter_id`, and `/doctors/me/visits` excludes waiting patients. Showing a
 current visit's record status means joining `/doctors/me/queue` with `/doctors/me/visits?from=today&to=today`
-by id. `POST .../encounter` on a started visit returns `422` with no id, so look the id up from visits.
+by id, which "My queue" does, as `encounter_id` and `record_status` come from visits. `POST .../encounter` on a started visit returns
+`422` with no id, so the list is read again for it.
 
 ## Backend gaps
 
@@ -354,3 +366,4 @@ Workable today, but worth knowing. Nothing has been changed in the backend.
 | G6 | No clinic details endpoint | Clinic name and logo have no source | Held in the frontend ([ADR 0009](decisions/0009-brand-assets.md)) |
 | G7 | No receipt or print endpoint | No printed receipts or prescriptions | Out of scope: decision Q5 in the [roadmap](roadmap.md) |
 | G8 | Queue routes only reach the clinic's today (from the source) | An entry still waiting or with a doctor at midnight can't be reached or closed afterwards, so it stays open | Nothing in the frontend can fix it. The screens show today only |
+| G9 | Saving a draft has no version check, and finalizing takes no content (confirmed on the running API) | With two tabs on one draft, the last save wins with no warning, and finalizing locks what was last saved, which may be the other tab's | The page says so after finalizing, if what was locked differs from what was on screen. It can't warn before |

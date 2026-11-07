@@ -13,6 +13,30 @@ import { can, type Role } from "./permissions";
 const labels = (role: Role) =>
   navigationFor(role).map(({ labelKey }) => labelKey);
 
+describe("clinical screens", () => {
+  const CLINICAL = ["my/visits", "my/encounters", "my/patients"];
+
+  it.each(CLINICAL)("%s is for doctors only, and built", (path) => {
+    const route = findRoute(path);
+    expect(route?.built).toBe(true);
+    expect(route?.capability).toBe("medicalRecords");
+    if (!route) return;
+    expect(canOpen("doctor", route)).toBe(true);
+    expect(canOpen("administrator", route)).toBe(false);
+    expect(canOpen("receptionist", route)).toBe(false);
+  });
+
+  it.each(CLINICAL)("%s needs a doctor's profile", (path) => {
+    expect(needsDoctorProfile(path)).toBe(true);
+  });
+
+  it("only my visits is in the navigation", () => {
+    expect(findRoute("my/visits")?.inNavigation).toBe(true);
+    expect(findRoute("my/encounters")?.inNavigation).toBe(false);
+    expect(findRoute("my/patients")?.inNavigation).toBe(false);
+  });
+});
+
 // The table in docs/frontend-blueprint.md, in its order.
 describe("each role's navigation matches the blueprint", () => {
   it("administrator", () => {

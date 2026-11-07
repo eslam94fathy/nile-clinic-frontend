@@ -62,6 +62,11 @@ export default async function setup() {
     noShowDoctor: await createStaff(`noshowdoctor${stamp}`, "doctor"),
     queueDoctor: await createStaff(`queuedoctor${stamp}`, "doctor"),
     secondQueueDoctor: await createStaff(`secondqueue${stamp}`, "doctor"),
+    encounterDoctor: await createStaff(`encounterdoctor${stamp}`, "doctor"),
+    secondEncounterDoctor: await createStaff(
+      `secondencounter${stamp}`,
+      "doctor",
+    ),
   };
 
   async function createDoctor(account: LiveAccount): Promise<number> {
@@ -112,6 +117,8 @@ export default async function setup() {
     noShow: await createDoctor(accounts.noShowDoctor),
     queue: await createDoctor(accounts.queueDoctor),
     secondQueue: await createDoctor(accounts.secondQueueDoctor),
+    encounter: await createDoctor(accounts.encounterDoctor),
+    secondEncounter: await createDoctor(accounts.secondEncounterDoctor),
     bookingName: `Synthetic Live bookingdoctor${stamp}`,
     secondName: `Synthetic Live seconddoctor${stamp}`,
     queueName: `Synthetic Live queuedoctor${stamp}`,
@@ -123,6 +130,8 @@ export default async function setup() {
   const allDay = { minutes: 5, start: "00:00", end: "24:00" };
   await setHours(doctors.queue, allDay);
   await setHours(doctors.secondQueue, allDay);
+  await setHours(doctors.encounter, allDay);
+  await setHours(doctors.secondEncounter, allDay);
 
   const profile = await api("doctors", {
     method: "POST",

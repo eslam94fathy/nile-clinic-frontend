@@ -3,7 +3,7 @@
 **Status:** Accepted, by the project owner with Phase 3, 2026-11-06
 
 Decided during Phase 3 planning and tested with a production spike against the real backend. See
-[research](../../specs/003-auth-app-shell/research.md). This builds on [ADR 0001](0001-authentication-bff.md).
+[research](../../specs/003-auth-app-shell/research.md). This builds on [ADR 0001](0001-authentication-bff.md). [ADR 0014](0014-writing-medical-records.md) narrows what a `401` does while a medical record is being written.
 
 ## Context
 

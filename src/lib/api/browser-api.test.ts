@@ -13,6 +13,23 @@ beforeEach(() => {
 });
 
 describe("browserApi", () => {
+  it("answers a 401 when asked to, without ending the session", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ message: "Signed out." }), { status: 401 }),
+    );
+
+    const result = await browserApi("x", {
+      locale: "en",
+      answerSessionEnd: true,
+    });
+
+    expect(endSession).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: false,
+      error: { status: 401, message: "Signed out.", fieldErrors: {} },
+    });
+  });
+
   it("calls the same-origin route with the language", async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
 

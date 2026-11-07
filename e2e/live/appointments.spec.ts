@@ -200,7 +200,10 @@ test.describe("finding appointments, against the real API", () => {
 
     const before = await allEntries(patient.id);
     await signInReception(page);
-    await page.goto(`/en/appointments?from=${date}&to=${date}`);
+    // With the patient's number too, as a day of test runs can fill more than one page of that date.
+    await page.goto(
+      `/en/appointments?from=${date}&to=${date}&patient_id=${patient.id}`,
+    );
     await expect(shown(page, patient.full_name)).toBeVisible();
     await page.reload();
     await expect(shown(page, patient.full_name)).toBeVisible();
@@ -228,9 +231,13 @@ test.describe("finding appointments, against the real API", () => {
     await book(other.id, booking, date, slots[1]?.start ?? "");
 
     await signInReception(page);
-    await page.goto(`/en/appointments?from=${date}&to=${date}`);
-    await expect(shown(page, patient.full_name)).toBeVisible();
-    await expect(shown(page, other.full_name)).toBeVisible();
+    // Each with its own number as well, as a day of test runs can fill more than one page of that date.
+    for (const booked of [patient, other]) {
+      await page.goto(
+        `/en/appointments?from=${date}&to=${date}&patient_id=${booked.id}`,
+      );
+      await expect(shown(page, booked.full_name)).toBeVisible();
+    }
 
     await page.goto(`/en/appointments?patient_id=${patient.id}`);
     await expect(shown(page, patient.full_name)).toBeVisible();
@@ -664,12 +671,21 @@ test.describe("each role, against the real API", () => {
     const other = await book(theirs.id, second, date, otherSlot.start);
 
     await signInLive(page, accounts.bookingDoctor);
-    await page.goto(`/en/my/appointments?from=${today}&to=${date}`);
-    await expect(shown(page, mine.full_name)).toBeVisible();
-    await expect(
-      page.getByRole("table").getByText(theirs.full_name),
-    ).toHaveCount(0);
-    await expect(page.getByText("01000000321")).toHaveCount(0);
+    // A day of test runs can fill several pages of this doctor's list, which has no patient filter, so each page
+    // is checked until this one is found.
+    let found = false;
+    for (let listPage = 1; !found && listPage <= 20; listPage += 1) {
+      await page.goto(
+        `/en/my/appointments?from=${today}&to=${date}&page=${listPage}`,
+      );
+      await expect(page.getByRole("table")).toBeVisible();
+      await expect(
+        page.getByRole("table").getByText(theirs.full_name),
+      ).toHaveCount(0);
+      await expect(page.getByText("01000000321")).toHaveCount(0);
+      found = (await shown(page, mine.full_name).count()) > 0;
+    }
+    expect(found).toBe(true);
     await expect(shown(page, "1990-04-12")).toBeVisible();
 
     await page.goto(`/en/my/appointments/${own.id}`);

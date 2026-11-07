@@ -43,13 +43,17 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-function setUp(entries: OwnQueueEntry[]) {
+function setUp(
+  entries: OwnQueueEntry[],
+  currentRecordStatus?: "none" | "draft" | "finalized",
+) {
   const onAnswered = vi.fn();
   const refresh = vi.fn().mockResolvedValue(undefined);
   renderWithIntl(
     <OwnQueueActions
       entries={entries}
       headingId="heading"
+      currentRecordStatus={currentRecordStatus}
       onAnswered={onAnswered}
       refresh={refresh}
     />,
@@ -68,6 +72,35 @@ const inDialog = (name: string) =>
   );
 
 describe("OwnQueueActions", () => {
+  describe("finishing with a record not finalized", () => {
+    it.each(["none", "draft"] as const)(
+      "says so for %s, without blocking",
+      (status) => {
+        setUp([entry(1, "with_doctor")], status);
+        press(t.own.finish.action);
+
+        const dialog = screen.getByRole("alertdialog");
+        expect(dialog.textContent).toContain(t.own.notFinalizedNote);
+        expect(
+          screen
+            .getAllByRole("button", { name: t.own.finish.confirm })
+            .some((button) => button.closest('[role="alertdialog"]')),
+        ).toBe(true);
+      },
+    );
+
+    it.each([["finalized"], [undefined]] as const)(
+      "says nothing for %s",
+      (status) => {
+        setUp([entry(1, "with_doctor")], status);
+        press(t.own.finish.action);
+        expect(screen.getByRole("alertdialog").textContent).not.toContain(
+          t.own.notFinalizedNote,
+        );
+      },
+    );
+  });
+
   it("offers nothing when there's nothing to do", () => {
     setUp([entry(1, "seen")]);
     expect(screen.queryByRole("button")).toBeNull();

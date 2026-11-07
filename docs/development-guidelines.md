@@ -67,8 +67,8 @@ work from memory or from these docs alone.
 - Mutations invalidate only what they affect, and use the response when it already holds the new record.
 - Don't retry mutations automatically.
 - No optimistic updates for money, medical records, or bookings: show what the server confirmed.
-- Read an audited record the way `features/patients/components/patient-record.tsx` does, in the browser and guarded, and count real entries in a live test on a production build ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)).
-- Link to a patient's record only with `PatientLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
+- Read an audited record with `useAuditedRead`, in the browser, and count real entries in a live test on a production build ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)).
+- Link to an audited page only with a link built on `AuditedLink`: `PatientLink`, `RecordLink`, or `HistoryLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
 - Show or choose a patient without opening them with `ChosenPatient` and `PatientChooser`. Never read the record just to show who someone is.
 - Treat a change that fails with status `0` or `502` and above as possibly saved, and say so. A `500` means it did not happen.
 - Write a list that must stay current with `useLiveList` and the `live` policy, which only reads the backend doesn't audit may use ([ADR 0013](decisions/0013-live-reads.md)). Don't replace the list with a loading state on a refresh, and don't announce refreshes to assistive technology.
@@ -103,6 +103,8 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Give a field holding an existing value a `defaultValue`, so that it's there before hydration.
 - Disable submit while pending, and until hydration, using `useHydrated`. Use `method="post"` on any form with a field that must stay out of the address, or the browser can submit it by itself as GET before React is ready.
 - Show backend messages as sent. Never compare message text in code.
+- On a page with text that's only on screen, use `UnsavedChangesGuard`, make fields read-only rather than disabled while a request runs, and use `answerSessionEnd` and `keepOnRefusal`, so that no failure can lose what's typed ([ADR 0014](decisions/0014-writing-medical-records.md)).
+- Clinical fields spread `CLINICAL_INPUT`, and never have a `maxLength`, as cutting pasted clinical text silently is worse than a refusal that keeps it.
 
 ## Internationalization
 

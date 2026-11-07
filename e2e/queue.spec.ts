@@ -937,7 +937,7 @@ test.describe("a doctor's list", () => {
     await expect(button(page, t.own.callNext.action)).toHaveCount(0);
   });
 
-  test("shows no contact details, and no links to a record", async ({
+  test("shows no contact details, and no links to a patient's record", async ({
     page,
   }) => {
     await seedEntry("patient=2&start=09:00");
@@ -950,7 +950,10 @@ test.describe("a doctor's list", () => {
     await expect(main).not.toContainText("01000000002");
     await expect(main).toContainText("1985-07-30");
     await expect(main).toContainText(t.sex.female);
-    await expect(main.locator('a[href*="/patients/"]')).toHaveCount(0);
+    // A doctor's history of a patient is Phase 8's. A patient's own record is never offered to a doctor.
+    await expect(
+      main.locator('a[href*="/patients/"]:not([href*="/my/patients/"])'),
+    ).toHaveCount(0);
     await expect(main.locator('a[href*="/appointments/"]')).toHaveCount(0);
   });
 

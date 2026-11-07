@@ -14,7 +14,10 @@ async function MyQueue({ locale }: { locale: string }) {
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} />
-      <ScopedMessages locale={locale} namespaces={["queue", "auth"]}>
+      <ScopedMessages
+        locale={locale}
+        namespaces={["queue", "encounters", "auth"]}
+      >
         <LiveQueryProvider>
           <OwnQueue timeZone={getEnv().CLINIC_TIMEZONE} />
         </LiveQueryProvider>

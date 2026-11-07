@@ -18,6 +18,9 @@ export type LiveAccounts = {
   /** Doctors only the queue tests use, whose lists those tests clear between them. */
   queueDoctor: LiveAccount;
   secondQueueDoctor: LiveAccount;
+  /** Doctors only the medical record tests use. */
+  encounterDoctor: LiveAccount;
+  secondEncounterDoctor: LiveAccount;
 };
 
 /** Those doctors' profile ids, which differ from their account ids. */
@@ -27,6 +30,8 @@ export type LiveDoctors = {
   noShow: number;
   queue: number;
   secondQueue: number;
+  encounter: number;
+  secondEncounter: number;
   bookingName: string;
   secondName: string;
   queueName: string;

@@ -266,16 +266,24 @@ test.describe("reception's list, against the real API", () => {
     const id = await book(patient.id, queue);
     await checkIn(id);
 
-    const list = await api("queue?per_page=100", { token });
-    expect(list.status).toBe(200);
-    const body = (await list.json()) as {
-      data: (Record<string, unknown> & { id: number })[];
-      meta: { total: number };
-    };
+    // Every page, as a day of runs can fill more than one, and the list is ordered by doctor, so this run's
+    // newly created doctor comes last.
+    type Row = Record<string, unknown> & { id: number };
+    const rows: Row[] = [];
+    for (let page = 1, lastPage = 1; page <= lastPage; page += 1) {
+      const list = await api(`queue?per_page=100&page=${page}`, { token });
+      expect(list.status).toBe(200);
+      const body = (await list.json()) as {
+        data: Row[];
+        meta: { last_page: number };
+      };
+      rows.push(...body.data);
+      lastPage = body.meta.last_page;
+    }
     const raw = (await doctorList(queue)).find(
       (entry) => entry.appointment?.id === id,
     );
-    const row = body.data.find(({ id: rowId }) => rowId === raw?.id);
+    const row = rows.find(({ id: rowId }) => rowId === raw?.id);
     expect(Object.keys(row ?? {}).sort()).toEqual(ENTRY_KEYS);
     expect(row?.patient).toEqual({
       id: patient.id,
