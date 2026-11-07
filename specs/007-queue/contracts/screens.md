@@ -11,7 +11,7 @@ Header: title, description, "Add walk-in", and "Today's appointments", which lea
 | Loading | The shared loading state, on the first read or a changed filter |
 | Success | One table per doctor, with the doctor's name above it, and paging when the API has more |
 | Empty, no filters | "Nobody has arrived today", with today's appointments and adding a walk-in |
-| Empty, filters | "Nobody matches", keeping the filters |
+| Empty, filters | "Nobody matches", keeping the filters, with today's appointments and adding a walk-in |
 | First read failed | The error state, with "Try again" |
 | Refresh failed | The list stays, with "This may be out of date" and the last-read time |
 | `403` | "Not allowed". Patient details removed, and reading stops |
