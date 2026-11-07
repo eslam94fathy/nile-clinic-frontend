@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import type { ApiError, ApiResult } from "@/lib/api/api-error";
+import { allMessages, isOutcomeUnknown } from "@/lib/api/refusal";
 import { useRouter } from "@/lib/i18n/navigation";
-import { allMessages, isOutcomeUnknown } from "../refusal";
 import { DETAILS_HEADING_ID } from "./appointment-details";
 
 /**
