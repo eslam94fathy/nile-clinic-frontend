@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, and the queue exist.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, the queue, medical records, and billing exist.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -31,8 +31,8 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/appointments`, `/appointments/new`, `/appointments/[id]` | A R | Find, book, reschedule, cancel, no-show, and check in on the appointment's page | `/appointments*`, `/doctors/{id}/slots` |
 | `/queue` | A R | Today's clinic queue, left, undo | `GET /queue`, `/queue/{entry}*`, `/doctors/{id}/queue` |
 | `/queue/walk-in` | A R | Add a walk-in, with a patient carried from their page | `POST /queue/walk-ins` |
-| `/billing` | A R | A date's visits and balances, charge a visit | `GET /visits`, `POST /visits/{id}/charge` |
-| `/charges`, `/charges/[id]` | A R | Find charges, payments. Discount and refund for A | `/charges*` |
+| `/billing` | A R | A date's visits and balances, charge a visit. Reads itself while it shows today | `GET /visits`, `POST /visits/{id}/charge` |
+| `/charges`, `/charges/[id]` | A R | Find charges over up to 92 days, the last 7 by default; payments and cancelling on the charge's page. Discount and refund for A. Reached also from a patient's page | `/charges*` |
 | `/reports/*` | A | Money collected, billing, activity, times | `/reports/*` |
 | `/audit` | A | Search the trail | `GET /audit-entries` |
 | `/my/queue` | D | Own queue, call next, finish | `/doctors/me/queue*` |
@@ -89,8 +89,9 @@ and keep the patient, doctor, and note. Choosing a patient never opens their rec
 finalizing are separate actions, and the API doesn't require a record to finish. The UI must make the
 difference clear. The patient's permitted history sits alongside the record.
 
-**Taking money.** From billing, charge the visit, then record the payment. Several payments are allowed
-up to the balance. Payments can't be edited, so the amount and method must be confirmed first.
+**Taking money.** From Billing, charge the visit, which opens the charge with the payment form ready: the amount starts as the
+whole balance, and a method must be chosen. Several payments are allowed up to the balance. Payments can't be edited, so the amount,
+method, and patient are confirmed first, and each is sent once. A mistaken charge with no money on it is cancelled with a reason.
 
 **Finalize.** The API returns any missing required fields against their inputs. Confirmation explains
 that it can't be undone, and that corrections become addenda.

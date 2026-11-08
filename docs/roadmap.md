@@ -15,7 +15,7 @@ foundations that later work relies on.
 | 6 | Appointments | **Done** (accepted 2026-11-07, [spec](../specs/006-appointments/spec.md)) | 4, 5 | Appointments, slots |
 | 7 | Queue: reception and doctor | **Done** (accepted 2026-11-07, [spec](../specs/007-queue/spec.md)) | 6 | Queues |
 | 8 | Medical encounters | **Done** (accepted 2026-11-08, [spec](../specs/008-medical-encounters/spec.md), [privacy review](../specs/008-medical-encounters/privacy-review.md)) | 7 | Encounters |
-| 9 | Billing and payments | Not started | 7 | Payments |
+| 9 | Billing and payments | **Done** (accepted 2026-11-08, [spec](../specs/009-billing-payments/spec.md)) | 7 | Payments |
 | 10 | Reports | Not started | 9 | Reports |
 | 11 | Audit log | Not started | 3 | Audit |
 | 12 | Role dashboards | Not started | 7, 8, 9, 10 | Composed |

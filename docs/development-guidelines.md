@@ -71,7 +71,8 @@ work from memory or from these docs alone.
 - Link to an audited page only with a link built on `AuditedLink`: `PatientLink`, `RecordLink`, or `HistoryLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
 - Show or choose a patient without opening them with `ChosenPatient` and `PatientChooser`. Never read the record just to show who someone is.
 - Treat a change that fails with status `0` or `502` and above as possibly saved, and say so. A `500` means it did not happen.
-- Write a list that must stay current with `useLiveList` and the `live` policy, which only reads the backend doesn't audit may use ([ADR 0013](decisions/0013-live-reads.md)). Don't replace the list with a loading state on a refresh, and don't announce refreshes to assistive technology.
+- Write a list that must stay current with `useLiveList` from `lib/api` and the `live` policy, which only reads the backend doesn't audit may use ([ADR 0013](decisions/0013-live-reads.md), [ADR 0015](decisions/0015-live-reads-beyond-the-queue.md)). Pass your feature's own `rootKey`, so that your actions refresh only your lists. Use the `onDemand` policy for a browser-read list that mustn't read by itself. Don't replace the list with a loading state on a refresh, and don't announce refreshes to assistive technology.
+- Send a money action once: one request at a time, never retried, and on an unknown outcome read the charge again and say to check it before trying again. Never resend one by itself (hazard H6).
 - Put a confirmation above anything a refresh can remove, with its own copy of what it's about, and say where focus goes if the button has gone.
 
 ## Signed-in pages
@@ -128,6 +129,8 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Never convert wall-clock times, and handle `24:00`.
 - Money stays a string. Format with `Intl.NumberFormat`, which accepts decimal strings. Never use
   `parseFloat` or `Number`.
+- Check and compare an amount someone typed with `lib/format/amount.ts`: `normalizeAmount`, `isAmount`, and `compareAmounts`, which
+  work on the digits. Show a typed amount with `toMoneyText`. Never work out an amount to show; show the API's.
 
 ## Security and privacy
 

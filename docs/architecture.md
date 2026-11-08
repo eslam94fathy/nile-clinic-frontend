@@ -43,7 +43,7 @@ src/
 │       ├── auth/{sign-in,sign-out,session-ended}/   # sign-in is the only code that sees the raw token
 │       └── backend/[...path]/         # same-origin proxy for Client Components
 ├── features/
-│   └── <feature>/                     # auth, staff, patients, appointments, queue, ...
+│   └── <feature>/                     # auth, staff, patients, appointments, queue, billing, ...
 │       ├── api/                       # typed calls for this feature; the only network code
 │       ├── components/                # this feature's UI
 │       ├── hooks/                     # query hooks, from Phase 7
@@ -95,7 +95,13 @@ origin. The proxy adds the bearer token and `Accept-Language`, then returns the 
 through the unaudited list, including `GET /patients?id=N` for one number. Reading the record there would write an opening nobody asked for.
 Appointments themselves aren't audited, so they follow the server read and refresh above.
 
-**A list that stays current.** The queue's lists read themselves every 15 seconds while on screen, through `useLiveList` in `features/queue`, over TanStack Query, with the `live` policy in `lib/api/live-query.ts` and a provider only on those pages ([ADR 0013](decisions/0013-live-reads.md)). **Only reads the backend doesn't audit may do this.** Measured: nothing is read while a tab is hidden, or while the person is on another page and the list is kept mounted. Actions keep the project's own pattern, and refresh the lists afterwards. A failed read keeps the last list with a notice, and a `403` or `404` clears it and stops.
+**A list that stays current.** The queue's lists, and Billing while it shows the clinic's today, read themselves every 15 seconds while on screen, through `useLiveList` in `lib/api`, over TanStack Query, with the `live` policy in `lib/api/live-query.ts` and `LiveQueryProvider` from `components/shared/live` only on those pages ([ADR 0013](decisions/0013-live-reads.md), [ADR 0015](decisions/0015-live-reads-beyond-the-queue.md)). Billing for any other date uses the `onDemand` policy, which reads when opened, after an action, and on "Refresh", and never by itself. Each feature passes its own root key, so its actions refresh only its own lists. **Only reads the backend doesn't audit may do this.** Measured: nothing is read while a tab is hidden, or while the person is on another page and the list is kept mounted. Actions keep the project's own pattern, and refresh the lists afterwards. A failed read keeps the last list with a notice, and a `403` or `404` clears it and stops.
+
+**A money action is sent once.** The backend has no idempotency key (hazard H6), so a resent payment can be recorded twice. Every
+money action allows one request at a time and is never retried. When no usable answer arrives, the page reads the charge again and
+asks the person to check its payments before trying again. Amounts stay text from the API to the screen, and typed amounts are checked
+and compared on their digits by `lib/format/amount.ts`. Charges and a charge's page read on the server and refresh after each action,
+under ADR 0011.
 
 **A confirmation sits above anything a refresh can remove.** The queue's dialogs hold their own copy of what they're about, because a refresh could otherwise close one under someone, or change what it says.
 
