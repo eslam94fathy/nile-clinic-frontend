@@ -12,17 +12,20 @@ import { Button } from "@/components/ui/button";
 export function LastRead({
   readAt,
   outOfDate,
+  retriesBySelf = true,
   reading,
   onRefresh,
   timeZone,
 }: {
   readAt: number;
   outOfDate: boolean;
+  /** False for a list that reads only when asked, so the notice doesn't promise a retry that won't come. */
+  retriesBySelf?: boolean;
   reading: boolean;
   onRefresh: () => void;
   timeZone: string;
 }) {
-  const t = useTranslations("queue.lastRead");
+  const t = useTranslations("shared.lastRead");
 
   return (
     <div className="flex flex-col gap-2">
@@ -56,7 +59,7 @@ export function LastRead({
             : "sr-only"
         }
       >
-        {outOfDate ? t("outOfDate") : ""}
+        {outOfDate ? t(retriesBySelf ? "outOfDate" : "outOfDateOnDemand") : ""}
       </p>
     </div>
   );

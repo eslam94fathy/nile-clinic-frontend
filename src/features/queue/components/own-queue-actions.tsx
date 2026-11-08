@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import type { RecordStatus } from "@/features/encounters/public";
 import { allMessages, isOutcomeUnknown } from "@/lib/api/refusal";
 import { callNext, finishVisit } from "../api/queue";
-import { useKeepFocus } from "../hooks/use-keep-focus";
+import { useKeepFocus } from "@/lib/use-keep-focus";
 import { offeredOwnAction } from "../offered-own-action";
 import type { OwnQueueEntry } from "../types";
 

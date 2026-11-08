@@ -44,7 +44,7 @@ function setUp(changes: Partial<QueueEntry> = {}) {
   const onAction = vi.fn();
   renderWithIntl(
     <QueueGroup
-      group={{ doctor: entry.doctor, entries: [{ ...entry, ...changes }] }}
+      group={{ doctor: entry.doctor, rows: [{ ...entry, ...changes }] }}
       timeZone="Africa/Cairo"
       onAction={onAction}
     />,

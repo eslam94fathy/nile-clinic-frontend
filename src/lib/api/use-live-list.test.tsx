@@ -10,6 +10,7 @@ import {
 import { type ReactNode, useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ApiResult } from "@/lib/api/api-error";
+import { ON_DEMAND_QUERY } from "./live-query";
 import { type LiveList, useLiveList } from "./use-live-list";
 
 afterEach(cleanup);
@@ -33,7 +34,11 @@ function Reader({
   read: () => Promise<ApiResult<string[]>>;
   listKey: string;
 }) {
-  const list = useLiveList<string[]>({ queryKey: ["queue", listKey], read });
+  const list = useLiveList<string[]>({
+    rootKey: ["queue"],
+    queryKey: ["queue", listKey],
+    read,
+  });
   useEffect(() => {
     latest = list;
   });
@@ -142,5 +147,68 @@ describe("useLiveList", () => {
     fireEvent(window, new Event("visibilitychange"));
     await act(() => latest.refresh());
     expect(read).toHaveBeenCalledTimes(calls);
+  });
+
+  it("refreshes only the lists under its own root", async () => {
+    const mine = vi.fn().mockResolvedValue(found("Mine"));
+    const theirs = vi.fn().mockResolvedValue(found("Theirs"));
+
+    function Other() {
+      const list = useLiveList<string[]>({
+        rootKey: ["other"],
+        queryKey: ["other", "list"],
+        read: theirs,
+      });
+      return <p>{list.data?.join() ?? "none"}</p>;
+    }
+
+    render(
+      <Stage read={mine}>
+        <Other />
+      </Stage>,
+    );
+    await screen.findByText("Mine");
+    await screen.findByText("Theirs");
+
+    await act(() => latest.refresh());
+
+    expect(mine).toHaveBeenCalledTimes(2);
+    expect(theirs).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("useLiveList on demand", () => {
+  function OnDemand({ read }: { read: () => Promise<ApiResult<string[]>> }) {
+    const list = useLiveList<string[]>({
+      rootKey: ["billing"],
+      queryKey: ["billing", "list"],
+      read,
+      policy: ON_DEMAND_QUERY,
+    });
+    useEffect(() => {
+      latest = list;
+    });
+    return <p>{list.data?.join() ?? "nothing"}</p>;
+  }
+
+  it("reads on opening and when asked, but not when the window regains focus", async () => {
+    const read = vi.fn().mockResolvedValue(found("Synthetic"));
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <OnDemand read={read} />
+      </QueryClientProvider>,
+    );
+    await screen.findByText("Synthetic");
+    expect(read).toHaveBeenCalledTimes(1);
+
+    fireEvent(window, new Event("visibilitychange"));
+    fireEvent(window, new Event("focus"));
+    fireEvent(window, new Event("online"));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(read).toHaveBeenCalledTimes(1);
+
+    await act(() => latest.refresh());
+    expect(read).toHaveBeenCalledTimes(2);
   });
 });

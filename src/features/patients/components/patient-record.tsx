@@ -107,6 +107,11 @@ export function PatientRecord({
               </Link>
             </Button>
             <Button variant="outline" asChild>
+              <Link href={`/charges?patient_id=${id}`} prefetch={false}>
+                {t("recordLinks.charges")}
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link href="/patients" prefetch={false}>
                 {t("backToSearch")}
               </Link>

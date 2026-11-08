@@ -47,14 +47,14 @@ export const APP_ROUTES = [
     capability: "billing",
     labelKey: "billing",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "charges",
     capability: "billing",
     labelKey: "charges",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "doctors",

@@ -577,7 +577,7 @@ test.describe("another tab", () => {
     ).toBeVisible();
     await control(`revoke?email=${encodeURIComponent(ACCOUNTS.doctor)}`);
     await other
-      .getByRole("button", { name: m.queue.lastRead.refresh, exact: true })
+      .getByRole("button", { name: m.shared.lastRead.refresh, exact: true })
       .click();
     await expect(other).toHaveURL(/\/en\/sign-in/);
 
@@ -599,7 +599,7 @@ test.describe("another tab", () => {
     ).toBeVisible();
     await control(`revoke?email=${encodeURIComponent(ACCOUNTS.doctor)}`);
     await other
-      .getByRole("button", { name: m.queue.lastRead.refresh, exact: true })
+      .getByRole("button", { name: m.shared.lastRead.refresh, exact: true })
       .click();
 
     await expect(page).toHaveURL(/\/en\/sign-in/);

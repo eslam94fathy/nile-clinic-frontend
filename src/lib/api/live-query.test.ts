@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LIVE_QUERY, retryLiveRead } from "./live-query";
+import { LIVE_QUERY, ON_DEMAND_QUERY, retryLiveRead } from "./live-query";
 
 const failure = (status: number) => ({ status, fieldErrors: {} });
 
@@ -21,5 +21,19 @@ describe("the live policy", () => {
 
   it.each([400, 401, 403, 404, 409, 422])("never retries %i", (status) => {
     expect(retryLiveRead(0, failure(status))).toBe(false);
+  });
+});
+
+describe("the on-demand policy", () => {
+  it("never reads by itself: no interval, no focus, no reconnect", () => {
+    expect(ON_DEMAND_QUERY.refetchInterval).toBe(false);
+    expect(ON_DEMAND_QUERY.refetchOnWindowFocus).toBe(false);
+    expect(ON_DEMAND_QUERY.refetchOnReconnect).toBe(false);
+  });
+
+  it("reads again whenever asked, and fails visibly, as the live policy does", () => {
+    expect(ON_DEMAND_QUERY.staleTime).toBe(0);
+    expect(ON_DEMAND_QUERY.networkMode).toBe("always");
+    expect(ON_DEMAND_QUERY.retry).toBe(retryLiveRead);
   });
 });

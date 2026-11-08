@@ -12,16 +12,17 @@ import type { ApiResult } from "@/lib/api/api-error";
 import { type PageMeta, pageHref } from "@/lib/api/pagination";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { readClinicQueue, readDoctorQueue } from "../api/queue";
-import { groupByDoctor } from "../group-by-doctor";
-import { useKeepFocus } from "../hooks/use-keep-focus";
-import { useLiveList } from "../hooks/use-live-list";
+import { groupByDoctor } from "@/lib/group-by-doctor";
+import { useKeepFocus } from "@/lib/use-keep-focus";
+import { useLiveList } from "@/lib/api/use-live-list";
+import { QUEUE_ROOT_KEY } from "../query-keys";
 import type { EntryAction } from "../offered-entry-actions";
 import { QUEUE_STATUSES, type QueueEntry, type QueueFilters } from "../types";
 import {
   EntryActionDialog,
   type EntryActionRequest,
 } from "./entry-action-dialog";
-import { LastRead } from "./last-read";
+import { LastRead } from "@/components/shared/live/last-read";
 import { actionMarker, QueueGroup } from "./queue-group";
 
 type DoctorOption = { id: number; name: string; is_active: boolean };
@@ -52,6 +53,7 @@ export function ClinicQueue({
   const { doctorId, status, page } = filters;
 
   const list = useLiveList<ClinicList>({
+    rootKey: QUEUE_ROOT_KEY,
     queryKey:
       doctorId === null
         ? ["queue", "clinic", { status, page }]

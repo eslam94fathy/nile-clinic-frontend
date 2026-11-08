@@ -1,17 +1,19 @@
-import type { QueueEntry } from "./types";
+type WithDoctor = { doctor: { id: number } };
 
-export type DoctorGroup = {
-  doctor: QueueEntry["doctor"];
-  entries: QueueEntry[];
+export type DoctorGroup<Row extends WithDoctor> = {
+  doctor: Row["doctor"];
+  rows: Row[];
 };
 
 /** Adjacent rows of one doctor, in the API's order, which is never changed here. */
-export function groupByDoctor(entries: QueueEntry[]): DoctorGroup[] {
-  const groups: DoctorGroup[] = [];
-  for (const entry of entries) {
+export function groupByDoctor<Row extends WithDoctor>(
+  rows: readonly Row[],
+): DoctorGroup<Row>[] {
+  const groups: DoctorGroup<Row>[] = [];
+  for (const row of rows) {
     const current = groups.at(-1);
-    if (current?.doctor.id === entry.doctor.id) current.entries.push(entry);
-    else groups.push({ doctor: entry.doctor, entries: [entry] });
+    if (current?.doctor.id === row.doctor.id) current.rows.push(row);
+    else groups.push({ doctor: row.doctor, rows: [row] });
   }
   return groups;
 }

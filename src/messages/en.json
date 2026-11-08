@@ -193,6 +193,17 @@
     "notices": {
       "label": "Notifications",
       "close": "Close notification"
+    },
+    "lastRead": {
+      "label": "Last updated:",
+      "refresh": "Refresh now",
+      "outOfDate": "This may be out of date, as the latest update failed. Trying again by itself.",
+      "outOfDateOnDemand": "This may be out of date, as the latest update failed. Choose “Refresh now” to try again."
+    },
+    "paymentMethod": {
+      "cash": "Cash",
+      "card": "Card",
+      "wallet": "Wallet"
     }
   },
   "preview": {
@@ -662,7 +673,8 @@
     "recordLinks": {
       "book": "Book appointment",
       "view": "View appointments",
-      "addToQueue": "Add to today's queue"
+      "addToQueue": "Add to today's queue",
+      "charges": "Charges"
     },
     "chooser": {
       "caption": "Patients found",
@@ -671,6 +683,11 @@
     },
     "chosen": {
       "notFound": "No patient was found with this number."
+    },
+    "filter": {
+      "open": "Filter by patient",
+      "close": "Close patient search",
+      "clear": "Clear patient"
     }
   },
   "appointments": {
@@ -718,9 +735,6 @@
       "moveDescription": "Every upcoming appointment fits its doctor's current hours."
     },
     "patientFilter": {
-      "open": "Filter by patient",
-      "close": "Close patient search",
-      "clear": "Clear patient",
       "heading": "Showing appointments for this patient"
     },
     "details": {
@@ -844,11 +858,6 @@
       "anyStatus": "Any status",
       "inactiveDoctor": "{name} (inactive)",
       "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to filter by doctor."
-    },
-    "lastRead": {
-      "label": "Last updated:",
-      "refresh": "Refresh now",
-      "outOfDate": "This may be out of date, as the latest update failed. Trying again by itself."
     },
     "empty": {
       "todayTitle": "Nobody has arrived today",
@@ -1057,6 +1066,182 @@
       "recordHeading": "Earlier record",
       "back": "Back to history",
       "hint": "Each opening writes an entry in the audit trail. What you're writing stays as it is."
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "description": "A day's visits and what each one owes. Today's list updates by itself.",
+    "listHeading": "Visits",
+    "caption": "Visits for {doctor}",
+    "seeQueue": "Today's queue",
+    "readFailed": "The visits couldn't be read.",
+    "walkIn": "Walk-in",
+    "fields": {
+      "date": "Date",
+      "doctor": "Doctor",
+      "patient": "Patient",
+      "visit": "Visit",
+      "chargeStatus": "Charge",
+      "balance": "Balance",
+      "actions": "Actions"
+    },
+    "filters": {
+      "anyDoctor": "Any doctor",
+      "anyChargeStatus": "Any charge status",
+      "inactiveDoctor": "{name} (inactive)",
+      "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to filter by doctor."
+    },
+    "empty": {
+      "dateTitle": "No visits on this date",
+      "dateDescription": "Visits appear here once patients are checked in or added as walk-ins.",
+      "filteredTitle": "No visits match",
+      "filteredDescription": "Try another doctor or charge status."
+    },
+    "charge": {
+      "action": "Charge visit",
+      "working": "Charging…",
+      "done": "Visit charged: {amount}.",
+      "refused": "The visit for {name} wasn't charged.",
+      "unknownOutcome": "The connection failed, so we can't tell whether the visit for {name} was charged. The list is being read again, so check it before trying again.",
+      "dismiss": "Dismiss"
+    },
+    "viewCharge": "View charge"
+  },
+  "charges": {
+    "title": "Charges",
+    "description": "Find charges, and what is still owed.",
+    "caption": "Charges",
+    "readFailed": "The charges couldn't be read.",
+    "patientFilterHeading": "Showing charges for this patient",
+    "open": "Open",
+    "fields": {
+      "from": "From",
+      "to": "To",
+      "date": "Date",
+      "status": "Status",
+      "doctor": "Doctor",
+      "patient": "Patient",
+      "fee": "Fee",
+      "discount": "Discount",
+      "amountDue": "Amount due",
+      "amountPaid": "Amount paid",
+      "balance": "Balance"
+    },
+    "filters": {
+      "anyDoctor": "Any doctor",
+      "anyStatus": "Any status",
+      "inactiveDoctor": "{name} (inactive)",
+      "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to filter by doctor."
+    },
+    "range": {
+      "tooLong": "The date range can be at most 92 days.",
+      "reversed": "The last date must be on or after the first."
+    },
+    "empty": {
+      "rangeTitle": "No charges in this range",
+      "rangeDescription": "Charges appear here once visits are charged on Billing.",
+      "filteredTitle": "No charges match",
+      "filteredDescription": "Try another range, doctor, or status."
+    },
+    "details": {
+      "title": "Charge {number}",
+      "back": "Back to charges",
+      "summaryHeading": "Charge",
+      "amountsHeading": "Amounts",
+      "date": "Date",
+      "status": "Status",
+      "doctor": "Doctor",
+      "patient": "Patient",
+      "patientNumber": "Patient number",
+      "phone": "Phone",
+      "chargedBy": "Charged by",
+      "chargedAt": "Charged at",
+      "fee": "Fee",
+      "discount": "Discount",
+      "amountDue": "Amount due",
+      "amountPaid": "Amount paid",
+      "balance": "Balance",
+      "discountReason": "Reason for the discount",
+      "discountedBy": "Discount set by",
+      "discountedAt": "Discount set at",
+      "paymentsHeading": "Payments",
+      "paymentsCaption": "Payments on this charge",
+      "noPayments": "No payments yet.",
+      "refundsHeading": "Refunds",
+      "refundsCaption": "Refunds on this charge",
+      "noRefunds": "No refunds.",
+      "amount": "Amount",
+      "method": "Method",
+      "receivedBy": "Received by",
+      "receivedAt": "Received at",
+      "refundedBy": "Refunded by",
+      "refundedAt": "Refunded at",
+      "reason": "Reason",
+      "cancelledTitle": "This charge is cancelled",
+      "cancelledDescription": "It stays on record, and takes no more changes.",
+      "cancelReason": "Reason",
+      "cancelledBy": "Cancelled by",
+      "cancelledAt": "Cancelled at",
+      "visitGone": "This visit no longer exists, as its check-in was undone.",
+      "actionsHeading": "Actions",
+      "nothingOffered": "Nothing more can be done with this charge."
+    },
+    "outcomeUnknown": "The connection failed, so we can't tell whether this was recorded. The charge has been read again: check its payments and refunds below before trying again.",
+    "payment": {
+      "heading": "Record payment",
+      "amountLabel": "Amount, in Egyptian pounds",
+      "amountHint": "Starts as the full balance. Change it for a part payment.",
+      "amountRule": "Enter an amount above 0 and at most 100000, with at most two decimals.",
+      "aboveBalance": "The amount can't be more than the balance.",
+      "methodLabel": "Method",
+      "methodRule": "Choose how the patient paid.",
+      "submit": "Record payment",
+      "confirmTitle": "Record this payment?",
+      "confirmDescription": "{amount} {how}, from {name}. A payment can't be edited or removed afterwards.",
+      "confirm": "Record payment",
+      "done": "Recorded {amount} {how}."
+    },
+    "refund": {
+      "heading": "Record refund",
+      "amountLabel": "Amount, in Egyptian pounds",
+      "amountHint": "At most what has been paid.",
+      "amountRule": "Enter an amount above 0 and at most 100000, with at most two decimals.",
+      "abovePaid": "The amount can't be more than what has been paid.",
+      "methodLabel": "Method",
+      "methodRule": "Choose how the money was returned.",
+      "reasonLabel": "Reason",
+      "reasonRule": "Give a reason, of at most 500 characters.",
+      "submit": "Record refund",
+      "confirmTitle": "Record this refund?",
+      "confirmDescription": "{amount} {how}, to {name}. A refund can't be edited or removed afterwards.",
+      "confirm": "Record refund",
+      "done": "Refunded {amount} {how}."
+    },
+    "discount": {
+      "heading": "Discount",
+      "amountLabel": "Discount, in Egyptian pounds",
+      "amountHint": "Saving replaces any discount. A discount of 0 removes it. The fee stays as charged.",
+      "amountRule": "Enter 0, or an amount of at most 100000, with at most two decimals.",
+      "reasonLabel": "Reason",
+      "reasonRule": "Give a reason, of at most 500 characters.",
+      "submit": "Save discount",
+      "saving": "Saving…",
+      "done": "Discount saved."
+    },
+    "cancel": {
+      "action": "Cancel charge",
+      "title": "Cancel this charge?",
+      "description": "It stays on record and takes no more payments. The visit can be charged again.",
+      "reasonLabel": "Reason",
+      "reasonRule": "Give a reason, of at most 500 characters.",
+      "confirm": "Cancel charge",
+      "keep": "Keep the charge",
+      "done": "Charge cancelled."
+    },
+    "methodPhrase": {
+      "cash": "in cash",
+      "card": "by card",
+      "wallet": "by wallet"
     }
   }
 }

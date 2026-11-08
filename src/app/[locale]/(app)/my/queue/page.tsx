@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { LoadingState } from "@/components/shared/states/loading-state";
 import { ScreenGate } from "@/features/auth/public-server";
-import { LiveQueryProvider } from "@/features/queue/components/live-query-provider";
+import { LiveQueryProvider } from "@/components/shared/live/live-query-provider";
 import { OwnQueue } from "@/features/queue/components/own-queue";
 import { getEnv } from "@/lib/config/env";
 import { ScopedMessages } from "@/lib/i18n/scoped-messages";

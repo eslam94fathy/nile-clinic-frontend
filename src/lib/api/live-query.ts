@@ -26,3 +26,19 @@ export const LIVE_QUERY = {
   networkMode: "always",
   retry: retryLiveRead,
 } as const;
+
+/**
+ * A list that reads in the browser, but never by itself: when it's opened, when its query changes, after an action,
+ * and when the person asks (ADR 0015). Billing uses it for any date but today, so that one table has one way of
+ * reading. The same audit rule applies as for `LIVE_QUERY`.
+ */
+export const ON_DEMAND_QUERY = {
+  staleTime: 0,
+  refetchInterval: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  networkMode: "always",
+  retry: retryLiveRead,
+} as const;
+
+export type ListPolicy = typeof LIVE_QUERY | typeof ON_DEMAND_QUERY;

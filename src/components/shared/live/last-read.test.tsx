@@ -9,7 +9,7 @@ import { LastRead } from "./last-read";
 
 afterEach(cleanup);
 
-const t = messagesByLocale.en.queue.lastRead;
+const t = messagesByLocale.en.shared.lastRead;
 // 10:00 in UTC, so 12:00 in Cairo, whatever zone this computer is in.
 const READ_AT = Date.UTC(2026, 10, 7, 10, 0);
 
@@ -80,5 +80,11 @@ describe("LastRead", () => {
 
     expect(screen.getByRole("status")).toBe(status);
     expect(status.textContent).toBe(t.outOfDate);
+  });
+
+  it("doesn't promise a retry for a list that reads only when asked", () => {
+    setUp({ outOfDate: true, retriesBySelf: false });
+
+    expect(screen.getByRole("status").textContent).toBe(t.outOfDateOnDemand);
   });
 });

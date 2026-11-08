@@ -356,7 +356,9 @@ for (const locale of ["ar", "en"] as const) {
         expect(await seriousIssues(page)).toEqual([]);
 
         await page.goto(`/${locale}/appointments`);
-        await page.getByRole("button", { name: a.patientFilter.open }).click();
+        await page
+          .getByRole("button", { name: t.patients.filter.open })
+          .click();
         expect(await seriousIssues(page)).toEqual([]);
       });
 
@@ -485,10 +487,10 @@ for (const locale of ["ar", "en"] as const) {
 
         await script("queue", 500);
         await page
-          .getByRole("button", { name: q.lastRead.refresh, exact: true })
+          .getByRole("button", { name: t.shared.lastRead.refresh, exact: true })
           .click();
         await expect(
-          page.getByText(q.lastRead.outOfDate, { exact: true }),
+          page.getByText(t.shared.lastRead.outOfDate, { exact: true }),
         ).toBeVisible();
         expect(await seriousIssues(page)).toEqual([]);
         await script("queue", 0);
@@ -498,6 +500,128 @@ for (const locale of ["ar", "en"] as const) {
           .locator("visible=true")
           .click();
         await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("billing: today's visits, another date, and a refusal", async ({
+        page,
+      }) => {
+        const bl = t.billing;
+        await control("clinic/queue-entry?patient=2");
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/billing`);
+        await expect(page.getByRole("table").first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page
+          .getByRole("button", { name: bl.charge.action, exact: true })
+          .locator("visible=true")
+          .click();
+        await expect(page.getByRole("alert").first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/billing?date=2026-01-01`);
+        await expect(
+          page.getByText(bl.empty.dateTitle, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("charges: the list, a range that can't be read, and the patient filter", async ({
+        page,
+      }) => {
+        const ch = t.charges;
+        await control("clinic/charge?payments=100");
+        await signIn(page, "receptionist", locale);
+        await page.goto(`/${locale}/charges`);
+        await expect(page.getByRole("table").first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/charges?from=2026-01-01&to=2026-12-31`);
+        await expect(
+          page.getByText(ch.range.tooLong, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/charges?patient_id=2`);
+        await expect(
+          page.getByText(ch.patientFilterHeading, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("charges: one charge, with every form and dialog", async ({
+        page,
+      }) => {
+        const ch = t.charges;
+        const { id } = (await control(
+          "clinic/charge?payments=100&refunds=20&discount=30",
+        )) as { id: number };
+        const empty = (await control("clinic/charge")) as { id: number };
+        await signIn(page, "administrator", locale);
+        await page.goto(`/${locale}/charges/${id}`);
+        await expect(
+          page.getByRole("heading", { name: ch.payment.heading }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page
+          .getByRole("button", { name: ch.payment.submit, exact: true })
+          .click();
+        await expect(
+          page.getByText(ch.payment.methodRule, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        // Within its own form, as the refund form has a "Method" group too.
+        await page
+          .getByRole("region", { name: ch.payment.heading, exact: true })
+          .getByRole("group")
+          .getByText(t.shared.paymentMethod.cash, { exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: ch.payment.submit, exact: true })
+          .click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: t.shared.confirm.cancel })
+          .click();
+
+        await script(`charges/${id}/payments`, -2);
+        await page
+          .getByRole("button", { name: ch.payment.submit, exact: true })
+          .click();
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: ch.payment.confirm, exact: true })
+          .click();
+        await expect(
+          page.getByText(ch.outcomeUnknown, { exact: true }),
+        ).toBeVisible();
+        // The payment went through before its answer was lost, so the page is read again. Measured once that read has
+        // settled, as it replaces the forms' buttons.
+        await expect(
+          page
+            .getByRole("table", { name: ch.details.paymentsCaption })
+            .getByRole("row"),
+        ).toHaveCount(3);
+        expect(await seriousIssues(page)).toEqual([]);
+        await script(`charges/${id}/payments`, 0);
+
+        await page.goto(`/${locale}/charges/${empty.id}`);
+        await page
+          .getByRole("button", { name: ch.cancel.action, exact: true })
+          .click();
+        await expect(page.getByRole("alertdialog")).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        const cancelled = (await control("clinic/charge?cancelled=1")) as {
+          id: number;
+        };
+        await page.goto(`/${locale}/charges/${cancelled.id}`);
+        await expect(page.getByRole("note")).toBeVisible();
         expect(await seriousIssues(page)).toEqual([]);
       });
 

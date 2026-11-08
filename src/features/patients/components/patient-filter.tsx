@@ -4,16 +4,26 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChosenPatient, PatientChooser } from "@/features/patients/public";
+import { ChosenPatient } from "./chosen-patient";
+import { PatientChooser } from "./patient-chooser";
 import { readPositiveId } from "@/lib/api/read-positive-id";
 import { Link, usePathname, useRouter } from "@/lib/i18n/navigation";
 
 /**
- * Sits outside the filter bar, because search terms must stay out of the address. Only the number chosen
- * goes in it. Choosing or showing a patient never reads their record, so no opening is written.
+ * Narrows a list to one patient. Sits outside the filter bar, because search terms must stay out of the address.
+ * Only the number chosen goes in it. Choosing or showing a patient never reads their record, so no opening is
+ * written. Changing the patient also drops the dates and page, so that the list's default range for this choice
+ * applies.
  */
-export function AppointmentPatientFilter({ value }: { value?: string }) {
-  const t = useTranslations("appointments.patientFilter");
+export function PatientFilter({
+  value,
+  heading,
+}: {
+  value?: string;
+  /** What the list shows for the chosen patient, in the list's own words. */
+  heading: string;
+}) {
+  const t = useTranslations("patients.filter");
   const tChosen = useTranslations("patients.chosen");
   const router = useRouter();
   const pathname = usePathname();
@@ -43,8 +53,8 @@ export function AppointmentPatientFilter({ value }: { value?: string }) {
     );
 
     return (
-      <section aria-label={t("heading")} className="flex flex-col gap-1.5">
-        <p className="text-[0.8125rem] text-muted-foreground">{t("heading")}</p>
+      <section aria-label={heading} className="flex flex-col gap-1.5">
+        <p className="text-[0.8125rem] text-muted-foreground">{heading}</p>
         {id === null ? (
           <div className="flex flex-wrap items-center gap-3">
             <p>{tChosen("notFound")}</p>

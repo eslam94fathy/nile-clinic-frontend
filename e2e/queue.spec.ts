@@ -452,12 +452,12 @@ test.describe("staying current", () => {
 
     await script("queue", 500);
     await nextRead(page);
-    await expect(shown(page, t.lastRead.outOfDate)).toBeVisible();
+    await expect(shown(page, m.shared.lastRead.outOfDate)).toBeVisible();
     await expect(shown(page, BETA)).toBeVisible();
 
     await script("queue", 0);
     await nextRead(page);
-    await expect(page.getByText(t.lastRead.outOfDate)).toBeHidden();
+    await expect(page.getByText(m.shared.lastRead.outOfDate)).toBeHidden();
     await expect(shown(page, BETA)).toBeVisible();
   });
 
@@ -472,7 +472,7 @@ test.describe("staying current", () => {
 
     await context.setOffline(true);
     await nextRead(page);
-    await expect(shown(page, t.lastRead.outOfDate)).toBeVisible();
+    await expect(shown(page, m.shared.lastRead.outOfDate)).toBeVisible();
     await context.setOffline(false);
   });
 
@@ -497,7 +497,7 @@ test.describe("staying current", () => {
     await expect(shown(page, BETA)).toBeVisible();
 
     await clearCalls();
-    await button(page, t.lastRead.refresh).click();
+    await button(page, m.shared.lastRead.refresh).click();
     await expect.poll(() => callsTo("queue")).toBe(1);
   });
 
@@ -854,7 +854,7 @@ test.describe("a doctor's list", () => {
     await script("GET doctors/me/queue", 500);
     await callNext(page);
     await expect(current(page)).toContainText(BETA);
-    await expect(shown(page, t.lastRead.outOfDate)).toBeVisible();
+    await expect(shown(page, m.shared.lastRead.outOfDate)).toBeVisible();
   });
 
   test("a refusal stays in the dialog, and the list is read again", async ({

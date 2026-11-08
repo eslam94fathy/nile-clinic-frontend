@@ -2,10 +2,7 @@
 
 import { type QueryKey, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiError, ApiResult } from "@/lib/api/api-error";
-import { LIVE_QUERY } from "@/lib/api/live-query";
-
-/** Every list on screen is under this, so that one action refreshes them all. */
-export const QUEUE_ROOT_KEY = ["queue"] as const;
+import { LIVE_QUERY, type ListPolicy } from "@/lib/api/live-query";
 
 /** The API has decided, and asking again every 15 seconds wouldn't change that. */
 const stopsReading = (error: ApiError | null) =>
@@ -26,21 +23,27 @@ export type LiveList<Data> = {
 };
 
 /**
- * A list that reads itself while it's on screen (ADR 0013). **Only for reads the backend doesn't audit.** Failed
- * reads keep the last list and carry on. A `403` or `404` removes the data and stops, including on returning to
- * the page and on focus, because `enabled` sees the error.
+ * A list that reads itself while it's on screen (ADR 0013), or, under `ON_DEMAND_QUERY`, only when asked (ADR 0015).
+ * **Only for reads the backend doesn't audit.** Failed reads keep the last list and carry on. A `403` or `404` removes
+ * the data and stops, including on returning to the page and on focus, because `enabled` sees the error.
  */
 export function useLiveList<Data>({
+  rootKey,
   queryKey,
   read,
+  policy = LIVE_QUERY,
 }: {
+  /** Every list of one feature is under this, so that one action refreshes them all, and no other feature's. */
+  rootKey: QueryKey;
+  /** Must start with `rootKey`. */
   queryKey: QueryKey;
   read: () => Promise<ApiResult<Data>>;
+  policy?: ListPolicy;
 }): LiveList<Data> {
   const client = useQueryClient();
 
   const query = useQuery<Data, ApiError>({
-    ...LIVE_QUERY,
+    ...policy,
     queryKey,
     enabled: ({ state }) => !stopsReading(state.error),
     queryFn: async () => {
@@ -64,6 +67,6 @@ export function useLiveList<Data>({
     outOfDate: query.data !== undefined && query.isError,
     reading: query.isFetching,
     readAt: query.dataUpdatedAt,
-    refresh: () => client.invalidateQueries({ queryKey: QUEUE_ROOT_KEY }),
+    refresh: () => client.invalidateQueries({ queryKey: rootKey }),
   };
 }

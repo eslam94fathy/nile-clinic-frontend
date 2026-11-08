@@ -13,7 +13,7 @@ import { UserText } from "@/components/shared/values/user-text";
 import { Button } from "@/components/ui/button";
 import { PatientLink } from "@/features/patients/public";
 import { Link } from "@/lib/i18n/navigation";
-import type { DoctorGroup } from "../group-by-doctor";
+import type { DoctorGroup } from "@/lib/group-by-doctor";
 import {
   type EntryAction,
   offeredEntryActions,
@@ -33,7 +33,7 @@ export function QueueGroup({
   onAction,
   pagination,
 }: {
-  group: DoctorGroup;
+  group: DoctorGroup<QueueEntry>;
   timeZone: string;
   onAction: (entry: QueueEntry, action: EntryAction) => void;
   /** On the last group only, as the API's pages aren't per doctor. */
@@ -134,7 +134,7 @@ export function QueueGroup({
       <DataTable
         caption={t("caption", { doctor: group.doctor.name })}
         columns={columns}
-        rows={group.entries}
+        rows={group.rows}
         getRowKey={(row) => String(row.id)}
         state="ready"
         pagination={pagination}

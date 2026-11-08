@@ -5,11 +5,11 @@ import { LoadingState } from "@/components/shared/states/loading-state";
 import { Button } from "@/components/ui/button";
 import { readAppointments } from "@/features/appointments/api/appointments-server";
 import { AppointmentList } from "@/features/appointments/components/appointment-list";
-import { AppointmentPatientFilter } from "@/features/appointments/components/appointment-patient-filter";
 import { AppointmentViewLinks } from "@/features/appointments/components/appointment-view-links";
 import { resolveRange } from "@/features/appointments/resolve-range";
 import { ScreenGate } from "@/features/auth/public-server";
 import { readAllDoctors } from "@/features/doctors/api/doctors-server";
+import { PatientFilter } from "@/features/patients/public";
 import { firstParam } from "@/lib/api/read-resource";
 import { getEnv } from "@/lib/config/env";
 import { clinicToday } from "@/lib/format/clinic-today";
@@ -63,8 +63,9 @@ async function Appointments({
         locale={locale}
         namespaces={["appointments", "patients", "auth"]}
       >
-        <AppointmentPatientFilter
+        <PatientFilter
           key={filters.patient_id ?? "none"}
+          heading={t("patientFilter.heading")}
           {...(filters.patient_id ? { value: filters.patient_id } : {})}
         />
       </ScopedMessages>
