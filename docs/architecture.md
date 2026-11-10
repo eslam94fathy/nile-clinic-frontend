@@ -103,6 +103,14 @@ asks the person to check its payments before trying again. Amounts stay text fro
 and compared on their digits by `lib/format/amount.ts`. Charges and a charge's page read on the server and refresh after each action,
 under ADR 0011.
 
+**Reports show the API's figures and nothing else.** The four reports in `features/reports` read in the browser under the `onDemand`
+policy, inside their own `LiveQueryProvider` with the root key `["reports"]` ([ADR 0016](decisions/0016-reports-read-on-demand.md)): when
+opened, when a choice or page changes, and on "Refresh", so a failed reread keeps the figures with a notice. None is audited. The period
+and doctor live in the address and are shared by the four through their tabs; a period the API would refuse isn't read at all, because the
+component that reads isn't mounted. No figure is added up, rounded, or averaged here, and a `null` average or rate reads "Not available".
+The one chart, net money by day, is HTML and CSS sized from exact whole piastres (`toPiastres`), beside a table of the same figures, with
+no library ([ADR 0017](decisions/0017-charts-without-a-library.md)).
+
 **A confirmation sits above anything a refresh can remove.** The queue's dialogs hold their own copy of what they're about, because a refresh could otherwise close one under someone, or change what it says.
 
 **Proxy rules**

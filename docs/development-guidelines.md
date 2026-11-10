@@ -131,6 +131,8 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
   `parseFloat` or `Number`.
 - Check and compare an amount someone typed with `lib/format/amount.ts`: `normalizeAmount`, `isAmount`, and `compareAmounts`, which
   work on the digits. Show a typed amount with `toMoneyText`. Never work out an amount to show; show the API's.
+- Never work out a figure to show: no totals, averages, or rates in the frontend, as reports send their own. A `null` figure is "Not
+  available", never `0` or the dash. To size a chart from money, use `toPiastres`, whose exact integers label nothing (ADR 0017).
 
 ## Security and privacy
 

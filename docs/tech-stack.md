@@ -85,7 +85,7 @@ Nothing at present. A package is added by the phase that needs it.
 | `next-themes` | **Rejected** | About 40 lines of project code do this, as the bundled Next.js guide shows. Last published in March 2025. See [ADR 0007](decisions/0007-design-system-foundation.md) |
 | `zustand` | **Deferred, not installed** | No justified global client state today: session comes from the server, locale from the URL, server data from TanStack Query. Revisit only with a concrete need |
 | `@tanstack/react-table` | **Deferred, not installed** | Its main value is client sorting, filtering, and pagination. This API has no sort parameters and does all paging and filtering server-side. Phase 2 confirmed that a thin `DataTable` over the shadcn table suffices. Revisit only if column visibility or similar is required |
-| `recharts` | **Deferred to reports phase** | Only reports need charts. Decide with that spec |
+| `recharts` | **Rejected** | Phase 10 has one bar chart, drawn with HTML and CSS: a library would bring its `d3` packages for one use, work in floating-point numbers, and not follow `dir`. See [ADR 0017](decisions/0017-charts-without-a-library.md). A second, different chart would reopen this |
 | `msw` | **Not needed so far** | Phase 3 found that a stubbed `fetch` covers component tests, and the fake backend covers end-to-end tests |
 | `jose` | **Not needed** | `iron-session` covers sealing, and the app doesn't verify JWTs |
 

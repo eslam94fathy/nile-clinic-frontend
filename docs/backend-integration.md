@@ -310,6 +310,16 @@ From the source only, not exercised: `409` `patient_with_another_doctor`, `409` 
 - The patient's name and phone and the amounts typed stayed out of every address visited, and a refund's reason and the patient's
   name out of browser storage and the application server's log.
 
+**Reports, confirmed on the running API** (2026-11-10, commit `dff2dca`, by `e2e/live/reports.spec.ts`):
+
+- Opening all four reports, for the clinic and for one doctor, writes no audit entry of any kind.
+- Every figure the app shows matched the API's own for the same query: Money collected's totals for one doctor, every Billing
+  total, Activity's new patients, booked and walk-in visits and no-show rate, and Times' average wait.
+- With `doctor_id`, Activity leaves `totals.new_patients` out rather than sending zero.
+- A receptionist and a doctor are refused every report.
+- Not exercised live: a no-show, a seen visit never charged, and a range refusal, which the app never sends (it checks the period
+  first).
+
 **Payments, from the source** (`app/Modules/Payments`), not exercised beyond the above:
 
 - No read writes an audit entry: `GET /visits`, `GET /charges`, and `GET /charges/{id}`. Each change writes one entry of its own

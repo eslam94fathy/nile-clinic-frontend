@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, the queue, medical records, and billing exist.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, the queue, medical records, billing, and reports exist.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -33,7 +33,7 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/queue/walk-in` | A R | Add a walk-in, with a patient carried from their page | `POST /queue/walk-ins` |
 | `/billing` | A R | A date's visits and balances, charge a visit. Reads itself while it shows today | `GET /visits`, `POST /visits/{id}/charge` |
 | `/charges`, `/charges/[id]` | A R | Find charges over up to 92 days, the last 7 by default; payments and cancelling on the charge's page. Discount and refund for A. Reached also from a patient's page | `/charges*` |
-| `/reports/*` | A | Money collected, billing, activity, times | `/reports/*` |
+| `/reports/*` | A | Money collected (with a chart of net by day), Charges by doctor, Activity, Times, sharing a period of up to 366 days, this month by default, and a doctor. `/reports` is Money collected | `/reports/*` |
 | `/audit` | A | Search the trail | `GET /audit-entries` |
 | `/my/queue` | D | Own queue, call next, finish | `/doctors/me/queue*` |
 | `/my/appointments`, `/my/appointments/[id]` | D | Own appointments, read only | `/doctors/me/appointments*` |
