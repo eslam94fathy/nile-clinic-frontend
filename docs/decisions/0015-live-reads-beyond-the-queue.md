@@ -35,3 +35,4 @@ of the pieces Phase 7 built inside `features/queue`.
 - A visible Billing page for today keeps a session alive, as the queue already does, under decision Q2.
 - `live-query.ts` now holds two policies, both in use. ADR 0005's "normal" kind stays unbuilt.
 - The queue's tests move with the pieces they test, so the behavior Phase 7 measured stays measured.
+- [ADR 0016](0016-reports-read-on-demand.md) later puts Phase 10's reports under the `onDemand` policy too.

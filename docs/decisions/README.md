@@ -20,6 +20,8 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0013](0013-live-reads.md) | Live reads through TanStack Query, on the queue's pages only | Accepted |
 | [0014](0014-writing-medical-records.md) | Saving by a person's action only, a guard on leaving, and answering a `401` while writing a record | Accepted |
 | [0015](0015-live-reads-beyond-the-queue.md) | Billing reads live for today and on demand otherwise; the live pieces move to shared places | Accepted |
+| [0016](0016-reports-read-on-demand.md) | Reports read in the browser on demand, never by themselves | Accepted |
+| [0017](0017-charts-without-a-library.md) | The one chart is drawn without a library; `recharts` rejected | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.
