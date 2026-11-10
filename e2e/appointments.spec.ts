@@ -128,8 +128,8 @@ test.describe("who can reach appointment pages", () => {
   }
 
   test("later phases' placeholders are unchanged", async ({ page }) => {
-    await signIn(page, "receptionist");
-    await page.goto("/en/billing");
+    await signIn(page, "administrator");
+    await page.goto("/en/audit");
     await expect(shown(page, m.shell.placeholderHeading)).toBeVisible();
   });
 });
@@ -271,7 +271,7 @@ test.describe("filtering by patient", () => {
     await signIn(page, "receptionist");
     await page.goto("/en/appointments");
 
-    await page.getByRole("button", { name: t.patientFilter.open }).click();
+    await page.getByRole("button", { name: m.patients.filter.open }).click();
     await choosePatient(page, "Synthetic Patient Beta");
 
     await expect(page).toHaveURL(/\/en\/appointments\?patient_id=2$/);
@@ -284,7 +284,7 @@ test.describe("filtering by patient", () => {
     );
     expect(await openings(2)).toBe(0);
 
-    await page.getByRole("link", { name: t.patientFilter.clear }).click();
+    await page.getByRole("link", { name: m.patients.filter.clear }).click();
     await expect(page).toHaveURL(/\/en\/appointments$/);
   });
 

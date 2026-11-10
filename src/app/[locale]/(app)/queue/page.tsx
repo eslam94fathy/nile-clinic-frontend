@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScreenGate } from "@/features/auth/public-server";
 import { readAllDoctors } from "@/features/doctors/api/doctors-server";
 import { ClinicQueue } from "@/features/queue/components/clinic-queue";
-import { LiveQueryProvider } from "@/features/queue/components/live-query-provider";
+import { LiveQueryProvider } from "@/components/shared/live/live-query-provider";
 import { readQueueFilters } from "@/features/queue/read-queue-filters";
 import { firstParam } from "@/lib/api/read-resource";
 import { getEnv } from "@/lib/config/env";

@@ -298,6 +298,40 @@ From the source only, not exercised: `409` `patient_with_another_doctor`, `409` 
 - Another doctor's finalized record reads only while the patient is on this doctor's list today, and stops once they're marked as left. Changing it, or adding to it, is `403`.
 - Finalizing an incomplete record is `422`, naming every missing field at once, with lines numbered as sent, such as `prescriptions.0.dosage`. Saving over a finalized record is `422` under `encounter`. A save missing a key is `422`, and a draft refuses an addendum with `422`.
 
+**Payments, confirmed on the running API** (2026-11-08, commit `dff2dca`, by `e2e/live/billing.spec.ts`):
+
+- Opening and reloading Billing, Charges, and a charge writes no audit entry of any kind, and showing a patient there writes no
+  `patient.opened`.
+- Charging writes one `charge.created`, at the doctor's fee. Each payment writes one `payment.recorded`; a discount one
+  `discount.set`, leaving the fee; a refund one `refund.recorded`, leaving the payment; and cancelling one `charge.cancelled`, after
+  which the visit can be charged again.
+- Undoing the check-in of a visit with an active charge is `422`, and the queue's dialog shows the API's message.
+- A receptionist's refund is `403`, and writes no entry.
+- The patient's name and phone and the amounts typed stayed out of every address visited, and a refund's reason and the patient's
+  name out of browser storage and the application server's log.
+
+**Reports, confirmed on the running API** (2026-11-10, commit `dff2dca`, by `e2e/live/reports.spec.ts`):
+
+- Opening all four reports, for the clinic and for one doctor, writes no audit entry of any kind.
+- Every figure the app shows matched the API's own for the same query: Money collected's totals for one doctor, every Billing
+  total, Activity's new patients, booked and walk-in visits and no-show rate, and Times' average wait.
+- With `doctor_id`, Activity leaves `totals.new_patients` out rather than sending zero.
+- A receptionist and a doctor are refused every report.
+- Not exercised live: a no-show, a seen visit never charged, and a range refusal, which the app never sends (it checks the period
+  first).
+
+**Payments, from the source** (`app/Modules/Payments`), not exercised beyond the above:
+
+- No read writes an audit entry: `GET /visits`, `GET /charges`, and `GET /charges/{id}`. Each change writes one entry of its own
+  (`charge.created`, `payment.recorded`, `refund.recorded`, `discount.set`, `charge.cancelled`). A discount writes one even when it
+  repeats the last. Refusals write none.
+- Every change locks its row first, so a payment above the balance, a refund above what was paid, and a second active charge are
+  impossible even when two arrive at once. There's no idempotency key: see hazard H6.
+- Refusals are `422` under `visit` (left, already charged, no fee), `amount` (above the balance, above what was paid, discount too
+  large), and `charge` (cancelled, money held), plus field keys `amount`, `method`, and `reason`. A charge range over 92 days is
+  `422` under `to`, shared with appointments.
+- `GET /visits` orders by doctor, then queue order, and lists a visit marked as left only while it has an active charge.
+
 **"No medical details" fields.** The API asks that time-off reason, appointment note, and charge
 reasons hold no medical details. Time-off reasons are readable by all staff. These fields need a
 visible hint.
@@ -351,6 +385,14 @@ Queue entries have no `encounter_id`, and `/doctors/me/visits` excludes waiting 
 current visit's record status means joining `/doctors/me/queue` with `/doctors/me/visits?from=today&to=today`
 by id, which "My queue" does, as `encounter_id` and `record_status` come from visits. `POST .../encounter` on a started visit returns
 `422` with no id, so the list is read again for it.
+
+### H6. A money action has no idempotency key
+
+`POST /charges/{id}/payments`, `/refunds`, `/cancel`, `PUT /charges/{id}/discount`, and `POST /visits/{id}/charge` take no key
+that would let the API recognise a repeat. A payment sent twice that fits the balance is recorded twice, and payments can't be
+edited, so only an administrator's refund can correct it. So the frontend sends each action once: one request at a time, never
+retried, and when no usable answer arrives (`isOutcomeUnknown`), it reads the charge again and asks the person to check the payments
+before trying again, rather than resending ([research R4](../specs/009-billing-payments/research.md)).
 
 ## Backend gaps
 

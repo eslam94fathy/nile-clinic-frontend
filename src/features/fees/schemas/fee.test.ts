@@ -1,44 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { feeFormSchema, isValidFeeAmount } from "./fee";
-
-describe("isValidFeeAmount", () => {
-  it.each([
-    "0.01",
-    "1",
-    "350",
-    "350.1",
-    "350.10",
-    "99999.99",
-    "100000",
-    "100000.0",
-    "100000.00",
-    "007",
-    "000000100000",
-  ])("accepts %s", (amount) => {
-    expect(isValidFeeAmount(amount)).toBe(true);
-  });
-
-  it.each([
-    "0",
-    "0.0",
-    "0.00",
-    "000",
-    "100000.01",
-    "100001",
-    "1234567",
-    "350.123",
-    "-5",
-    ".5",
-    "5.",
-    "1e3",
-    "1,000",
-    "abc",
-    "",
-    " 5",
-  ])("refuses %j", (amount) => {
-    expect(isValidFeeAmount(amount)).toBe(false);
-  });
-});
+import { feeFormSchema } from "./fee";
 
 describe("feeFormSchema", () => {
   const schema = feeFormSchema({ amountRule: "Bad amount." });

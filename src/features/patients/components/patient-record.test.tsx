@@ -131,6 +131,18 @@ describe("links to appointments", () => {
     expect(link.getAttribute("data-prefetch")).toBe("false");
     expect(readPatient).toHaveBeenCalledTimes(1);
   });
+
+  it("carries the patient to their charges, and reads nothing more", async () => {
+    readPatient.mockResolvedValue({ ok: true, status: 200, data: record });
+    render(stage());
+    const link = await screen.findByRole("link", {
+      name: t.recordLinks.charges,
+    });
+
+    expect(link.getAttribute("href")).toBe("/charges?patient_id=5");
+    expect(link.getAttribute("data-prefetch")).toBe("false");
+    expect(readPatient).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("when the record is read", () => {

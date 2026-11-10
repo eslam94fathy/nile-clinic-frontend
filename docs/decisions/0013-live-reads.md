@@ -2,6 +2,8 @@
 
 **Status:** Accepted, by the project owner with Phase 7's plan, 2026-11-07
 
+Extended by [ADR 0015](0015-live-reads-beyond-the-queue.md), which adds Billing and moves the live pieces to shared places.
+
 Builds on [ADR 0005](0005-audit-safe-data-fetching.md) and what [ADR 0011](0011-server-reads-and-refresh.md) left to this phase. See
 [research](../../specs/007-queue/research.md), R1 to R5.
 

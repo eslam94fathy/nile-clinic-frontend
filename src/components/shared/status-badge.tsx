@@ -8,7 +8,8 @@ import {
   toneOf,
 } from "./status-mapping";
 
-const toneClasses: Record<StatusTone, string> = {
+/** Also used by a badge that marks a count rather than an API status. */
+export const toneClasses: Record<StatusTone, string> = {
   neutral:
     "border-status-neutral-border bg-status-neutral text-status-neutral-foreground",
   active:

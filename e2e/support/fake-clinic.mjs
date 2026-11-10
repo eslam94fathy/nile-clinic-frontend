@@ -1,6 +1,7 @@
-// The clinic-setup part of the fake backend: staff, specialties, doctors, schedules, slots, time off, and
-// fees. All data is synthetic. Refusals use the same statuses and error keys as the real API, checked
-// against its contracts and form requests, so that the screens' mapping is tested against the real shape.
+// The clinic part of the fake backend: staff, specialties, doctors, schedules, slots, time off, fees, patients,
+// appointments, the queue, medical records, and payments. All data is synthetic. Refusals use the same statuses
+// and error keys as the real API, checked against its contracts and form requests, so that the screens' mapping
+// is tested against the real shape.
 const DAYS = [
   "sunday",
   "monday",
@@ -51,6 +52,55 @@ const clinicClock = () =>
 const dayNumber = (date) => {
   const [year, month, day] = date.split("-").map(Number);
   return Date.UTC(year, month - 1, day) / 86_400_000;
+};
+const REPORT_NAMES = ["money-collected", "billing", "activity", "times"];
+const ZERO_MONEY = { received: "0.00", refunded: "0.00", net: "0.00" };
+// What the API answers for a period with nothing in it. Tests seed anything else.
+const EMPTY_REPORTS = {
+  "money-collected": { totals: ZERO_MONEY, by_method: [], by_day: [] },
+  billing: {
+    rows: [],
+    totals: {
+      active_charges: 0,
+      fees: "0.00",
+      discounts: "0.00",
+      amount_due: "0.00",
+      amount_paid: "0.00",
+      balance: "0.00",
+      cancelled_charges: 0,
+      uncharged_seen_visits: 0,
+    },
+  },
+  activity: {
+    rows: [],
+    totals: {
+      appointments: {
+        scheduled: 0,
+        cancelled: 0,
+        no_show: 0,
+        checked_in: 0,
+        completed: 0,
+      },
+      no_show_rate: null,
+      visits: {
+        waiting: 0,
+        with_doctor: 0,
+        seen: 0,
+        left: 0,
+        booked: 0,
+        walk_in: 0,
+      },
+      new_patients: 0,
+    },
+  },
+  times: {
+    rows: [],
+    totals: {
+      wait: { average_minutes: null, visits: 0 },
+      consultation: { average_minutes: null, visits: 0 },
+      records: { finalized: 0, draft: 0, none: 0 },
+    },
+  },
 };
 const dateOf = (number) =>
   new Date(number * 86_400_000).toISOString().slice(0, 10);
@@ -150,6 +200,10 @@ function freshClinic() {
     queue: [],
     queueNumbers: new Map(),
     encounters: [],
+    charges: [],
+    // Reports' figures are seeded by tests, keyed by report and, optionally, doctor, never worked out here.
+    reports: new Map(),
+    reportReads: [],
     // Each read here is a permanent entry on the real API, so tests count them.
     encounterReads: {
       opened: 0,
@@ -268,7 +322,8 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
   };
   const timeOffBody = (entry) => ({ ...entry });
 
-  function paginate(response, items, query, path) {
+  /** A standard Laravel page of `items`, or `null` for a page or size the API would refuse. */
+  function pageOf(items, query, path) {
     const perPage = Number(query.get("per_page") ?? 15);
     const page = Number(query.get("page") ?? 1);
     if (
@@ -278,13 +333,13 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
       perPage < 1 ||
       perPage > 100
     ) {
-      return refuse(response, { page: ["The page is not valid."] });
+      return null;
     }
 
     const lastPage = Math.max(1, Math.ceil(items.length / perPage));
     const rows = items.slice((page - 1) * perPage, page * perPage);
     const here = `http://127.0.0.1:${port}/api/v1/${path}`;
-    return send(response, 200, {
+    return {
       data: rows,
       links: {
         first: `${here}?page=1`,
@@ -302,7 +357,14 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         to: rows.length ? (page - 1) * perPage + rows.length : null,
         total: items.length,
       },
-    });
+    };
+  }
+
+  function paginate(response, items, query, path) {
+    const page = pageOf(items, query, path);
+    return page
+      ? send(response, 200, page)
+      : refuse(response, { page: ["The page is not valid."] });
   }
 
   const readActiveFilter = (query) => {
@@ -1020,6 +1082,139 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         : send(response, 404, { message: "No queue entry was found." });
     });
 
+  // Payments follow contract 009 and the backend's ChargeService: amounts are text, worked in whole piastres, and
+  // each refusal uses the API's key. Fees are the only price, taken at the moment of charging.
+  const piastres = (text) => {
+    const [whole, decimals = ""] = String(text).split(".");
+    return Number(whole) * 100 + Number(decimals.padEnd(2, "0"));
+  };
+  const money = (total) =>
+    `${Math.floor(total / 100)}.${String(total % 100).padStart(2, "0")}`;
+  const activeChargeOf = (entry) =>
+    clinic.charges.find(
+      (charge) =>
+        charge.queue_entry_id === entry.id && charge.status !== "cancelled",
+    );
+  const dueOf = (charge) => piastres(charge.fee) - piastres(charge.discount);
+  const statusFor = (due, paid) =>
+    due - paid <= 0 ? "paid" : paid > 0 ? "partially_paid" : "unpaid";
+  const chargeSummary = (charge) => {
+    const patient = clinic.patients.find(({ id }) => id === charge.patient_id);
+    const due = dueOf(charge);
+    return {
+      id: charge.id,
+      visit_id: clinic.queue.some(({ id }) => id === charge.queue_entry_id)
+        ? charge.queue_entry_id
+        : null,
+      status: charge.status,
+      date: charge.date,
+      doctor: reference(
+        clinic.doctors.find(({ id }) => id === charge.doctor_id),
+      ),
+      patient: {
+        id: patient.id,
+        full_name: patient.full_name,
+        phone: patient.phone,
+      },
+      fee: charge.fee,
+      discount: charge.discount,
+      amount_due: money(due),
+      amount_paid: money(charge.paid),
+      balance: money(Math.max(0, due - charge.paid)),
+      charged_at: charge.charged_at,
+    };
+  };
+  const chargeBody = (charge) => ({
+    ...chargeSummary(charge),
+    charged_by: charge.charged_by,
+    discount_reason: charge.discount_reason,
+    discounted_by: charge.discounted_by,
+    discounted_at: charge.discounted_at,
+    cancel_reason: charge.cancel_reason,
+    cancelled_by: charge.cancelled_by,
+    cancelled_at: charge.cancelled_at,
+    payments: charge.payments.map((payment) => ({ ...payment })),
+    refunds: charge.refunds.map((refund) => ({ ...refund })),
+  });
+  const visitChargeBody = (entry) => {
+    const charge = activeChargeOf(entry);
+    const patient = clinic.patients.find(({ id }) => id === entry.patient_id);
+    return {
+      id: entry.id,
+      date: entry.date,
+      status: entry.status,
+      walk_in: entry.appointment_id === null,
+      doctor: reference(
+        clinic.doctors.find(({ id }) => id === entry.doctor_id),
+      ),
+      patient: {
+        id: patient.id,
+        full_name: patient.full_name,
+        phone: patient.phone,
+      },
+      charge_status: charge ? charge.status : "none",
+      charge_id: charge ? charge.id : null,
+      balance: charge ? chargeSummary(charge).balance : null,
+    };
+  };
+  function addCharge(entry, me, fee) {
+    const charge = {
+      id: nextId++,
+      queue_entry_id: entry.id,
+      doctor_id: entry.doctor_id,
+      patient_id: entry.patient_id,
+      date: entry.date,
+      status: "unpaid",
+      fee,
+      discount: "0.00",
+      discount_reason: null,
+      discounted_by: null,
+      discounted_at: null,
+      cancel_reason: null,
+      cancelled_by: null,
+      cancelled_at: null,
+      paid: 0,
+      charged_by: staffRef(me),
+      charged_at: nowUtc(),
+      payments: [],
+      refunds: [],
+    };
+    clinic.charges.push(charge);
+    return charge;
+  }
+  const CHARGE_CANCELLED = {
+    charge: ["This charge has been cancelled and can't be changed."],
+  };
+  const METHODS = ["cash", "card", "wallet"];
+  function reasonErrors(reason) {
+    if (typeof reason !== "string" || reason.trim() === "") {
+      return { reason: ["A reason is required."] };
+    }
+    if (reason.length > 500) {
+      return { reason: ["The reason may be at most 500 characters."] };
+    }
+    return null;
+  }
+  function amountErrors(amount, { allowZero = false } = {}) {
+    const text = String(amount ?? "");
+    if (allowZero && AMOUNT.test(text) && piastres(text) === 0) return null;
+    return checkAmount(amount)
+      ? null
+      : {
+          amount: [
+            "The amount must be above 0 and at most 100000, with at most two decimals.",
+          ],
+        };
+  }
+  const withCharge = (handler) =>
+    reception((request, response, me, match, query) => {
+      const charge = clinic.charges.find(({ id }) => id === Number(match[1]));
+      return charge
+        ? handler(request, response, me, charge, query)
+        : send(response, 404, { message: "No charge was found." });
+    });
+  const DAYS_LIMIT = 92;
+
   const routes = [
     // Queue
     [
@@ -1118,7 +1313,7 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         if (entry.status !== "waiting" || entry.appointment_id === null) {
           return refuse(response, ENTRY_NOT_CHANGEABLE);
         }
-        if (entry.has_active_charge) {
+        if (entry.has_active_charge || activeChargeOf(entry)) {
           return refuse(response, {
             entry: ["This visit has an active charge."],
           });
@@ -2205,7 +2400,296 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         }),
       ),
     ],
+
+    // Payments
+    [
+      "GET",
+      /^visits$/,
+      reception((_request, response, _me, _match, query) => {
+        const date = query.get("date");
+        if (!DATE.test(date ?? "")) {
+          return refuse(response, { date: ["The date is not valid."] });
+        }
+        const status = query.get("charge_status");
+        if (
+          status &&
+          !["none", "unpaid", "partially_paid", "paid"].includes(status)
+        ) {
+          return refuse(response, {
+            charge_status: ["The charge status is not valid."],
+          });
+        }
+        const doctorId = query.has("doctor_id")
+          ? Number(query.get("doctor_id"))
+          : null;
+        const rows = clinic.queue
+          .filter((entry) => entry.date === date)
+          .filter((entry) => doctorId === null || entry.doctor_id === doctorId)
+          // As the API does: a visit marked as left appears only with an active charge.
+          .filter((entry) => entry.status !== "left" || activeChargeOf(entry))
+          .sort((a, b) => a.doctor_id - b.doctor_id || inQueueOrder(a, b))
+          .map(visitChargeBody)
+          .filter((row) => !status || row.charge_status === status);
+        return paginate(response, rows, query, "visits");
+      }),
+    ],
+    [
+      "POST",
+      /^visits\/(\d+)\/charge$/,
+      reception((_request, response, me, match) => {
+        const entry = clinic.queue.find(({ id }) => id === Number(match[1]));
+        if (!entry) {
+          return send(response, 404, { message: "No visit was found." });
+        }
+        if (entry.status === "left") {
+          return refuse(response, {
+            visit: ["This patient left, so the visit can't be charged."],
+          });
+        }
+        if (activeChargeOf(entry) || entry.has_active_charge) {
+          return refuse(response, {
+            visit: ["This visit has already been charged."],
+          });
+        }
+        const fee = clinic.fees.get(entry.doctor_id);
+        if (!fee?.amount) {
+          return refuse(response, { visit: ["This doctor has no fee yet."] });
+        }
+        const charge = addCharge(entry, me, fee.amount);
+        return send(response, 201, { data: chargeBody(charge) });
+      }),
+    ],
+    [
+      "GET",
+      /^charges$/,
+      reception((_request, response, _me, _match, query) => {
+        const from = query.get("from");
+        const to = query.get("to");
+        if (!DATE.test(from ?? "")) {
+          return refuse(response, { from: ["The first date is not valid."] });
+        }
+        if (!DATE.test(to ?? "") || to < from) {
+          return refuse(response, {
+            to: ["The last date must be on or after the first."],
+          });
+        }
+        if (dayNumber(to) - dayNumber(from) + 1 > DAYS_LIMIT) {
+          return refuse(response, {
+            to: ["The date range can be at most 92 days."],
+          });
+        }
+        const status = query.get("status");
+        const patientId = query.has("patient_id")
+          ? Number(query.get("patient_id"))
+          : null;
+        const doctorId = query.has("doctor_id")
+          ? Number(query.get("doctor_id"))
+          : null;
+        const rows = clinic.charges
+          .filter((charge) => charge.date >= from && charge.date <= to)
+          .filter(
+            (charge) => patientId === null || charge.patient_id === patientId,
+          )
+          .filter(
+            (charge) => doctorId === null || charge.doctor_id === doctorId,
+          )
+          .filter((charge) => !status || charge.status === status)
+          .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+          .map(chargeSummary);
+        return paginate(response, rows, query, "charges");
+      }),
+    ],
+    [
+      "GET",
+      /^charges\/(\d+)$/,
+      withCharge((_request, response, _me, charge) =>
+        send(response, 200, { data: chargeBody(charge) }),
+      ),
+    ],
+    [
+      "POST",
+      /^charges\/(\d+)\/payments$/,
+      withCharge(async (request, response, me, charge) => {
+        const body = await readJson(request);
+        const errors = {
+          ...amountErrors(body.amount),
+          ...(METHODS.includes(body.method)
+            ? {}
+            : { method: ["The method is not valid."] }),
+        };
+        if (Object.keys(errors).length > 0) return refuse(response, errors);
+        if (charge.status === "cancelled") {
+          return refuse(response, CHARGE_CANCELLED);
+        }
+        const amount = piastres(body.amount);
+        if (amount > dueOf(charge) - charge.paid) {
+          return refuse(response, {
+            amount: ["The amount is more than the balance."],
+          });
+        }
+        charge.payments.push({
+          id: nextId++,
+          amount: money(amount),
+          method: body.method,
+          received_by: staffRef(me),
+          received_at: nowUtc(),
+        });
+        charge.paid += amount;
+        charge.status = statusFor(dueOf(charge), charge.paid);
+        return send(response, 201, { data: chargeBody(charge) });
+      }),
+    ],
+    [
+      "POST",
+      /^charges\/(\d+)\/refunds$/,
+      admin(
+        withCharge(async (request, response, me, charge) => {
+          const body = await readJson(request);
+          const errors = {
+            ...amountErrors(body.amount),
+            ...(METHODS.includes(body.method)
+              ? {}
+              : { method: ["The method is not valid."] }),
+            ...reasonErrors(body.reason),
+          };
+          if (Object.keys(errors).length > 0) return refuse(response, errors);
+          if (charge.status === "cancelled") {
+            return refuse(response, CHARGE_CANCELLED);
+          }
+          const amount = piastres(body.amount);
+          if (amount > charge.paid) {
+            return refuse(response, {
+              amount: ["The amount is more than was paid."],
+            });
+          }
+          charge.refunds.push({
+            id: nextId++,
+            amount: money(amount),
+            method: body.method,
+            reason: body.reason,
+            refunded_by: staffRef(me),
+            refunded_at: nowUtc(),
+          });
+          charge.paid -= amount;
+          charge.status = statusFor(dueOf(charge), charge.paid);
+          return send(response, 201, { data: chargeBody(charge) });
+        }),
+      ),
+    ],
+    [
+      "PUT",
+      /^charges\/(\d+)\/discount$/,
+      admin(
+        withCharge(async (request, response, me, charge) => {
+          const body = await readJson(request);
+          const errors = {
+            ...amountErrors(body.amount, { allowZero: true }),
+            ...reasonErrors(body.reason),
+          };
+          if (Object.keys(errors).length > 0) return refuse(response, errors);
+          if (charge.status === "cancelled") {
+            return refuse(response, CHARGE_CANCELLED);
+          }
+          const discount = piastres(body.amount);
+          if (discount > piastres(charge.fee) - charge.paid) {
+            return refuse(response, {
+              amount: ["The discount is more than the fee less what was paid."],
+            });
+          }
+          charge.discount = money(discount);
+          charge.discount_reason = body.reason;
+          charge.discounted_by = staffRef(me);
+          charge.discounted_at = nowUtc();
+          charge.status = statusFor(dueOf(charge), charge.paid);
+          return send(response, 200, { data: chargeBody(charge) });
+        }),
+      ),
+    ],
+    [
+      "POST",
+      /^charges\/(\d+)\/cancel$/,
+      withCharge(async (request, response, me, charge) => {
+        const body = await readJson(request);
+        const errors = reasonErrors(body.reason);
+        if (errors) return refuse(response, errors);
+        if (charge.status === "cancelled") {
+          return refuse(response, CHARGE_CANCELLED);
+        }
+        if (charge.paid > 0) {
+          return refuse(response, {
+            charge: ["Money is held on this charge, so it can't be cancelled."],
+          });
+        }
+        charge.status = "cancelled";
+        charge.cancel_reason = body.reason;
+        charge.cancelled_by = staffRef(me);
+        charge.cancelled_at = nowUtc();
+        return send(response, 200, { data: chargeBody(charge) });
+      }),
+    ],
+    ...REPORT_NAMES.map((name) => [
+      "GET",
+      new RegExp(`^reports/${name}$`),
+      admin((_request, response, _me, _match, query) =>
+        readReport(response, name, query),
+      ),
+    ]),
   ];
+
+  // As the real API validates every report (`ReportRequest`), and refuses an unknown doctor with 404.
+  function reportErrors(query) {
+    const from = query.get("from");
+    const to = query.get("to");
+    if (!DATE.test(from ?? "")) {
+      return { from: ["The from field must match the format Y-m-d."] };
+    }
+    if (!DATE.test(to ?? "")) {
+      return { to: ["The to field must match the format Y-m-d."] };
+    }
+    if (to < from) {
+      return { to: ["The to field must be a date after or equal to from."] };
+    }
+    if (dayNumber(to) - dayNumber(from) + 1 > 366) {
+      return { to: ["The period can be at most 366 days."] };
+    }
+    if (query.has("doctor_id") && !/^[1-9]\d*$/.test(query.get("doctor_id"))) {
+      return { doctor_id: ["The doctor id field must be an integer."] };
+    }
+    return null;
+  }
+
+  function readReport(response, name, query) {
+    const errors = reportErrors(query);
+    if (errors) return refuse(response, errors);
+
+    const doctorId = query.has("doctor_id")
+      ? Number(query.get("doctor_id"))
+      : null;
+    if (
+      doctorId !== null &&
+      !clinic.doctors.some(({ id }) => id === doctorId)
+    ) {
+      return missing(response);
+    }
+    clinic.reportReads.push({ name, query: query.toString() });
+
+    const seeded =
+      clinic.reports.get(`${name}|${doctorId ?? ""}`) ??
+      clinic.reports.get(`${name}|`) ??
+      EMPTY_REPORTS[name];
+    const body = structuredClone(seeded);
+
+    if (name === "money-collected") {
+      return send(response, 200, {
+        data: { ...body, from: query.get("from"), to: query.get("to") },
+      });
+    }
+    // The API leaves this out for one doctor, as it counts the whole clinic.
+    if (doctorId !== null) delete body.totals.new_patients;
+    const page = pageOf(body.rows, query, `reports/${name}`);
+    if (!page) return refuse(response, { page: ["The page is not valid."] });
+    return send(response, 200, { ...page, totals: body.totals });
+  }
 
   function checkSpecialty(body, ownId, required) {
     const errors = {};
@@ -2428,6 +2912,90 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         send(response, 200, {});
         return true;
       }
+      case "/__control/clinic/charge": {
+        // A charge already made, for tests that aren't about how it got there. Its visit comes with it unless `visit`
+        // names one. `payments` and `refunds` are comma-separated amounts, with methods in turn.
+        const entry = query.has("visit")
+          ? clinic.queue.find(({ id }) => id === Number(query.get("visit")))
+          : addEntry({
+              doctorId: Number(query.get("doctor") ?? 1),
+              patientId: Number(query.get("patient") ?? 2),
+              status: query.get("visit_status") ?? "seen",
+              ...(query.has("date") ? { date: query.get("date") } : {}),
+            });
+        const desk = { id: 2, name: "Synthetic Reception" };
+        const office = { id: 1, name: "Synthetic Admin" };
+        const charge = addCharge(entry, desk, query.get("fee") ?? "350.00");
+        const list = (name) =>
+          (query.get(name) ?? "").split(",").filter(Boolean);
+        list("payments").forEach((amount, index) => {
+          charge.payments.push({
+            id: nextId++,
+            amount: money(piastres(amount)),
+            method: METHODS[index % 3],
+            received_by: desk,
+            received_at: nowUtc(),
+          });
+          charge.paid += piastres(amount);
+        });
+        list("refunds").forEach((amount, index) => {
+          charge.refunds.push({
+            id: nextId++,
+            amount: money(piastres(amount)),
+            method: METHODS[(index + 1) % 3],
+            reason: query.get("refund_reason") ?? "Synthetic overpayment",
+            refunded_by: office,
+            refunded_at: nowUtc(),
+          });
+          charge.paid -= piastres(amount);
+        });
+        if (query.has("discount")) {
+          charge.discount = money(piastres(query.get("discount")));
+          charge.discount_reason =
+            query.get("discount_reason") ?? "Synthetic hardship discount";
+          charge.discounted_by = office;
+          charge.discounted_at = nowUtc();
+        }
+        charge.status = statusFor(dueOf(charge), charge.paid);
+        if (query.get("cancelled") === "1") {
+          charge.status = "cancelled";
+          charge.cancel_reason =
+            query.get("cancel_reason") ?? "Synthetic mistaken charge";
+          charge.cancelled_by = desk;
+          charge.cancelled_at = nowUtc();
+        }
+        if (query.get("visit_gone") === "1") {
+          clinic.queue = clinic.queue.filter((row) => row !== entry);
+        }
+        send(response, 200, { id: charge.id, visitId: entry.id });
+        return true;
+      }
+      case "/__control/clinic/change-charge": {
+        // Someone else acts on another computer, after this screen has read the charge.
+        const charge = clinic.charges.find(
+          ({ id }) => id === Number(query.get("id")),
+        );
+        if (query.get("cancel") === "1") {
+          charge.status = "cancelled";
+          charge.cancel_reason = "Synthetic mistaken charge";
+          charge.cancelled_by = { id: 2, name: "Synthetic Reception" };
+          charge.cancelled_at = nowUtc();
+        }
+        if (query.has("pay")) {
+          const amount = piastres(query.get("pay"));
+          charge.payments.push({
+            id: nextId++,
+            amount: money(amount),
+            method: "cash",
+            received_by: { id: 2, name: "Synthetic Reception" },
+            received_at: nowUtc(),
+          });
+          charge.paid += amount;
+          charge.status = statusFor(dueOf(charge), charge.paid);
+        }
+        send(response, 200, {});
+        return true;
+      }
       case "/__control/clinic/encounter-reads": {
         send(response, 200, clinic.encounterReads);
         return true;
@@ -2539,6 +3107,20 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
           });
         }
         send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/report": {
+        // `body` is the report as JSON: `{ totals, by_method, by_day }` for money collected, `{ rows, totals }` for
+        // the others. With `doctor`, it answers only for that doctor.
+        clinic.reports.set(
+          `${query.get("name")}|${query.get("doctor") ?? ""}`,
+          JSON.parse(query.get("body")),
+        );
+        send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/report-reads": {
+        send(response, 200, { reads: clinic.reportReads });
         return true;
       }
       case "/__control/clinic/empty": {

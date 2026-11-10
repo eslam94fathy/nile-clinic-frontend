@@ -19,3 +19,13 @@ export function addDays(date: string, count: number): string {
     .toISOString()
     .slice(0, 10);
 }
+
+/** The first day of a clinic date's month. */
+export function startOfMonth(date: string): string {
+  return `${date.slice(0, 8)}01`;
+}
+
+/** The last day of the month before a clinic date's month. */
+export function endOfPreviousMonth(date: string): string {
+  return addDays(startOfMonth(date), -1);
+}

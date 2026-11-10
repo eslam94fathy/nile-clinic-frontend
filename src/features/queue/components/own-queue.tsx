@@ -27,10 +27,11 @@ import { clinicToday } from "@/lib/format/clinic-today";
 import { useRouter } from "@/lib/i18n/navigation";
 import { readOwnQueue } from "../api/queue";
 import { applyEntry } from "../apply-entry";
-import { useLiveList } from "../hooks/use-live-list";
+import { useLiveList } from "@/lib/api/use-live-list";
+import { QUEUE_ROOT_KEY } from "../query-keys";
 import type { OwnQueueEntry } from "../types";
 import { EntryTimes } from "./entry-times";
-import { LastRead } from "./last-read";
+import { LastRead } from "@/components/shared/live/last-read";
 import { OwnQueueActions } from "./own-queue-actions";
 import { TimeRange } from "@/components/shared/values/time-range";
 
@@ -50,10 +51,12 @@ export function OwnQueue({ timeZone }: { timeZone: string }) {
   const client = useQueryClient();
 
   const list = useLiveList<{ data: OwnQueueEntry[] }>({
+    rootKey: QUEUE_ROOT_KEY,
     queryKey: OWN_QUEUE_KEY,
     read: () => readOwnQueue(locale),
   });
   const visits = useLiveList<{ data: Visit[] }>({
+    rootKey: QUEUE_ROOT_KEY,
     queryKey: OWN_VISITS_KEY,
     read: () => readTodaysVisits(clinicToday(timeZone), locale),
   });

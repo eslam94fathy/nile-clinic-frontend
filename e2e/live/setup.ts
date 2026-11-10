@@ -67,6 +67,7 @@ export default async function setup() {
       `secondencounter${stamp}`,
       "doctor",
     ),
+    billingDoctor: await createStaff(`billingdoctor${stamp}`, "doctor"),
   };
 
   async function createDoctor(account: LiveAccount): Promise<number> {
@@ -119,10 +120,13 @@ export default async function setup() {
     secondQueue: await createDoctor(accounts.secondQueueDoctor),
     encounter: await createDoctor(accounts.encounterDoctor),
     secondEncounter: await createDoctor(accounts.secondEncounterDoctor),
+    billing: await createDoctor(accounts.billingDoctor),
     bookingName: `Synthetic Live bookingdoctor${stamp}`,
     secondName: `Synthetic Live seconddoctor${stamp}`,
     queueName: `Synthetic Live queuedoctor${stamp}`,
     secondQueueName: `Synthetic Live secondqueue${stamp}`,
+    billingName: `Synthetic Live billingdoctor${stamp}`,
+    billingFee: "350.00",
   };
   await setHours(doctors.booking);
   await setHours(doctors.second);
@@ -132,6 +136,16 @@ export default async function setup() {
   await setHours(doctors.secondQueue, allDay);
   await setHours(doctors.encounter, allDay);
   await setHours(doctors.secondEncounter, allDay);
+  await setHours(doctors.billing, allDay);
+
+  const fee = await api(`doctors/${doctors.billing}/fee`, {
+    method: "PUT",
+    token,
+    body: { amount: doctors.billingFee },
+  });
+  if (fee.status !== 200) {
+    throw new Error(`Setting a fee gave status ${fee.status}.`);
+  }
 
   const profile = await api("doctors", {
     method: "POST",

@@ -62,6 +62,8 @@ function freshAccounts() {
 let accounts = freshAccounts();
 let tokens = new Map();
 let scripted = new Map();
+// A scripted status's field, for a refusal placed on one field as the API's `errors` would.
+let scriptedFields = new Map();
 let calls = {};
 
 const REFUSED = {
@@ -191,6 +193,7 @@ function control(pathname, query, response) {
       clinic.reset();
       tokens = new Map();
       scripted = new Map();
+      scriptedFields = new Map();
       calls = {};
       return send(response, 200, {});
     case "/__control/calls":
@@ -199,9 +202,14 @@ function control(pathname, query, response) {
       calls = {};
       return send(response, 200, {});
     case "/__control/script":
-      // The next requests to this endpoint get this status, until it's scripted to 0.
+      // The next requests to this endpoint get this status, until it's scripted to 0. `-1` drops the connection,
+      // and `-2` makes the change and then drops it. A `field` puts the message under that key in `errors`.
+      scriptedFields.delete(query.get("endpoint"));
       if (query.get("status") === "0") scripted.delete(query.get("endpoint"));
       else scripted.set(query.get("endpoint"), Number(query.get("status")));
+      if (query.has("field")) {
+        scriptedFields.set(query.get("endpoint"), query.get("field"));
+      }
       return send(response, 200, {});
     case "/__control/revoke":
       for (const [token, id] of tokens) {
@@ -262,8 +270,23 @@ createServer(async (request, response) => {
   const status =
     scripted.get(`${request.method} ${endpoint}`) ?? scripted.get(endpoint);
   if (status === -1) return request.socket.destroy();
+  if (status === -2) {
+    // The change happens, then the answer is lost: what an unknown outcome looks like to the application.
+    const me = currentAccount(request);
+    const sink = { writeHead: () => sink, setHeader: () => {}, end: () => {} };
+    if (me) await route.handler(request, sink, me, route.match, searchParams);
+    return request.socket.destroy();
+  }
   if (status) {
-    return send(response, status, { message: `Scripted ${status}.` });
+    const message = `Scripted ${status}.`;
+    const field =
+      scriptedFields.get(`${request.method} ${endpoint}`) ??
+      scriptedFields.get(endpoint);
+    return send(
+      response,
+      status,
+      field ? { message, errors: { [field]: [message] } } : { message },
+    );
   }
 
   if (endpoint === "auth/sign-in") return route.handler(request, response);

@@ -40,6 +40,9 @@
   --status-warning: #fcebcf;
   --status-warning-foreground: #6b3e00;
   --status-warning-border: #b26f00;
+  /* The one chart's polarity: net above and below zero. Checked with the dataviz validator (ADR 0017). */
+  --chart-positive: #00879b;
+  --chart-negative: #b26f00;
   --status-muted: #eef0f0;
   --status-muted-foreground: #4e5a5d;
   --status-muted-border: #8a9699;
@@ -83,6 +86,8 @@
   --status-warning: #3d2a08;
   --status-warning-foreground: #f6d59a;
   --status-warning-border: #cf9333;
+  --chart-positive: #1fa2b3;
+  --chart-negative: #c27f1f;
   --status-muted: #1c2a2d;
   --status-muted-foreground: #a9b6b9;
   --status-muted-border: #6f7f83;
@@ -127,6 +132,8 @@
   --color-status-warning: var(--status-warning);
   --color-status-warning-foreground: var(--status-warning-foreground);
   --color-status-warning-border: var(--status-warning-border);
+  --color-chart-positive: var(--chart-positive);
+  --color-chart-negative: var(--chart-negative);
   --color-status-muted: var(--status-muted);
   --color-status-muted-foreground: var(--status-muted-foreground);
   --color-status-muted-border: var(--status-muted-border);

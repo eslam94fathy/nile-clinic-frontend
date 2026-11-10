@@ -21,6 +21,8 @@ export type LiveAccounts = {
   /** Doctors only the medical record tests use. */
   encounterDoctor: LiveAccount;
   secondEncounterDoctor: LiveAccount;
+  /** A doctor only the billing tests use, with a fee and hours all day. */
+  billingDoctor: LiveAccount;
 };
 
 /** Those doctors' profile ids, which differ from their account ids. */
@@ -32,10 +34,14 @@ export type LiveDoctors = {
   secondQueue: number;
   encounter: number;
   secondEncounter: number;
+  billing: number;
   bookingName: string;
   secondName: string;
   queueName: string;
   secondQueueName: string;
+  billingName: string;
+  /** The billing doctor's fee, as the API returns it. */
+  billingFee: string;
 };
 
 function requireEnv(name: string): string {
