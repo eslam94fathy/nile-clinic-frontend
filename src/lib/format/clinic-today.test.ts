@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { addDays, clinicToday } from "./clinic-today";
+import {
+  addDays,
+  clinicToday,
+  endOfPreviousMonth,
+  startOfMonth,
+} from "./clinic-today";
 
 describe("clinicToday", () => {
   it("uses the clinic's date when UTC is still on the day before", () => {
@@ -47,4 +52,20 @@ describe("addDays", () => {
     expect(addDays("2026-04-23", 7)).toBe("2026-04-30");
     expect(addDays("2026-10-29", 7)).toBe("2026-11-05");
   });
+});
+
+describe("startOfMonth and endOfPreviousMonth", () => {
+  it.each([
+    ["2026-01-01", "2026-01-01", "2025-12-31"],
+    ["2026-12-31", "2026-12-01", "2026-11-30"],
+    ["2028-03-01", "2028-03-01", "2028-02-29"],
+    ["2027-03-15", "2027-03-01", "2027-02-28"],
+    ["2026-11-15", "2026-11-01", "2026-10-31"],
+  ])(
+    "for %s, the month starts on %s and the one before ends on %s",
+    (date, start, end) => {
+      expect(startOfMonth(date)).toBe(start);
+      expect(endOfPreviousMonth(date)).toBe(end);
+    },
+  );
 });

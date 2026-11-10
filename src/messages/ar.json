@@ -1243,5 +1243,105 @@
       "card": "ببطاقة",
       "wallet": "بمحفظة إلكترونية"
     }
+  },
+  "reports": {
+    "title": "التقارير",
+    "description": "الأموال والرسوم والنشاط والأوقات خلال فترة، كما هي في السجلات وقت قراءتها.",
+    "tabs": {
+      "label": "التقارير",
+      "money-collected": "الأموال المحصّلة",
+      "billing": "الرسوم حسب الطبيب",
+      "activity": "النشاط",
+      "times": "الأوقات"
+    },
+    "choices": {
+      "from": "من",
+      "to": "إلى",
+      "doctor": "الطبيب",
+      "allDoctors": "كل الأطباء",
+      "inactiveDoctor": "{name} (غير نشط)",
+      "doctorsUnavailable": "تعذّرت قراءة قائمة الأطباء. أعد تحميل الصفحة لاختيار طبيب.",
+      "apply": "عرض التقرير",
+      "shortcutsLabel": "فترات سريعة",
+      "shortcuts": {
+        "today": "اليوم",
+        "last7Days": "آخر 7 أيام",
+        "thisMonth": "هذا الشهر",
+        "lastMonth": "الشهر الماضي"
+      }
+    },
+    "range": {
+      "missingFrom": "اختر التاريخ الأول.",
+      "missingTo": "اختر التاريخ الأخير.",
+      "reversed": "يجب أن يكون التاريخ الأخير في يوم التاريخ الأول أو بعده.",
+      "tooLong": "لا يمكن أن تزيد الفترة على 366 يومًا."
+    },
+    "period": "من <from></from> إلى <to></to>",
+    "periodLabel": "الفترة",
+    "doctorLabel": "الطبيب",
+    "readFailed": "تعذّرت قراءة التقرير.",
+    "doctorNotFound": "لم يُعثر على هذا الطبيب.",
+    "showAllDoctors": "عرض كل الأطباء",
+    "notAvailable": "غير متاح",
+    "negative": "(سالب)",
+    "needsAttention": "يحتاج إلى متابعة",
+    "averageWithVisits": "{average}، {visits}",
+    "visitsCovered": "{count, plural, zero {دون زيارات} one {على زيارة واحدة} two {على زيارتين} few {على {formatted} زيارات} many {على {formatted} زيارة} other {على {formatted} زيارة}}",
+    "allDoctors": "كل الأطباء",
+    "thisDoctor": "هذا الطبيب",
+    "doctorColumn": "الطبيب",
+    "columnInGroup": "{group}: {item}",
+    "money": {
+      "heading": "الأموال المحصّلة",
+      "received": "المستلم",
+      "refunded": "المسترد",
+      "net": "الصافي",
+      "totals": "الفترة كاملة",
+      "byDay": "حسب اليوم",
+      "byDayCaption": "الأموال المستلمة والمستردة والصافي، حسب اليوم",
+      "byMethod": "حسب طريقة الدفع",
+      "staffCaption": "الموظفون، {method}",
+      "date": "التاريخ",
+      "staff": "الموظف",
+      "doctorNote": "تُحتسب فقط الأموال المسجلة على رسوم هذا الطبيب.",
+      "emptyTitle": "لم تُستلم أو تُسترد أي أموال في هذه الفترة.",
+      "noNetChange": "لم يتغيّر الصافي في أي يوم من هذه الفترة.",
+      "chartLabel": "صافي الأموال حسب اليوم، من {from} إلى {to}. الأرقام نفسها في الجدول أدناه.",
+      "chartDay": "{date}: {net}",
+      "noMovement": "لا حركة أموال"
+    },
+    "billing": {
+      "caption": "الرسوم حسب الطبيب",
+      "activeCharges": "الرسوم السارية",
+      "fees": "إجمالي الرسوم",
+      "discounts": "الخصومات",
+      "amountDue": "المستحق",
+      "amountPaid": "المدفوع",
+      "balance": "المتبقي",
+      "cancelledCharges": "الرسوم الملغاة",
+      "unchargedSeenVisits": "زيارات تم الكشف فيها دون رسوم",
+      "note": "تُعدّ الرسوم الملغاة فقط، ولا تدخل في أي مبلغ.",
+      "emptyTitle": "لم تُسجَّل أي رسوم في هذه الفترة، ولم تبقَ أي زيارة دون رسوم."
+    },
+    "activity": {
+      "caption": "النشاط حسب الطبيب",
+      "appointments": "المواعيد",
+      "visits": "الزيارات",
+      "booked": "بموعد",
+      "walkIn": "بدون موعد",
+      "noShowRate": "نسبة عدم الحضور",
+      "newPatients": "المرضى الجدد",
+      "newPatientsForClinic": "يُحتسب المرضى الجدد للعيادة كلها، لذا لا يُعرض عددهم لطبيب واحد.",
+      "rateNote": "نسبة عدم الحضور هي حصة المواعيد التي لم يحضر أصحابها، من بين المواعيد التي انتهت بعدم الحضور أو بتسجيل الوصول أو بالاكتمال.",
+      "emptyTitle": "لا توجد مواعيد أو زيارات في هذه الفترة."
+    },
+    "times": {
+      "caption": "الأوقات حسب الطبيب",
+      "wait": "متوسط الانتظار",
+      "consultation": "متوسط مدة الكشف",
+      "records": "زيارات تم الكشف فيها",
+      "note": "تُحسب المتوسطات الإجمالية من كل الزيارات، لا من متوسطات الأطباء.",
+      "emptyTitle": "لا توجد زيارات في هذه الفترة."
+    }
   }
 }

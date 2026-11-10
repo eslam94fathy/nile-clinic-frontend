@@ -1243,5 +1243,105 @@
       "card": "by card",
       "wallet": "by wallet"
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "description": "Money, charges, activity, and times over a period, as the records stand when they're read.",
+    "tabs": {
+      "label": "Reports",
+      "money-collected": "Money collected",
+      "billing": "Charges by doctor",
+      "activity": "Activity",
+      "times": "Times"
+    },
+    "choices": {
+      "from": "From",
+      "to": "To",
+      "doctor": "Doctor",
+      "allDoctors": "All doctors",
+      "inactiveDoctor": "{name} (inactive)",
+      "doctorsUnavailable": "The list of doctors couldn't be read. Reload the page to choose a doctor.",
+      "apply": "Show report",
+      "shortcutsLabel": "Quick periods",
+      "shortcuts": {
+        "today": "Today",
+        "last7Days": "Last 7 days",
+        "thisMonth": "This month",
+        "lastMonth": "Last month"
+      }
+    },
+    "range": {
+      "missingFrom": "Choose the first date.",
+      "missingTo": "Choose the last date.",
+      "reversed": "The last date must be on or after the first.",
+      "tooLong": "The period can be at most 366 days."
+    },
+    "period": "<from></from> to <to></to>",
+    "periodLabel": "Period",
+    "doctorLabel": "Doctor",
+    "readFailed": "The report couldn't be read.",
+    "doctorNotFound": "That doctor wasn't found.",
+    "showAllDoctors": "Show all doctors",
+    "notAvailable": "Not available",
+    "negative": "(negative)",
+    "needsAttention": "Needs attention",
+    "averageWithVisits": "{average}, {visits}",
+    "visitsCovered": "{count, plural, one {over {formatted} visit} other {over {formatted} visits}}",
+    "allDoctors": "All doctors",
+    "thisDoctor": "This doctor",
+    "doctorColumn": "Doctor",
+    "columnInGroup": "{group}: {item}",
+    "money": {
+      "heading": "Money collected",
+      "received": "Received",
+      "refunded": "Refunded",
+      "net": "Net",
+      "totals": "Whole period",
+      "byDay": "By day",
+      "byDayCaption": "Money received, refunded, and net, by day",
+      "byMethod": "By method",
+      "staffCaption": "Staff, {method}",
+      "date": "Date",
+      "staff": "Staff member",
+      "doctorNote": "Only money on this doctor's charges is counted.",
+      "emptyTitle": "No money was received or refunded in this period.",
+      "noNetChange": "No day in this period had a net change.",
+      "chartLabel": "Net money by day, from {from} to {to}. The same figures are in the table below.",
+      "chartDay": "{date}: {net}",
+      "noMovement": "No money movement"
+    },
+    "billing": {
+      "caption": "Charges by doctor",
+      "activeCharges": "Active charges",
+      "fees": "Fees",
+      "discounts": "Discounts",
+      "amountDue": "Amount due",
+      "amountPaid": "Amount paid",
+      "balance": "Balance",
+      "cancelledCharges": "Cancelled charges",
+      "unchargedSeenVisits": "Seen visits not charged",
+      "note": "Cancelled charges are counted only, and are in no amount.",
+      "emptyTitle": "Nothing was charged in this period, and no visit was left uncharged."
+    },
+    "activity": {
+      "caption": "Activity by doctor",
+      "appointments": "Appointments",
+      "visits": "Visits",
+      "booked": "Booked",
+      "walkIn": "Walk-in",
+      "noShowRate": "No-show rate",
+      "newPatients": "New patients",
+      "newPatientsForClinic": "New patients are counted for the whole clinic, so they aren't given for one doctor.",
+      "rateNote": "The no-show rate is the share of no-shows among appointments that were no-shows, checked in, or completed.",
+      "emptyTitle": "No appointments or visits in this period."
+    },
+    "times": {
+      "caption": "Times by doctor",
+      "wait": "Average wait",
+      "consultation": "Average consultation",
+      "records": "Seen visits",
+      "note": "Overall averages are worked out from every visit, not from the doctors' averages.",
+      "emptyTitle": "No visits in this period."
+    }
   }
 }

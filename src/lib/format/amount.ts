@@ -58,3 +58,22 @@ export function isAmount(
   if (compareAmounts(text, MAXIMUM) === 1) return false;
   return allowZero || compareAmounts(text, "0") === 1;
 }
+
+// The contracts' `SignedMoney`, which also covers `Money`.
+const SIGNED_MONEY = /^(-?)(\d+)\.(\d{2})$/;
+
+/**
+ * An amount from the API as exact whole piastres, with its sign, or `null` if it isn't the API's money. Built from
+ * the digits, so that no floating-point step is involved. Only for sizing, such as a chart's columns: nothing shown
+ * is ever worked out from it (constitution V).
+ */
+export function toPiastres(value: string): number | null {
+  const match = SIGNED_MONEY.exec(value);
+  if (!match) return null;
+
+  const [, sign = "", pounds = "", piastres = ""] = match;
+  // A string of digits is read as the whole number it writes, exactly, while it's a safe integer.
+  const whole = Number(`${pounds}${piastres}`);
+  if (!Number.isSafeInteger(whole)) return null;
+  return sign === "-" && whole !== 0 ? -whole : whole;
+}

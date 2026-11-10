@@ -53,6 +53,55 @@ const dayNumber = (date) => {
   const [year, month, day] = date.split("-").map(Number);
   return Date.UTC(year, month - 1, day) / 86_400_000;
 };
+const REPORT_NAMES = ["money-collected", "billing", "activity", "times"];
+const ZERO_MONEY = { received: "0.00", refunded: "0.00", net: "0.00" };
+// What the API answers for a period with nothing in it. Tests seed anything else.
+const EMPTY_REPORTS = {
+  "money-collected": { totals: ZERO_MONEY, by_method: [], by_day: [] },
+  billing: {
+    rows: [],
+    totals: {
+      active_charges: 0,
+      fees: "0.00",
+      discounts: "0.00",
+      amount_due: "0.00",
+      amount_paid: "0.00",
+      balance: "0.00",
+      cancelled_charges: 0,
+      uncharged_seen_visits: 0,
+    },
+  },
+  activity: {
+    rows: [],
+    totals: {
+      appointments: {
+        scheduled: 0,
+        cancelled: 0,
+        no_show: 0,
+        checked_in: 0,
+        completed: 0,
+      },
+      no_show_rate: null,
+      visits: {
+        waiting: 0,
+        with_doctor: 0,
+        seen: 0,
+        left: 0,
+        booked: 0,
+        walk_in: 0,
+      },
+      new_patients: 0,
+    },
+  },
+  times: {
+    rows: [],
+    totals: {
+      wait: { average_minutes: null, visits: 0 },
+      consultation: { average_minutes: null, visits: 0 },
+      records: { finalized: 0, draft: 0, none: 0 },
+    },
+  },
+};
 const dateOf = (number) =>
   new Date(number * 86_400_000).toISOString().slice(0, 10);
 
@@ -152,6 +201,9 @@ function freshClinic() {
     queueNumbers: new Map(),
     encounters: [],
     charges: [],
+    // Reports' figures are seeded by tests, keyed by report and, optionally, doctor, never worked out here.
+    reports: new Map(),
+    reportReads: [],
     // Each read here is a permanent entry on the real API, so tests count them.
     encounterReads: {
       opened: 0,
@@ -270,7 +322,8 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
   };
   const timeOffBody = (entry) => ({ ...entry });
 
-  function paginate(response, items, query, path) {
+  /** A standard Laravel page of `items`, or `null` for a page or size the API would refuse. */
+  function pageOf(items, query, path) {
     const perPage = Number(query.get("per_page") ?? 15);
     const page = Number(query.get("page") ?? 1);
     if (
@@ -280,13 +333,13 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
       perPage < 1 ||
       perPage > 100
     ) {
-      return refuse(response, { page: ["The page is not valid."] });
+      return null;
     }
 
     const lastPage = Math.max(1, Math.ceil(items.length / perPage));
     const rows = items.slice((page - 1) * perPage, page * perPage);
     const here = `http://127.0.0.1:${port}/api/v1/${path}`;
-    return send(response, 200, {
+    return {
       data: rows,
       links: {
         first: `${here}?page=1`,
@@ -304,7 +357,14 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         to: rows.length ? (page - 1) * perPage + rows.length : null,
         total: items.length,
       },
-    });
+    };
+  }
+
+  function paginate(response, items, query, path) {
+    const page = pageOf(items, query, path);
+    return page
+      ? send(response, 200, page)
+      : refuse(response, { page: ["The page is not valid."] });
   }
 
   const readActiveFilter = (query) => {
@@ -2567,7 +2627,69 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         return send(response, 200, { data: chargeBody(charge) });
       }),
     ],
+    ...REPORT_NAMES.map((name) => [
+      "GET",
+      new RegExp(`^reports/${name}$`),
+      admin((_request, response, _me, _match, query) =>
+        readReport(response, name, query),
+      ),
+    ]),
   ];
+
+  // As the real API validates every report (`ReportRequest`), and refuses an unknown doctor with 404.
+  function reportErrors(query) {
+    const from = query.get("from");
+    const to = query.get("to");
+    if (!DATE.test(from ?? "")) {
+      return { from: ["The from field must match the format Y-m-d."] };
+    }
+    if (!DATE.test(to ?? "")) {
+      return { to: ["The to field must match the format Y-m-d."] };
+    }
+    if (to < from) {
+      return { to: ["The to field must be a date after or equal to from."] };
+    }
+    if (dayNumber(to) - dayNumber(from) + 1 > 366) {
+      return { to: ["The period can be at most 366 days."] };
+    }
+    if (query.has("doctor_id") && !/^[1-9]\d*$/.test(query.get("doctor_id"))) {
+      return { doctor_id: ["The doctor id field must be an integer."] };
+    }
+    return null;
+  }
+
+  function readReport(response, name, query) {
+    const errors = reportErrors(query);
+    if (errors) return refuse(response, errors);
+
+    const doctorId = query.has("doctor_id")
+      ? Number(query.get("doctor_id"))
+      : null;
+    if (
+      doctorId !== null &&
+      !clinic.doctors.some(({ id }) => id === doctorId)
+    ) {
+      return missing(response);
+    }
+    clinic.reportReads.push({ name, query: query.toString() });
+
+    const seeded =
+      clinic.reports.get(`${name}|${doctorId ?? ""}`) ??
+      clinic.reports.get(`${name}|`) ??
+      EMPTY_REPORTS[name];
+    const body = structuredClone(seeded);
+
+    if (name === "money-collected") {
+      return send(response, 200, {
+        data: { ...body, from: query.get("from"), to: query.get("to") },
+      });
+    }
+    // The API leaves this out for one doctor, as it counts the whole clinic.
+    if (doctorId !== null) delete body.totals.new_patients;
+    const page = pageOf(body.rows, query, `reports/${name}`);
+    if (!page) return refuse(response, { page: ["The page is not valid."] });
+    return send(response, 200, { ...page, totals: body.totals });
+  }
 
   function checkSpecialty(body, ownId, required) {
     const errors = {};
@@ -2985,6 +3107,20 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
           });
         }
         send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/report": {
+        // `body` is the report as JSON: `{ totals, by_method, by_day }` for money collected, `{ rows, totals }` for
+        // the others. With `doctor`, it answers only for that doctor.
+        clinic.reports.set(
+          `${query.get("name")}|${query.get("doctor") ?? ""}`,
+          JSON.parse(query.get("body")),
+        );
+        send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/report-reads": {
+        send(response, 200, { reads: clinic.reportReads });
         return true;
       }
       case "/__control/clinic/empty": {

@@ -107,7 +107,7 @@ for (const locale of ["ar", "en"] as const) {
 
       test("placeholder", async ({ page }) => {
         await signIn(page, "administrator", locale);
-        await page.goto(`/${locale}/reports`);
+        await page.goto(`/${locale}/audit`);
         await expect(page.getByText(t.shell.placeholderHeading)).toBeVisible();
 
         expect(await seriousIssues(page)).toEqual([]);
@@ -623,6 +623,78 @@ for (const locale of ["ar", "en"] as const) {
         await page.goto(`/${locale}/charges/${cancelled.id}`);
         await expect(page.getByRole("note")).toBeVisible();
         expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("reports: each report, empty, refused, and an unknown doctor", async ({
+        page,
+      }) => {
+        const rp = t.reports;
+        const today = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Africa/Cairo",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
+        const first = `${today.slice(0, 8)}01`;
+        const money = (net: string) => ({
+          received: "350.00",
+          refunded: "0.00",
+          net,
+        });
+        const body = {
+          totals: money("-50.00"),
+          by_method: [
+            {
+              method: "cash",
+              ...money("-50.00"),
+              staff: [
+                { id: 2, name: "Synthetic Reception", ...money("-50.00") },
+              ],
+            },
+          ],
+          by_day: [
+            { date: first, ...money("350.00") },
+            { date: today, ...money("-400.00") },
+          ],
+        };
+        await control(
+          `clinic/report?name=money-collected&body=${encodeURIComponent(JSON.stringify(body))}`,
+        );
+        await signIn(page, "administrator", locale);
+
+        await page.goto(`/${locale}/reports`);
+        await expect(
+          page.getByRole("img", { name: /Net money by day|صافي الأموال/ }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        for (const report of ["billing", "activity", "times"]) {
+          await page.goto(`/${locale}/reports/${report}`);
+          await expect(
+            page.getByRole("heading", { name: rp.allDoctors }),
+          ).toBeVisible();
+          expect(await seriousIssues(page)).toEqual([]);
+        }
+
+        await page.goto(
+          `/${locale}/reports/times?from=2025-01-01&to=2026-12-31`,
+        );
+        await expect(
+          page.getByText(rp.range.tooLong, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page.goto(`/${locale}/reports?doctor_id=999`);
+        await expect(
+          page.getByText(rp.doctorNotFound, { exact: true }),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await script("reports/billing", 503);
+        await page.goto(`/${locale}/reports/billing`);
+        await expect(page.getByRole("alert").first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+        await script("reports/billing", 0);
       });
 
       test("queue: adding a walk-in", async ({ page }) => {

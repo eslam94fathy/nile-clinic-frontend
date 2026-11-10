@@ -4,6 +4,7 @@ import {
   isAmount,
   normalizeAmount,
   toMoneyText,
+  toPiastres,
 } from "./amount";
 
 describe("normalizeAmount", () => {
@@ -119,5 +120,31 @@ describe("toMoneyText", () => {
 
   it("throws on something that isn't an amount", () => {
     expect(() => toMoneyText("1.234")).toThrow();
+  });
+});
+
+describe("toPiastres", () => {
+  it.each([
+    ["0.00", 0],
+    ["150.00", 15000],
+    ["-0.50", -50],
+    ["-0.00", 0],
+    ["1234567.89", 123456789],
+    ["007.05", 705],
+  ])("reads %s as %i piastres", (value, piastres) => {
+    expect(toPiastres(value)).toBe(piastres);
+  });
+
+  it.each([
+    "1.5",
+    "1e3",
+    "",
+    "150",
+    "1.234",
+    "+1.00",
+    " 1.00",
+    "99999999999999.99",
+  ])("refuses %j, which isn't the API's money or can't be exact", (value) => {
+    expect(toPiastres(value)).toBeNull();
   });
 });

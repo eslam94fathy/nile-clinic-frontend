@@ -90,7 +90,7 @@ export const APP_ROUTES = [
     capability: "reports",
     labelKey: "reports",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "audit",

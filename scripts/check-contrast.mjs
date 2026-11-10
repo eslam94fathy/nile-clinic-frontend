@@ -38,6 +38,9 @@ export const REQUIRED_PAIRS = [
   ["status-muted-border", "card", CONTROL],
   ["input", "background", CONTROL],
   ["input", "card", CONTROL],
+  // The chart's bars, a graphical object (WCAG 1.4.11). ADR 0017.
+  ["chart-positive", "card", CONTROL],
+  ["chart-negative", "card", CONTROL],
   ["ring", "background", CONTROL],
   ["ring", "card", CONTROL],
   ["brand", "background", CONTROL],

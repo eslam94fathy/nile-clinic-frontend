@@ -23,9 +23,11 @@ export async function control(path: string): Promise<unknown> {
 
 export const resetBackend = () => control("reset");
 
-export const script = (endpoint: string, status: number) =>
+export const script = (endpoint: string, status: number, field?: string) =>
   control(
-    `script?endpoint=${encodeURIComponent(endpoint)}&status=${String(status)}`,
+    `script?endpoint=${encodeURIComponent(endpoint)}&status=${String(status)}${
+      field ? `&field=${encodeURIComponent(field)}` : ""
+    }`,
   );
 
 export async function callsTo(endpoint: string): Promise<number> {
