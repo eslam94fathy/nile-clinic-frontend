@@ -66,16 +66,18 @@ Language switch, account, and sign-out appear in the top bar for everyone.
 
 ## Dashboards
 
-No summary endpoint exists, so each is composed from existing endpoints and shows only what they return.
+Built in Phase 12 ([spec](../specs/012-role-dashboards/spec.md), [ADR 0019](decisions/0019-dashboards-read-in-panels.md)). No summary
+endpoint exists, so each is composed from existing, unaudited endpoints and shows only what they return. Each panel reads, fails,
+and refreshes on its own, and links to the screen that owns its figures.
 
-| Role | Content | Source |
-|---|---|---|
-| Administrator | Today's money and activity, upcoming appointments outside availability | `/reports/money-collected`, `/reports/activity`, `/appointments?outside_availability=true` |
-| Receptionist | Today's appointments and arrivals, queue by status, unpaid visits, appointments needing a move | `/appointments`, `/queue`, `/visits?date=today`, `/appointments?outside_availability=true` |
-| Doctor | Patient with me now, waiting count, next patients, visits lacking a record | `/doctors/me/queue`, `/doctors/me/appointments`, `/doctors/me/visits?record_status=none` |
+| Role | Panels | Source | Reads |
+|---|---|---|---|
+| Administrator | Money today, activity today, appointments to move | `/reports/money-collected`, `/reports/activity` (today), `/appointments?outside_availability=1` (today + 90) | On demand |
+| Receptionist | Today's appointments (to arrive, arrived, completed, no-show), queue now by status, money owed today (not charged, unpaid, part paid), appointments to move | `/appointments` by status, `/queue` by status, `/visits?date=today` by charge status, `/appointments?outside_availability=1` | Live |
+| Doctor | With you now, waiting (everyone, in queue order), later today, records to finish (no record, draft, over 92 days) | `/doctors/me/queue`, `/doctors/me/appointments`, `/doctors/me/visits` by record status | Live |
 
-Counts come from `meta.total` or the returned list, never from fetching everything. Each dashboard is
-specified after the modules it draws on.
+Counts come from `meta.total` of a one-row read, or the list the API returns whole, never from fetching everything. Lists show at
+most five rows, except the doctor's waiting list. No row links to a patient's record or a medical record.
 
 ## Key workflows
 

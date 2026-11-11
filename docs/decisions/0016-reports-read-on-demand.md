@@ -2,7 +2,8 @@
 
 **Status:** Accepted, by the project owner with Phase 10's plan, 2026-11-08
 
-Extends [ADR 0015](0015-live-reads-beyond-the-queue.md). See [research](../../specs/010-reports/research.md), R1.
+Extends [ADR 0015](0015-live-reads-beyond-the-queue.md). See [research](../../specs/010-reports/research.md), R1. Extended by
+[ADR 0019](0019-dashboards-read-in-panels.md), whose administrator's dashboard reads two reports the same way.
 
 ## Context
 

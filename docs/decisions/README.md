@@ -23,6 +23,7 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0016](0016-reports-read-on-demand.md) | Reports read in the browser on demand, never by themselves | Accepted |
 | [0017](0017-charts-without-a-library.md) | The one chart is drawn without a library; `recharts` rejected | Accepted |
 | [0018](0018-audit-search-on-press.md) | The audit search reads only on a person's press, in memory, with no effect or cache | Accepted |
+| [0019](0019-dashboards-read-in-panels.md) | Dashboards read in panels: live for the desk and doctors, on demand for administrators | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.

@@ -273,6 +273,8 @@ test("an administrator setting a new password ends the session", async ({
 }) => {
   const { disposable } = liveAccounts();
   await signInLive(page, disposable);
+  // A page that reads nothing by itself: the dashboard's own reads would find the ended session before the click.
+  await page.goto("/en/account");
 
   const token = await adminToken();
   const password = `Synthetic-${randomBytes(12).toString("hex")}`;

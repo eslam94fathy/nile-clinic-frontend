@@ -1568,5 +1568,80 @@
       "discount_reason": "Discount reason",
       "cancel_reason": "Cancellation reason"
     }
+  },
+  "dashboard": {
+    "panel": {
+      "failed": "These figures couldn't be read.",
+      "andMore": "and {count} more",
+      "figureName": "{label}: {value}",
+      "profileNotFound": "Your doctor profile couldn't be found. Ask an administrator to check it.",
+      "period": "<from></from> to <to></to>"
+    },
+    "appointments": {
+      "heading": "Today's appointments",
+      "toArrive": "Still to arrive",
+      "arrived": "Arrived",
+      "completed": "Completed",
+      "noShow": "No-show",
+      "listLabel": "Next still to arrive",
+      "empty": "No appointments are still to arrive today.",
+      "link": "Open appointments"
+    },
+    "queue": {
+      "heading": "Queue now",
+      "empty": "Nobody is on today's queue yet.",
+      "link": "Open the queue"
+    },
+    "owed": {
+      "heading": "Money owed today",
+      "empty": "No visit today owes money.",
+      "link": "Open billing"
+    },
+    "move": {
+      "heading": "Appointments to move",
+      "total": "To move",
+      "period": "Today to <to></to>",
+      "listLabel": "Soonest to move",
+      "empty": "No appointments need moving.",
+      "link": "Open appointments needing a move"
+    },
+    "now": {
+      "heading": "With you now",
+      "number": "Number",
+      "calledAt": "Called at",
+      "empty": "Nobody is with you.",
+      "link": "Open my queue"
+    },
+    "waiting": {
+      "heading": "Waiting",
+      "count": "Waiting",
+      "listLabel": "Waiting, in queue order",
+      "empty": "Nobody is waiting.",
+      "link": "Open my queue"
+    },
+    "later": {
+      "heading": "Later today",
+      "listLabel": "Next still to arrive",
+      "empty": "No appointments are still to arrive today.",
+      "link": "Open my appointments"
+    },
+    "records": {
+      "heading": "Records to finish",
+      "none": "No record",
+      "draft": "Draft not finalized",
+      "empty": "No visits in this period lack a finished record.",
+      "link": "Open my visits"
+    },
+    "money": {
+      "heading": "Money today",
+      "byMethod": "Received by method",
+      "empty": "No money was recorded today.",
+      "link": "Open money collected"
+    },
+    "activity": {
+      "heading": "Activity today",
+      "empty": "No appointments or visits today.",
+      "link": "Open the activity report"
+    }
   }
 }
