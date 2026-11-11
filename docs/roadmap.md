@@ -17,7 +17,7 @@ foundations that later work relies on.
 | 8 | Medical encounters | **Done** (accepted 2026-11-08, [spec](../specs/008-medical-encounters/spec.md), [privacy review](../specs/008-medical-encounters/privacy-review.md)) | 7 | Encounters |
 | 9 | Billing and payments | **Done** (accepted 2026-11-08, [spec](../specs/009-billing-payments/spec.md)) | 7 | Payments |
 | 10 | Reports | **Done** (accepted 2026-11-10, [spec](../specs/010-reports/spec.md); charting library: none, [ADR 0017](decisions/0017-charts-without-a-library.md)) | 9 | Reports |
-| 11 | Audit log | Not started | 3 | Audit |
+| 11 | Audit log | Built, awaiting acceptance ([spec](../specs/011-audit-log/spec.md), [ADR 0018](decisions/0018-audit-search-on-press.md)) | 3 | Audit |
 | 12 | Role dashboards | Not started | 7, 8, 9, 10 | Composed |
 | 13 | Hardening and production readiness | Not started | all | |
 
@@ -63,7 +63,7 @@ simple landing page.
 **13: Hardening.** Full journeys per role and locale, accessibility and security review, security headers,
 performance, deployment documentation, and the pre-production items below. A Content Security Policy must allow the fixed theme
 script by hash or nonce ([ADR 0007](decisions/0007-design-system-foundation.md)). Also check for any shared component that still has
-no real consumer, and remove it (the exception recorded in the Phase 2 plan).
+no real consumer, and remove it (the exception recorded in the Phase 2 plan). Count `CursorPager`, shared with one consumer (Phase 11's plan), and the "not available yet" placeholder, which no route uses since Phase 11.
 
 ## Decisions on open questions
 

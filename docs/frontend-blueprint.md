@@ -1,6 +1,6 @@
 # Frontend Blueprint
 
-> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, the queue, medical records, billing, and reports exist.** What the product looks like, derived from the backend's
+> **Status: approved direction; the design system, app shell, clinic setup, patients, appointments, the queue, medical records, billing, reports, and the audit log exist.** What the product looks like, derived from the backend's
 > capabilities. Each screen is confirmed in its feature's specification. Everything below maps to
 > verified endpoints in [backend-integration.md](backend-integration.md).
 
@@ -34,7 +34,7 @@ All routes sit under `/{locale}` (`en` or `ar`). **A** administrator, **R** rece
 | `/billing` | A R | A date's visits and balances, charge a visit. Reads itself while it shows today | `GET /visits`, `POST /visits/{id}/charge` |
 | `/charges`, `/charges/[id]` | A R | Find charges over up to 92 days, the last 7 by default; payments and cancelling on the charge's page. Discount and refund for A. Reached also from a patient's page | `/charges*` |
 | `/reports/*` | A | Money collected (with a chart of net by day), Charges by doctor, Activity, Times, sharing a period of up to 366 days, this month by default, and a doctor. `/reports` is Money collected | `/reports/*` |
-| `/audit` | A | Search the trail | `GET /audit-entries` |
+| `/audit` | A | Search the trail on Search only, by period, staff member, patient number, record, action, and outcome, 25 entries a page, newest first, with Older and Newer. Nothing in the address | `GET /audit-entries` |
 | `/my/queue` | D | Own queue, call next, finish | `/doctors/me/queue*` |
 | `/my/appointments`, `/my/appointments/[id]` | D | Own appointments, read only | `/doctors/me/appointments*` |
 | `/my/schedule` | D | Own hours and time off, read only | `/doctors/me/schedule`, `/slots`, `/time-off` |
@@ -144,8 +144,8 @@ localized format in the clinic's time zone, so the two kinds look different by d
 | `Money`, `ClinicDate`, `ClinicTime`, `Instant`, `LtrText`, `UserText` | One correct display for each kind of value |
 | `ThemeSwitch` | Light, dark, or following the device |
 
-Phase 3 added `Can` for role-based visibility, in `features/app-shell`, and Phase 4 gave it consumers. Phase 4 also added `ConfirmedAction`, a button that asks first, calls the API, and refreshes. Still to come: `CursorPager` for the
-audit log, the only list with no total (Phase 11).
+Phase 3 added `Can` for role-based visibility, in `features/app-shell`, and Phase 4 gave it consumers. Phase 4 also added `ConfirmedAction`, a button that asks first, calls the API, and refreshes. Phase 11 added `CursorPager`, for the
+audit log, the only list with no total.
 
 **Lists.** Filters and page live in the URL so that they survive reload and the back button, with one
 exception: patient search, including where it's used to choose a patient. Its terms and page stay in the component's state and out of the

@@ -23,7 +23,7 @@ One page, `/{locale}/audit`, administrators only, with no query string ever.
 |---|---|---|
 | Before search | Opened, or after Clear | Empty state: "Choose filters, or none, and select Search to see entries" |
 | Loading | A Search running | Loading state in the results; Search shows progress and is disabled |
-| Moving | Older or Newer running | The page shown stays, dimmed and `aria-busy`; the pressed button shows progress; both disabled |
+| Moving | Older or Newer running | The page shown stays, dimmed and `aria-busy`; the pressed button shows progress; both disabled, and Search unavailable (`aria-disabled`) |
 | Success | Entries | The entries; the pager; "Newest entries" when there's no `prev_cursor` |
 | Empty | No entries | "No entries match these filters", keeping the filters |
 | Out of date | The form differs from the filters shown | A line above the results: "These results are for the previous search. Select Search to apply your changes." |

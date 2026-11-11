@@ -100,7 +100,7 @@ src/
 │   │   ├── audit-entry.tsx                  # Summary and details
 │   │   ├── entry-changes.tsx
 │   │   ├── searched-filters.tsx
-│   │   └── record-link.tsx                  # Subject and actor links
+│   │   └── entry-link.tsx                   # Subject and actor links
 │   ├── schemas/audit.ts
 │   ├── action-groups.ts
 │   ├── describe-value.ts

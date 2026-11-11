@@ -129,13 +129,15 @@ no library ([ADR 0017](decisions/0017-charts-without-a-library.md)).
 |---|---|---|
 | Live | Queue | Polls only while the tab and the page are visible |
 | Normal | Lists, reference data | Not a query: read on the server, then refresh ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) |
-| Audited | Patient, encounter, history, audit search | No automatic refetch, no retry, no link prefetch ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)) |
+| Audited | Patient, encounter, history, audit search | No automatic refetch, no retry, no link prefetch ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md), [ADR 0018](decisions/0018-audit-search-on-press.md)) |
 
 The query cache is memory only, is never persisted, and is cleared at sign-out and on `401`, both of which load a whole new page.
 
 **Patient reads** are the exception to server reads ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)). Records and patient search run in Client Components through the same-origin route, and no patient API call exists on the server. A server read of a record writes a false "opened" entry after a refresh and the back button, and search terms can't reach the server without entering the address. Everything else reads on the server, under [ADR 0011](decisions/0011-server-reads-and-refresh.md).
 
 **Medical records** follow the same rule, more strictly ([ADR 0014](decisions/0014-writing-medical-records.md)). Clinical content is only ever in a Client Component's state: never read on the server, never in the query cache, sent `no-store`, and gone at sign-out's full page load. A record or a history uses the guarded read, `useAuditedRead` in `lib`, which patients use too. In the panel beside a draft, each read runs directly in a click's handler, so nothing can repeat it. "My visits" holds no clinical content, so it reads on the server like other lists, and "My queue" reads the same list live for record statuses.
+
+**The audit log** reads only inside a person's press ([ADR 0018](decisions/0018-audit-search-on-press.md)). Every request to `GET /audit-entries`, each page included, writes a permanent `audit.searched` entry, so `useAuditSearch` in `features/audit` makes one only from Search, Older, Newer, Try again, or Start again, once per press, with a ref set before the request. No effect reads, nothing is cached, and the page's address never holds a query, so a reload, a link, or the back button can't repeat a search. The results and the filters sent stay in the component's state, so going back from a linked page shows them again without a read. Paging uses the API's cursors through the shared `CursorPager`, sending the filters of the page shown. The staff choice is read on the server, as it isn't audited. A patient's number links only through `PatientLink`.
 
 **Text that's only on screen.** A draft exists only in the page until a doctor saves it, as nothing saves by itself and nothing is kept in the browser. So `UnsavedChangesGuard` warns on every way out it can catch: links, in one place, sign-out, closing, and back and forward through the Navigation API. A `401` on a change is answered rather than acted on, a `403` or `404` doesn't re-decide the page, and fields go read-only during a request. A deliberate sign-out in any tab still leaves at once.
 

@@ -71,7 +71,7 @@ simply move elsewhere". That judgment was made before anything was measured, and
 
 ADR 0005's other rules still apply: no prefetching, no automatic retry, use what a mutation returned, and refreshing is a person's action.
 
-Phases 8 and 11 have audited reads too, and should start from this ADR. TanStack Query still arrives with the queue's polling in Phase 7.
+Phases 8 and 11 have audited reads too, and should start from this ADR. Phase 11's search is never started by opening a page, so it needs neither the effect nor the mark: [ADR 0018](0018-audit-search-on-press.md) reads it only inside a person's press. TanStack Query still arrives with the queue's polling in Phase 7.
 
 **Phase 8 made this read shared,** as its second consumer: `lib/use-audited-read.ts`, `lib/audited-opening.ts`, and `components/shared/audited-link.tsx`. Patients use them too, with their live counts unchanged. See [ADR 0014](0014-writing-medical-records.md).
 

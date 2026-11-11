@@ -68,6 +68,7 @@ work from memory or from these docs alone.
 - Don't retry mutations automatically.
 - No optimistic updates for money, medical records, or bookings: show what the server confirmed.
 - Read an audited record with `useAuditedRead`, in the browser, and count real entries in a live test on a production build ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md)).
+- Search the audit trail only inside a person's press, never from an effect, a query library, or the address ([ADR 0018](decisions/0018-audit-search-on-press.md)). Each request, every page included, writes an entry.
 - Link to an audited page only with a link built on `AuditedLink`: `PatientLink`, `RecordLink`, or `HistoryLink`. It never prefetches, and its click is what tells the reader a person asked to read again.
 - Show or choose a patient without opening them with `ChosenPatient` and `PatientChooser`. Never read the record just to show who someone is.
 - Treat a change that fails with status `0` or `502` and above as possibly saved, and say so. A `500` means it did not happen.

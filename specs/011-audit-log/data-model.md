@@ -2,15 +2,17 @@
 
 **Feature**: 011-audit-log | **Date**: 2026-11-10
 
-Frontend shapes only. Every API shape comes from `src/lib/api/generated/audit.ts`; schemas `satisfies z.ZodType<Generated>`.
+Frontend shapes only. Every API shape comes from `src/lib/api/generated/audit.ts`; schemas `satisfies z.ZodType<…>` of the
+types below, which widen the generated entry where the screen must show a backend addition as sent.
 
 ## From the API
 
 | Type | Source | Notes |
 |---|---|---|
-| `AuditEntry` | `components["schemas"]["AuditEntry"]` | `filters` is generated as `Record<string, never> \| null`; the schema reads it as a record of `string \| number` values, the only types the backend writes (research, Facts) |
-| `AuditActor`, `AuditEntrySubject`, `AuditChanges` | Generated | `values[field].from` and `.to` are `unknown`; read only by `describeValue` (below) |
-| `AuditAction` (44), `AuditOutcome`, `AuditSubject` (9) | Generated enums | Translation maps use `satisfies Record<…, string>`, so an added value fails type checking |
+| `AuditEntry` | `components["schemas"]["AuditEntry"]`, widened | `action`, `outcome`, `subject.type`, `actor.type`, and `actor.role` are any `string`, so a value the backend adds later is shown as sent rather than failing the page (FR-012); narrow with `isAuditSubject` before relying on a known one. `filters` is generated as `Record<string, never> \| null`; the schema reads it as a record of `string \| number` values, the only types the backend writes (research, Facts) |
+| `AuditEntryActor` | `AuditActor`, widened as above | |
+| `AuditChanges` | Generated | `values[field].from` and `.to` are `unknown`; read only by `describeValue` (below) |
+| `AuditAction` (44), `AuditOutcome`, `AuditSubject` (9) | Generated enums | For the filters' choices and links. Translation maps use `satisfies Record<…, string>`, so an added value fails type checking |
 | `AuditPage` | `{ data: AuditEntry[]; meta: { per_page: number; next_cursor: string \| null; prev_cursor: string \| null } }` | `links` and `meta.path` are removed by the same-origin route and aren't in the schema |
 
 ## The search's own state (memory only)
@@ -43,7 +45,8 @@ type Shown = {
 ```
 
 - Held in the search component with `useState`, plus a `busy` ref (research R2). Never in the address, storage, or a cache.
-- A `403` returns to `idle` and forgets `filters`. Any other failure keeps `previous`.
+- A `403` is `failed` with `previous: null`, shown as the forbidden state, and forgets the filters, so nothing can be tried again.
+  Any other failure keeps `previous`.
 - `stale`: whether the form's current values differ from `shown.filters`, to mark the results as the previous search's (US2.7). Computed
   from the form's values on change; nothing reads.
 
