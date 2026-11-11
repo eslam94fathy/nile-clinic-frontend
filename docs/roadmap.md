@@ -17,7 +17,7 @@ foundations that later work relies on.
 | 8 | Medical encounters | **Done** (accepted 2026-11-08, [spec](../specs/008-medical-encounters/spec.md), [privacy review](../specs/008-medical-encounters/privacy-review.md)) | 7 | Encounters |
 | 9 | Billing and payments | **Done** (accepted 2026-11-08, [spec](../specs/009-billing-payments/spec.md)) | 7 | Payments |
 | 10 | Reports | **Done** (accepted 2026-11-10, [spec](../specs/010-reports/spec.md); charting library: none, [ADR 0017](decisions/0017-charts-without-a-library.md)) | 9 | Reports |
-| 11 | Audit log | Built, awaiting acceptance ([spec](../specs/011-audit-log/spec.md), [ADR 0018](decisions/0018-audit-search-on-press.md)) | 3 | Audit |
+| 11 | Audit log | **Done** (accepted 2026-11-11, [spec](../specs/011-audit-log/spec.md), [ADR 0018](decisions/0018-audit-search-on-press.md)) | 3 | Audit |
 | 12 | Role dashboards | Not started | 7, 8, 9, 10 | Composed |
 | 13 | Hardening and production readiness | Not started | all | |
 
