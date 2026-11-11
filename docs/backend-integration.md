@@ -402,7 +402,7 @@ Workable today, but worth knowing. Nothing has been changed in the backend.
 |---|---|---|---|
 | G1 | `/staff` has no name search | Finding a staff member in a long list | Filter by role and status, then page |
 | G2 | Nothing links a staff account to a doctor profile: `DoctorSummary` omits `user_id`, and `/staff` has no "has profile" filter | The create-doctor screen can't exclude accounts that already have a profile, and staff pages can't link to the doctor | A paged table of doctor-role accounts, then the form; the API's `422` on `user_id` decides. A new doctor-role account goes straight to its form, the one time its id is known |
-| G3 | No dashboard or summary endpoint | Dashboards need several calls; receptionists and doctors have no reports | Compose from existing lists, showing only what they return |
+| G3 | No dashboard or summary endpoint | Dashboards need several calls (18 across the three roles); receptionists and doctors have no reports | Compose from existing lists, counting with `meta.total` on a one-row page ([ADR 0019](decisions/0019-dashboards-read-in-panels.md)). **Confirmed on the running API** (2026-11-11, commit `dff2dca`, by `e2e/live/dashboard.spec.ts`): each figure equals the API's own total for the same filter, and opening, refreshing, and leaving a dashboard open for two intervals writes no audit entry |
 | G4 | No sort parameters | No sortable columns anywhere | Don't offer sorting; sorting one client page would mislead |
 | G5 | Throttle wait is only in message text | No countdown possible without parsing | Show the message as sent |
 | G6 | No clinic details endpoint | Clinic name and logo have no source | Held in the frontend ([ADR 0009](decisions/0009-brand-assets.md)) |

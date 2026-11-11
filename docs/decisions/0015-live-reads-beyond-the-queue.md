@@ -2,7 +2,8 @@
 
 **Status:** Accepted, by the project owner with Phase 9's plan, 2026-11-08
 
-Extends [ADR 0013](0013-live-reads.md). See [research](../../specs/009-billing-payments/research.md), R1 and R2.
+Extends [ADR 0013](0013-live-reads.md). See [research](../../specs/009-billing-payments/research.md), R1 and R2. Extended by
+[ADR 0019](0019-dashboards-read-in-panels.md).
 
 ## Context
 

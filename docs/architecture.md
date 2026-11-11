@@ -111,6 +111,15 @@ component that reads isn't mounted. No figure is added up, rounded, or averaged 
 The one chart, net money by day, is HTML and CSS sized from exact whole piastres (`toPiastres`), beside a table of the same figures, with
 no library ([ADR 0017](decisions/0017-charts-without-a-library.md)).
 
+**Dashboards are panels, each read on its own** ([ADR 0019](decisions/0019-dashboards-read-in-panels.md)). `/dashboard` shows the
+signed-in role's dashboard from `features/dashboard`, inside its own `LiveQueryProvider`. Each panel is one `useLiveList` whose read
+makes its few requests together and fails as one, with its own key as its refresh's, so Refresh and Try again read only that panel,
+and one panel's failure leaves the others. A figure is `meta.total` from a read with `per_page=1`; a short list is five rows. The
+receptionist's and the doctor's panels read live; the administrator's on demand. Today is worked out when each read runs, so a page
+left open past midnight reads the new day. The dashboard reads through its own module with narrow schemas that drop what it doesn't
+show, such as a listed patient's phone, and **no audited read is ever made**: no row links to a patient's record or a medical
+record.
+
 **A confirmation sits above anything a refresh can remove.** The queue's dialogs hold their own copy of what they're about, because a refresh could otherwise close one under someone, or change what it says.
 
 **Proxy rules**
@@ -127,7 +136,7 @@ no library ([ADR 0017](decisions/0017-charts-without-a-library.md)).
 
 | Kind | Examples | Behavior |
 |---|---|---|
-| Live | Queue | Polls only while the tab and the page are visible |
+| Live | Queue, Billing for today, the desk's and doctors' dashboards | Polls only while the tab and the page are visible |
 | Normal | Lists, reference data | Not a query: read on the server, then refresh ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) |
 | Audited | Patient, encounter, history, audit search | No automatic refetch, no retry, no link prefetch ([ADR 0012](decisions/0012-audited-reads-in-the-browser.md), [ADR 0018](decisions/0018-audit-search-on-press.md)) |
 
