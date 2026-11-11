@@ -92,28 +92,12 @@ for (const [role, path, label] of REFUSALS) {
 
 test("a refused page's content isn't sent at all", async ({ page }) => {
   await signIn(page, "receptionist");
-  const placeholder = messages.en.shell.placeholderHeading;
 
   const response = await page.request.get("/en/audit");
   const body = await response.text();
 
   expect(body).toContain(messages.en.shared.states.forbiddenHeading);
-  expect(body).not.toContain(placeholder);
-});
-
-test("an allowed page from a later phase shows the placeholder", async ({
-  page,
-}) => {
-  await signIn(page, "administrator");
-
-  await page.goto("/en/audit");
-
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    messages.en.shell.nav.audit,
-  );
-  await expect(
-    page.getByText(messages.en.shell.placeholderHeading),
-  ).toBeVisible();
+  expect(body).not.toContain(messages.en.audit.notice);
 });
 
 test.describe("addresses that don't exist", () => {

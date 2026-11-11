@@ -145,6 +145,10 @@
         "active": "نشط",
         "deactivated": "موقوف",
         "inactive": "غير نشط"
+      },
+      "outcome": {
+        "succeeded": "نجح",
+        "refused": "مرفوض"
       }
     },
     "states": {
@@ -204,6 +208,13 @@
       "cash": "نقدًا",
       "card": "بطاقة",
       "wallet": "محفظة إلكترونية"
+    },
+    "cursorPager": {
+      "label": "الصفحات",
+      "newer": "الأحدث",
+      "older": "الأقدم",
+      "newest": "أحدث الإدخالات",
+      "moving": "جارٍ التحميل…"
     }
   },
   "preview": {
@@ -1342,6 +1353,220 @@
       "records": "زيارات تم الكشف فيها",
       "note": "تُحسب المتوسطات الإجمالية من كل الزيارات، لا من متوسطات الأطباء.",
       "emptyTitle": "لا توجد زيارات في هذه الفترة."
+    }
+  },
+  "audit": {
+    "title": "سجل التدقيق",
+    "description": "السجل الدائم لما قام به الموظفون: تسجيل الدخول والتعديلات وفتح السجلات.",
+    "notice": "كل بحث، وكل صفحة منه، يُسجَّل بدوره في هذا السجل باسمك. تظهر أسماء الموظفين كما هي الآن.",
+    "filters": {
+      "from": "من",
+      "to": "إلى",
+      "staff": "الموظف",
+      "staffNumber": "رقم الموظف",
+      "staffHint": "الإدخالات التي قام بها، أو التي تخص حسابه.",
+      "deactivated": "{name} (موقوف)",
+      "patient": "رقم المريض",
+      "subjectType": "نوع السجل",
+      "subjectNumber": "رقم السجل",
+      "subjectHint": "اختر النوع والرقم معًا.",
+      "action": "الإجراء",
+      "outcome": "النتيجة",
+      "any": "الكل",
+      "search": "بحث",
+      "clear": "مسح"
+    },
+    "problems": {
+      "reversed": "لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية.",
+      "needsType": "اختر نوع السجل لهذا الرقم.",
+      "needsNumber": "أدخل رقم السجل لهذا النوع.",
+      "notANumber": "أدخل عددًا صحيحًا أكبر من صفر."
+    },
+    "states": {
+      "beforeSearchTitle": "لم يتم البحث بعد",
+      "beforeSearch": "اختر عوامل التصفية، أو لا شيء، ثم اختر «بحث» لعرض الإدخالات.",
+      "emptyTitle": "لا توجد إدخالات تطابق هذه التصفية",
+      "empty": "جرّب فترة أطول أو عوامل تصفية أقل.",
+      "outOfDate": "هذه النتائج للبحث السابق. اختر «بحث» لتطبيق تغييراتك.",
+      "moveFailed": "تعذّر تغيير هذه الصفحة.",
+      "positionRefused": "هذا الموضع في النتائج لم يعد صالحًا.",
+      "startAgain": "البدء من جديد من الأحدث",
+      "results": "النتائج"
+    },
+    "actors": {
+      "system": "النظام",
+      "unknown": "غير معروف (لا يوجد حساب مطابق)",
+      "roleAtTime": "الدور وقتها: {role}"
+    },
+    "entry": {
+      "who": "من قام به",
+      "record": "السجل",
+      "recordValue": "{type} {number}",
+      "patient": "المريض",
+      "address": "عنوان الشبكة",
+      "changed": "ما تغيّر",
+      "none": "لا يوجد",
+      "filtersUsed": "عوامل التصفية المستخدمة",
+      "noFilters": "بدون عوامل تصفية",
+      "before": "قبل",
+      "after": "بعد",
+      "change": "من {before} إلى {after}",
+      "targetedAccount": "الحساب المذكور هو الحساب المستهدف، وليس بالضرورة من حاول."
+    },
+    "actionGroups": {
+      "auth": "تسجيل الدخول",
+      "staff": "الموظفون",
+      "patients": "المرضى",
+      "specialties": "التخصصات",
+      "doctors": "الأطباء والجداول",
+      "appointments": "المواعيد",
+      "visits": "الزيارات",
+      "records": "السجلات الطبية",
+      "money": "المال",
+      "audit": "سجل التدقيق"
+    },
+    "actions": {
+      "auth": {
+        "sign_in": "تسجيل الدخول",
+        "sign_out": "تسجيل الخروج",
+        "password_changed": "تغيير كلمة المرور الخاصة"
+      },
+      "staff": {
+        "created": "إنشاء حساب موظف",
+        "updated": "تعديل حساب موظف",
+        "deactivated": "إيقاف حساب موظف",
+        "reactivated": "إعادة تفعيل حساب موظف",
+        "password_reset": "تعيين كلمة مرور موظف"
+      },
+      "patient": {
+        "registered": "تسجيل مريض",
+        "updated": "تعديل بيانات مريض",
+        "opened": "فتح سجل مريض"
+      },
+      "specialty": {
+        "created": "إضافة تخصص",
+        "updated": "إعادة تسمية تخصص",
+        "deactivated": "إيقاف تخصص",
+        "reactivated": "إعادة تفعيل تخصص"
+      },
+      "doctor": {
+        "created": "إنشاء ملف طبيب",
+        "updated": "تعديل ملف طبيب"
+      },
+      "schedule": {
+        "set": "تحديد ساعات العمل",
+        "cleared": "مسح ساعات العمل"
+      },
+      "time_off": {
+        "added": "إضافة إجازة",
+        "removed": "حذف إجازة"
+      },
+      "appointment": {
+        "booked": "حجز موعد",
+        "rescheduled": "تغيير موعد",
+        "cancelled": "إلغاء موعد",
+        "no_show": "تسجيل عدم الحضور"
+      },
+      "visit": {
+        "checked_in": "تسجيل الوصول",
+        "walk_in_added": "إضافة زيارة بدون موعد",
+        "left": "تسجيل المغادرة",
+        "check_in_undone": "التراجع عن تسجيل الوصول",
+        "called": "استدعاء المريض",
+        "finished": "إنهاء الزيارة"
+      },
+      "encounter": {
+        "started": "بدء سجل طبي",
+        "draft_saved": "حفظ مسودة سجل طبي",
+        "finalized": "اعتماد سجل طبي",
+        "addendum_added": "إضافة ملحق",
+        "opened": "فتح سجل طبي",
+        "history_viewed": "عرض التاريخ الطبي"
+      },
+      "fee": {
+        "set": "تحديد سعر كشف الطبيب"
+      },
+      "charge": {
+        "created": "إنشاء رسم",
+        "cancelled": "إلغاء رسم"
+      },
+      "payment": {
+        "recorded": "تسجيل دفعة"
+      },
+      "refund": {
+        "recorded": "تسجيل استرداد"
+      },
+      "discount": {
+        "set": "تحديد خصم"
+      },
+      "audit": {
+        "searched": "بحث في سجل التدقيق"
+      }
+    },
+    "outcomes": {
+      "succeeded": "نجح",
+      "refused": "مرفوض"
+    },
+    "subjects": {
+      "staff_member": "حساب موظف",
+      "patient": "مريض",
+      "specialty": "تخصص",
+      "doctor": "طبيب",
+      "time_off": "إجازة",
+      "appointment": "موعد",
+      "visit": "زيارة",
+      "encounter": "سجل طبي",
+      "charge": "رسم"
+    },
+    "fields": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "role": "الدور",
+      "is_active": "نشط",
+      "name_en": "الاسم بالإنجليزية",
+      "name_ar": "الاسم بالعربية",
+      "user_id": "حساب الموظف",
+      "title": "اللقب",
+      "registration_number": "رقم القيد",
+      "specialty_ids": "التخصصات",
+      "appointment_minutes": "مدة الموعد",
+      "periods": "ساعات العمل",
+      "start_date": "اليوم الأول",
+      "end_date": "اليوم الأخير",
+      "start_minute": "وقت البدء",
+      "end_minute": "وقت الانتهاء",
+      "reason": "السبب",
+      "full_name": "الاسم الكامل",
+      "date_of_birth": "تاريخ الميلاد",
+      "sex": "النوع",
+      "phone": "الهاتف",
+      "national_id": "الرقم القومي",
+      "address": "العنوان",
+      "emergency_contact_name": "اسم جهة الاتصال في الطوارئ",
+      "emergency_contact_relationship": "صلة القرابة لجهة الاتصال في الطوارئ",
+      "emergency_contact_phone": "هاتف جهة الاتصال في الطوارئ",
+      "patient_id": "المريض",
+      "doctor_id": "الطبيب",
+      "date": "التاريخ",
+      "status": "الحالة",
+      "note": "الملاحظة",
+      "cancellation_reason": "سبب الإلغاء",
+      "queue_entry_id": "الزيارة",
+      "appointment_id": "الموعد",
+      "queue_number": "رقم الانتظار",
+      "order_minute": "الترتيب في قائمة الانتظار",
+      "chief_complaint": "الشكوى الرئيسية",
+      "examination_findings": "نتائج الفحص",
+      "diagnosis": "التشخيص",
+      "treatment_plan": "خطة العلاج",
+      "prescriptions": "الوصفات الطبية",
+      "text": "نص الإضافة",
+      "fee": "الرسم",
+      "discount": "الخصم",
+      "amount_paid": "المدفوع",
+      "discount_reason": "سبب الخصم",
+      "cancel_reason": "سبب الإلغاء"
     }
   }
 }

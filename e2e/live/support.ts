@@ -23,6 +23,11 @@ export type LiveAccounts = {
   secondEncounterDoctor: LiveAccount;
   /** A doctor only the billing tests use, with a fee and hours all day. */
   billingDoctor: LiveAccount;
+  /**
+   * An administrator only the audit tests sign in as. Each search writes an entry, and so does each count, so the
+   * counts are made as the setup administrator and only this account's searches are counted.
+   */
+  auditAdmin: LiveAccount;
 };
 
 /** Those doctors' profile ids, which differ from their account ids. */

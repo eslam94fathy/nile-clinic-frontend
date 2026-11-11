@@ -126,12 +126,6 @@ test.describe("who can reach appointment pages", () => {
       expect(await callsTo("doctors/me/appointments")).toBe(0);
     });
   }
-
-  test("later phases' placeholders are unchanged", async ({ page }) => {
-    await signIn(page, "administrator");
-    await page.goto("/en/audit");
-    await expect(shown(page, m.shell.placeholderHeading)).toBeVisible();
-  });
 });
 
 test.describe("the list", () => {

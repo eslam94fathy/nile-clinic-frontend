@@ -97,7 +97,7 @@ export const APP_ROUTES = [
     capability: "auditTrail",
     labelKey: "audit",
     inNavigation: true,
-    built: false,
+    built: true,
   },
   {
     path: "my/queue",

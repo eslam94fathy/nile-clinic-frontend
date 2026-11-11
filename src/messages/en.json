@@ -145,6 +145,10 @@
         "active": "Active",
         "deactivated": "Deactivated",
         "inactive": "Inactive"
+      },
+      "outcome": {
+        "succeeded": "Succeeded",
+        "refused": "Refused"
       }
     },
     "states": {
@@ -204,6 +208,13 @@
       "cash": "Cash",
       "card": "Card",
       "wallet": "Wallet"
+    },
+    "cursorPager": {
+      "label": "Pages",
+      "newer": "Newer",
+      "older": "Older",
+      "newest": "Newest entries",
+      "moving": "Loading…"
     }
   },
   "preview": {
@@ -1342,6 +1353,220 @@
       "records": "Seen visits",
       "note": "Overall averages are worked out from every visit, not from the doctors' averages.",
       "emptyTitle": "No visits in this period."
+    }
+  },
+  "audit": {
+    "title": "Audit log",
+    "description": "The permanent record of what staff did: sign-ins, changes, and openings of records.",
+    "notice": "Each search, and each page of it, is itself recorded in this log under your name. Staff names are shown as they are now.",
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "staff": "Staff member",
+      "staffNumber": "Staff member's number",
+      "staffHint": "Entries where they acted, or where their account was acted on.",
+      "deactivated": "{name} (deactivated)",
+      "patient": "Patient number",
+      "subjectType": "Record type",
+      "subjectNumber": "Record number",
+      "subjectHint": "Choose a type and a number together.",
+      "action": "Action",
+      "outcome": "Outcome",
+      "any": "Any",
+      "search": "Search",
+      "clear": "Clear"
+    },
+    "problems": {
+      "reversed": "The end date can't be before the start date.",
+      "needsType": "Choose a record type for this number.",
+      "needsNumber": "Enter the record's number for this type.",
+      "notANumber": "Enter a whole number above zero."
+    },
+    "states": {
+      "beforeSearchTitle": "No search yet",
+      "beforeSearch": "Choose filters, or none, and select Search to see entries.",
+      "emptyTitle": "No entries match these filters",
+      "empty": "Try a wider period or fewer filters.",
+      "outOfDate": "These results are for the previous search. Select Search to apply your changes.",
+      "moveFailed": "This page couldn't be changed.",
+      "positionRefused": "This position in the results is no longer valid.",
+      "startAgain": "Start again from the newest",
+      "results": "Results"
+    },
+    "actors": {
+      "system": "The system",
+      "unknown": "Unknown (no account matched)",
+      "roleAtTime": "Role at the time: {role}"
+    },
+    "entry": {
+      "who": "Who",
+      "record": "Record",
+      "recordValue": "{type} {number}",
+      "patient": "Patient",
+      "address": "Network address",
+      "changed": "Changed",
+      "none": "None",
+      "filtersUsed": "Filters used",
+      "noFilters": "No filters",
+      "before": "Before",
+      "after": "After",
+      "change": "{before} to {after}",
+      "targetedAccount": "The account named is the one targeted, not necessarily who tried."
+    },
+    "actionGroups": {
+      "auth": "Signing in",
+      "staff": "Staff",
+      "patients": "Patients",
+      "specialties": "Specialties",
+      "doctors": "Doctors and schedules",
+      "appointments": "Appointments",
+      "visits": "Visits",
+      "records": "Medical records",
+      "money": "Money",
+      "audit": "Audit log"
+    },
+    "actions": {
+      "auth": {
+        "sign_in": "Signed in",
+        "sign_out": "Signed out",
+        "password_changed": "Changed own password"
+      },
+      "staff": {
+        "created": "Staff account created",
+        "updated": "Staff account changed",
+        "deactivated": "Staff account deactivated",
+        "reactivated": "Staff account reactivated",
+        "password_reset": "Staff password set"
+      },
+      "patient": {
+        "registered": "Patient registered",
+        "updated": "Patient details changed",
+        "opened": "Patient record opened"
+      },
+      "specialty": {
+        "created": "Specialty added",
+        "updated": "Specialty renamed",
+        "deactivated": "Specialty deactivated",
+        "reactivated": "Specialty reactivated"
+      },
+      "doctor": {
+        "created": "Doctor profile created",
+        "updated": "Doctor profile changed"
+      },
+      "schedule": {
+        "set": "Working hours set",
+        "cleared": "Working hours cleared"
+      },
+      "time_off": {
+        "added": "Time off added",
+        "removed": "Time off removed"
+      },
+      "appointment": {
+        "booked": "Appointment booked",
+        "rescheduled": "Appointment moved",
+        "cancelled": "Appointment cancelled",
+        "no_show": "Marked as no-show"
+      },
+      "visit": {
+        "checked_in": "Checked in",
+        "walk_in_added": "Walk-in added",
+        "left": "Marked as left",
+        "check_in_undone": "Check-in undone",
+        "called": "Patient called in",
+        "finished": "Visit finished"
+      },
+      "encounter": {
+        "started": "Medical record started",
+        "draft_saved": "Medical record draft saved",
+        "finalized": "Medical record finalized",
+        "addendum_added": "Addendum added",
+        "opened": "Medical record opened",
+        "history_viewed": "Medical history viewed"
+      },
+      "fee": {
+        "set": "Doctor's fee set"
+      },
+      "charge": {
+        "created": "Charge created",
+        "cancelled": "Charge cancelled"
+      },
+      "payment": {
+        "recorded": "Payment recorded"
+      },
+      "refund": {
+        "recorded": "Refund recorded"
+      },
+      "discount": {
+        "set": "Discount set"
+      },
+      "audit": {
+        "searched": "Audit log searched"
+      }
+    },
+    "outcomes": {
+      "succeeded": "Succeeded",
+      "refused": "Refused"
+    },
+    "subjects": {
+      "staff_member": "Staff account",
+      "patient": "Patient",
+      "specialty": "Specialty",
+      "doctor": "Doctor",
+      "time_off": "Time off",
+      "appointment": "Appointment",
+      "visit": "Visit",
+      "encounter": "Medical record",
+      "charge": "Charge"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "role": "Role",
+      "is_active": "Active",
+      "name_en": "Name in English",
+      "name_ar": "Name in Arabic",
+      "user_id": "Staff account",
+      "title": "Title",
+      "registration_number": "Registration number",
+      "specialty_ids": "Specialties",
+      "appointment_minutes": "Appointment length",
+      "periods": "Working hours",
+      "start_date": "First day",
+      "end_date": "Last day",
+      "start_minute": "Start time",
+      "end_minute": "End time",
+      "reason": "Reason",
+      "full_name": "Full name",
+      "date_of_birth": "Date of birth",
+      "sex": "Sex",
+      "phone": "Phone",
+      "national_id": "National ID",
+      "address": "Address",
+      "emergency_contact_name": "Emergency contact's name",
+      "emergency_contact_relationship": "Emergency contact's relationship",
+      "emergency_contact_phone": "Emergency contact's phone",
+      "patient_id": "Patient",
+      "doctor_id": "Doctor",
+      "date": "Date",
+      "status": "Status",
+      "note": "Note",
+      "cancellation_reason": "Cancellation reason",
+      "queue_entry_id": "Visit",
+      "appointment_id": "Appointment",
+      "queue_number": "Queue number",
+      "order_minute": "Place in the queue",
+      "chief_complaint": "Chief complaint",
+      "examination_findings": "Examination findings",
+      "diagnosis": "Diagnosis",
+      "treatment_plan": "Treatment plan",
+      "prescriptions": "Prescriptions",
+      "text": "Addendum text",
+      "fee": "Fee",
+      "discount": "Discount",
+      "amount_paid": "Amount paid",
+      "discount_reason": "Discount reason",
+      "cancel_reason": "Cancellation reason"
     }
   }
 }

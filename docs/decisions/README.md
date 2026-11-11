@@ -22,6 +22,7 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0015](0015-live-reads-beyond-the-queue.md) | Billing reads live for today and on demand otherwise; the live pieces move to shared places | Accepted |
 | [0016](0016-reports-read-on-demand.md) | Reports read in the browser on demand, never by themselves | Accepted |
 | [0017](0017-charts-without-a-library.md) | The one chart is drawn without a library; `recharts` rejected | Accepted |
+| [0018](0018-audit-search-on-press.md) | The audit search reads only on a person's press, in memory, with no effect or cache | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.

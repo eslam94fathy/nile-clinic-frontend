@@ -23,15 +23,19 @@ export function parseInstant(value: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** Formats a moment in time for display in the clinic's time zone, never the browser's. */
+/**
+ * Formats a moment in time for display in the clinic's time zone, never the browser's. `seconds` is for the audit
+ * trail, where entries a second apart must be told apart.
+ */
 export function formatInstant(
   instant: Date,
   locale: string,
   timeZone: string,
+  { seconds = false }: { seconds?: boolean } = {},
 ): string {
   return new Intl.DateTimeFormat(formattingLocale(locale), {
     timeZone,
     dateStyle: "medium",
-    timeStyle: "short",
+    timeStyle: seconds ? "medium" : "short",
   }).format(instant);
 }
