@@ -67,10 +67,60 @@ for (const locale of ["ar", "en"] as const) {
 
       const t = messages[locale];
 
-      test("landing page", async ({ page }) => {
+      test("dashboards: the desk's, with one panel failed and one refused, at desk and narrow widths", async ({
+        page,
+      }) => {
+        const d = t.dashboard;
+        await control("clinic/appointment?days=0&patient=2&start=10:00");
+        await control("clinic/queue-entry?patient=3&status=waiting");
+        await control("clinic/appointment?days=3&outside=1&patient=2");
+        await script("visits", 500);
+        await script("queue", 403);
         await signIn(page, "receptionist", locale);
-        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        await expect(
+          page.getByRole("region", { name: d.appointments.heading }),
+        ).toContainText("10:00");
+        await expect(
+          page.getByRole("region", { name: d.owed.heading }).getByRole("alert"),
+        ).toBeVisible();
+        await expect(
+          page
+            .getByRole("region", { name: d.queue.heading })
+            .getByText(t.shared.states.forbiddenHeading),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
 
+        await page.setViewportSize({ width: 390, height: 844 });
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("dashboards: the doctor's, with someone waiting and nobody with them", async ({
+        page,
+      }) => {
+        const d = t.dashboard;
+        await control("clinic/queue-entry?patient=3&status=waiting");
+        await signIn(page, "doctor", locale);
+        await expect(
+          page.getByRole("region", { name: d.waiting.heading }),
+        ).toContainText("Synthetic Child Gamma");
+        await expect(
+          page.getByRole("region", { name: d.now.heading }),
+        ).toContainText(d.now.empty);
+        await expect(
+          page.getByRole("region", { name: d.records.heading }),
+        ).toContainText(d.records.empty);
+        expect(await seriousIssues(page)).toEqual([]);
+      });
+
+      test("dashboards: the administrator's", async ({ page }) => {
+        const d = t.dashboard;
+        await signIn(page, "administrator", locale);
+        await expect(
+          page.getByRole("region", { name: d.money.heading }),
+        ).toContainText(d.money.empty);
+        await expect(
+          page.getByRole("region", { name: d.activity.heading }),
+        ).toContainText(d.activity.empty);
         expect(await seriousIssues(page)).toEqual([]);
       });
 

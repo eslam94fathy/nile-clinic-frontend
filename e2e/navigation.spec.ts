@@ -144,12 +144,28 @@ test("a role that lost access is refused on the next navigation", async ({
 }) => {
   await signIn(page, "administrator");
   const nav = mainNavigation(page, "en");
+  // The dashboard streams in after the address changes, and reads the role as it does. Changing the role before it has
+  // finished would have the dashboard, not the next navigation, find the change.
+  for (const heading of [
+    messages.en.dashboard.money.heading,
+    messages.en.dashboard.activity.heading,
+    messages.en.dashboard.move.heading,
+  ]) {
+    await expect(
+      page
+        .getByRole("region", { name: heading })
+        .getByText(messages.en.shared.lastRead.label),
+    ).toBeVisible();
+  }
   await control(`account?email=${ACCOUNTS.administrator}&role=receptionist`);
 
   await nav.getByRole("link", { name: messages.en.shell.nav.staff }).click();
 
+  // Only what's on screen: the dashboard stays mounted, hidden, and its panels may have been refused too.
   await expect(
-    page.getByText(messages.en.shared.states.forbiddenHeading),
+    page
+      .getByText(messages.en.shared.states.forbiddenHeading)
+      .locator("visible=true"),
   ).toBeVisible();
   await expect(
     nav.getByRole("link", { name: messages.en.shell.nav.staff }),

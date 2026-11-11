@@ -118,6 +118,8 @@ test.describe("a session that ended elsewhere", () => {
 
   test("goes to sign-in on the next navigation", async ({ page }) => {
     await signIn(page, "receptionist");
+    // From a page that reads nothing by itself, so that the navigation is what finds out. The dashboard's panels would.
+    await page.goto("/en/account");
     await control(`revoke?email=${ACCOUNTS.receptionist}`);
 
     await mainNavigation(page, "en")
@@ -238,6 +240,8 @@ test.describe("two tabs", () => {
     page,
   }) => {
     await signIn(page, "receptionist");
+    // From a page that reads nothing by itself, so that the navigation is what finds out. The dashboard's panels would.
+    await page.goto("/en/account");
     const other = await context.newPage();
     await other.goto("/en/account");
     await expect(mainNavigation(other, "en")).toBeVisible();
