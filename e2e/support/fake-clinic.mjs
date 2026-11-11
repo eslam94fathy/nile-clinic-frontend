@@ -105,6 +105,103 @@ const EMPTY_REPORTS = {
 const dateOf = (number) =>
   new Date(number * 86_400_000).toISOString().slice(0, 10);
 
+// A synthetic audit trail, oldest first, a minute apart: every kind of actor, a refused sign-in, changes with kept
+// values, and an earlier search, with more than two pages of 25. Patients 1 and 2 and staff 1 and 2 recur.
+function syntheticAuditTrail() {
+  const staffActor = (id) => ({
+    type: "staff",
+    id,
+    name: id === 1 ? "Synthetic Admin" : "Synthetic Reception",
+    role: id === 1 ? "administrator" : "receptionist",
+  });
+  const kinds = [
+    () => ({
+      action: "auth.sign_in",
+      actor: staffActor(2),
+      subject: { type: "staff_member", id: 2 },
+    }),
+    (id) => ({
+      action: "patient.opened",
+      actor: staffActor(2),
+      subject: { type: "patient", id: (id % 2) + 1 },
+      patient_id: (id % 2) + 1,
+    }),
+    (id) => ({
+      action: "appointment.booked",
+      actor: staffActor(2),
+      subject: { type: "appointment", id: id + 300 },
+      patient_id: (id % 2) + 1,
+      changes: {
+        fields: ["patient_id", "doctor_id", "date", "start_minute", "status"],
+        values: {
+          status: { from: null, to: "scheduled" },
+          date: { from: null, to: "2026-02-03" },
+          start_minute: { from: null, to: 540 },
+          doctor_id: { from: null, to: 1 },
+        },
+      },
+    }),
+    () => ({
+      action: "discount.set",
+      actor: staffActor(1),
+      subject: { type: "charge", id: 57 },
+      patient_id: 1,
+      changes: {
+        fields: ["discount", "discount_reason", "status"],
+        values: {
+          discount: { from: "0.00", to: "200.00" },
+          status: { from: "unpaid", to: "paid" },
+        },
+      },
+    }),
+    () => ({
+      action: "auth.sign_in",
+      outcome: "refused",
+      actor: { type: "unknown", id: null, name: null, role: null },
+      subject: null,
+    }),
+    () => ({
+      action: "auth.sign_in",
+      outcome: "refused",
+      actor: staffActor(2),
+      subject: { type: "staff_member", id: 2 },
+    }),
+    () => ({
+      action: "staff.created",
+      actor: { type: "system", id: null, name: null, role: null },
+      subject: { type: "staff_member", id: 1 },
+      network_address: null,
+      changes: {
+        fields: ["name", "email", "password", "role", "is_active"],
+        values: {
+          role: { from: null, to: "administrator" },
+          is_active: { from: null, to: true },
+        },
+      },
+    }),
+    () => ({
+      action: "audit.searched",
+      actor: staffActor(1),
+      subject: null,
+      filters: { patient_id: 1, action: "patient.opened" },
+    }),
+  ];
+  return Array.from({ length: 64 }, (_, index) => {
+    const id = index + 1;
+    const at = new Date(Date.UTC(2026, 0, 30, 8, 0, 0) + index * 61_000);
+    return {
+      id,
+      occurred_at: at.toISOString().replace(".000Z", ".000000Z"),
+      outcome: "succeeded",
+      patient_id: null,
+      network_address: "203.0.113.10",
+      changes: null,
+      filters: null,
+      ...kinds[index % kinds.length](id),
+    };
+  });
+}
+
 function freshClinic() {
   return {
     specialties: [
@@ -204,6 +301,9 @@ function freshClinic() {
     // Reports' figures are seeded by tests, keyed by report and, optionally, doctor, never worked out here.
     reports: new Map(),
     reportReads: [],
+    audit: syntheticAuditTrail(),
+    // The filters of each search, as the real API records them with `audit.searched`.
+    auditSearches: [],
     // Each read here is a permanent entry on the real API, so tests count them.
     encounterReads: {
       opened: 0,
@@ -2627,6 +2727,13 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
         return send(response, 200, { data: chargeBody(charge) });
       }),
     ],
+    [
+      "GET",
+      /^audit-entries$/,
+      admin((_request, response, me, _match, query) =>
+        searchAudit(response, me, query),
+      ),
+    ],
     ...REPORT_NAMES.map((name) => [
       "GET",
       new RegExp(`^reports/${name}$`),
@@ -2635,6 +2742,156 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
       ),
     ]),
   ];
+
+  const AUDIT_FILTERS = [
+    "from",
+    "to",
+    "staff_id",
+    "patient_id",
+    "subject_type",
+    "subject_id",
+    "action",
+    "outcome",
+  ];
+  const AUDIT_NUMBERS = ["staff_id", "patient_id", "subject_id"];
+  const encodeCursor = (position) =>
+    Buffer.from(JSON.stringify(position)).toString("base64url");
+  const decodeCursor = (text) => {
+    try {
+      const position = JSON.parse(Buffer.from(text, "base64url").toString());
+      return Number.isInteger(position?.id) &&
+        ["older", "newer"].includes(position?.direction)
+        ? position
+        : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // As `SearchAuditEntriesRequest`: authorization first (the route's `admin`), then each filter's rule.
+  function auditErrors(query) {
+    const errors = {};
+    for (const name of ["from", "to"]) {
+      if (query.has(name) && !DATE.test(query.get(name))) {
+        errors[name] = [`The ${name} field must match the format Y-m-d.`];
+      }
+    }
+    if (
+      query.has("from") &&
+      query.has("to") &&
+      query.get("to") < query.get("from")
+    ) {
+      errors.to = ["The to field must be a date after or equal to from."];
+    }
+    for (const name of AUDIT_NUMBERS) {
+      if (query.has(name) && !/^[1-9]\d*$/.test(query.get(name))) {
+        errors[name] = [
+          `The ${name.replace("_", " ")} field must be an integer.`,
+        ];
+      }
+    }
+    if (query.has("subject_id") !== query.has("subject_type")) {
+      const other = query.has("subject_id") ? "subject_type" : "subject_id";
+      errors[other] = [`The ${other.replace("_", " ")} field is required.`];
+    }
+    if (query.has("cursor") && !decodeCursor(query.get("cursor"))) {
+      errors.cursor = ["The position in the results is not valid."];
+    }
+    const perPage = Number(query.get("per_page") ?? 15);
+    if (!Number.isInteger(perPage) || perPage < 1 || perPage > 100) {
+      errors.per_page = ["The per page field must be between 1 and 100."];
+    }
+    return Object.keys(errors).length > 0 ? errors : null;
+  }
+
+  // Newest first, by id, and stable as entries are added, as the API's cursor paging is. Dates are Cairo's.
+  function searchAudit(response, me, query) {
+    const errors = auditErrors(query);
+    if (errors) return refuse(response, errors);
+
+    const filters = {};
+    for (const name of AUDIT_FILTERS) {
+      if (!query.has(name)) continue;
+      filters[name] = AUDIT_NUMBERS.includes(name)
+        ? Number(query.get(name))
+        : query.get(name);
+    }
+    const dateOf = (entry) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(
+        new Date(entry.occurred_at),
+      );
+    const matches = (entry) =>
+      (filters.staff_id === undefined ||
+        entry.actor.id === filters.staff_id ||
+        (entry.subject?.type === "staff_member" &&
+          entry.subject.id === filters.staff_id)) &&
+      (filters.patient_id === undefined ||
+        entry.patient_id === filters.patient_id) &&
+      (filters.subject_type === undefined ||
+        (entry.subject?.type === filters.subject_type &&
+          entry.subject.id === filters.subject_id)) &&
+      (filters.action === undefined || entry.action === filters.action) &&
+      (filters.outcome === undefined || entry.outcome === filters.outcome) &&
+      (filters.from === undefined || dateOf(entry) >= filters.from) &&
+      (filters.to === undefined || dateOf(entry) <= filters.to);
+
+    const perPage = Number(query.get("per_page") ?? 15);
+    const all = clinic.audit.filter(matches).sort((a, b) => b.id - a.id);
+    const position = query.has("cursor")
+      ? decodeCursor(query.get("cursor"))
+      : null;
+    let rows;
+    if (position?.direction === "older") {
+      rows = all.filter(({ id }) => id < position.id).slice(0, perPage);
+    } else if (position?.direction === "newer") {
+      rows = all.filter(({ id }) => id > position.id).slice(-perPage);
+    } else {
+      rows = all.slice(0, perPage);
+    }
+    const first = rows[0];
+    const last = rows.at(-1);
+    const next =
+      last && all.some(({ id }) => id < last.id)
+        ? encodeCursor({ id: last.id, direction: "older" })
+        : null;
+    const prev =
+      first && all.some(({ id }) => id > first.id)
+        ? encodeCursor({ id: first.id, direction: "newer" })
+        : null;
+
+    // Recorded after the results are read, so a search never lists itself.
+    clinic.auditSearches.push(filters);
+    clinic.audit.push({
+      id: (clinic.audit.at(-1)?.id ?? 0) + 1,
+      occurred_at: nowUtc(),
+      action: "audit.searched",
+      outcome: "succeeded",
+      actor: { type: "staff", id: me.id, name: me.name, role: me.role },
+      subject: null,
+      patient_id: null,
+      network_address: "203.0.113.10",
+      changes: null,
+      filters,
+    });
+
+    // The private address, as the real API sends it; the same-origin route must remove it.
+    const here = `http://127.0.0.1:${port}/api/v1/audit-entries`;
+    return send(response, 200, {
+      data: rows,
+      links: {
+        first: null,
+        last: null,
+        prev: prev && `${here}?cursor=${prev}`,
+        next: next && `${here}?cursor=${next}`,
+      },
+      meta: {
+        path: here,
+        per_page: perPage,
+        next_cursor: next,
+        prev_cursor: prev,
+      },
+    });
+  }
 
   // As the real API validates every report (`ReportRequest`), and refuses an unknown doctor with 404.
   function reportErrors(query) {
@@ -3117,6 +3374,10 @@ export function createClinic({ send, readJson, accounts, endSessions, port }) {
           JSON.parse(query.get("body")),
         );
         send(response, 200, {});
+        return true;
+      }
+      case "/__control/clinic/audit-searches": {
+        send(response, 200, { searches: clinic.auditSearches });
         return true;
       }
       case "/__control/clinic/report-reads": {

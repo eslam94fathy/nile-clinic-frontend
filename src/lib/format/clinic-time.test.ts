@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readClinicTime } from "./clinic-time";
+import { minutesToClockTime, readClinicTime } from "./clinic-time";
 
 describe("readClinicTime", () => {
   it.each(["09:20", "00:00", "23:55", "24:00", "09:21"])(
@@ -22,4 +22,23 @@ describe("readClinicTime", () => {
   ])("gives nothing for %s", (value) => {
     expect(readClinicTime(value)).toBeNull();
   });
+});
+
+describe("minutesToClockTime", () => {
+  it.each([
+    [0, "00:00"],
+    [5, "00:05"],
+    [540, "09:00"],
+    [1015, "16:55"],
+    [1440, "24:00"],
+  ])("gives %s as %s", (minutes, time) => {
+    expect(minutesToClockTime(minutes)).toBe(time);
+  });
+
+  it.each([-1, 1441, 9.5, Number.NaN, "540", null, undefined, true])(
+    "gives nothing for %s",
+    (value) => {
+      expect(minutesToClockTime(value)).toBeNull();
+    },
+  );
 });

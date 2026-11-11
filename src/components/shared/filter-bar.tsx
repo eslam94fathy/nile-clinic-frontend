@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   NativeSelect,
+  NativeSelectOptGroup,
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { usePathname, useRouter } from "@/lib/i18n/navigation";
@@ -26,10 +27,32 @@ type FilterBase = {
 };
 
 export type FilterDefinition = FilterBase &
-  (
-    | { type: "text" | "date" }
-    | { type: "select"; options: { value: string; label: string }[] }
-  );
+  ({ type: "text" | "date" } | { type: "select"; options: FilterOption[] });
+
+/** `group` puts consecutive options with the same label into one `optgroup`, for a long list such as the audit's actions. */
+export type FilterOption = { value: string; label: string; group?: string };
+
+type OptionRun = { group: string | undefined; options: FilterOption[] };
+
+function runsOf(options: FilterOption[]): OptionRun[] {
+  const runs: OptionRun[] = [];
+  for (const option of options) {
+    const last = runs.at(-1);
+    if (last && last.group !== undefined && last.group === option.group) {
+      last.options.push(option);
+    } else {
+      runs.push({ group: option.group, options: [option] });
+    }
+  }
+  return runs;
+}
+
+const renderOptions = (options: FilterOption[]) =>
+  options.map((option) => (
+    <NativeSelectOption key={option.value} value={option.value}>
+      {option.label}
+    </NativeSelectOption>
+  ));
 
 export type FilterValues = Record<string, string>;
 
@@ -49,20 +72,42 @@ function fieldsIn(form: HTMLFormElement | null) {
   return fields;
 }
 
+/** Each filter's value, trimmed, as `onApply` and `onChange` give it. */
+function valuesIn(form: HTMLFormElement, filters: FilterDefinition[]) {
+  const fields = fieldsIn(form);
+  return Object.fromEntries(
+    filters.map((filter) => [
+      filter.name,
+      (fields.get(filter.name)?.value ?? "").trim(),
+    ]),
+  ) satisfies FilterValues;
+}
+
 export function FilterBar({
   filters,
   onApply,
   onReset,
+  onChange,
+  applyBlocked = false,
   errors,
   applyLabel,
+  resetLabel,
 }: {
   filters: FilterDefinition[];
   onApply?: (values: FilterValues) => void;
   /** Called instead of `onApply` on reset, for a screen that must tell a reset from an empty search. */
   onReset?: () => void;
+  /** Every value, as `onApply` would give it, each time the person changes a field. Nothing is applied. */
+  onChange?: (values: FilterValues) => void;
+  /**
+   * The apply button says it's unavailable, and pressing it or Enter does nothing, while the screen can't take a new
+   * search. Not `disabled`, so the button keeps its focus.
+   */
+  applyBlocked?: boolean;
   /** Each filter's error, by name, shown as sent. */
   errors?: Partial<Record<string, string>>;
   applyLabel?: string;
+  resetLabel?: string;
 }) {
   const t = useTranslations("shared.filters");
   const searchParams = useSearchParams();
@@ -116,13 +161,8 @@ export function FilterBar({
 
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const fields = fieldsIn(event.currentTarget);
-    const applied: FilterValues = Object.fromEntries(
-      filters.map((filter) => [
-        filter.name,
-        (fields.get(filter.name)?.value ?? "").trim(),
-      ]),
-    );
+    if (applyBlocked) return;
+    const applied = valuesIn(event.currentTarget, filters);
     navigate(applied);
     onApply?.(applied);
   }
@@ -153,6 +193,11 @@ export function FilterBar({
       ref={form}
       aria-label={t("label")}
       onSubmit={apply}
+      onChange={
+        onChange
+          ? (event) => onChange(valuesIn(event.currentTarget, filters))
+          : undefined
+      }
       className="flex flex-wrap items-start gap-3"
     >
       {filters.map((filter) => (
@@ -169,11 +214,18 @@ export function FilterBar({
                   {...fieldProps(filter)}
                   className="w-full"
                 >
-                  {filter.options.map((option) => (
-                    <NativeSelectOption key={option.value} value={option.value}>
-                      {option.label}
-                    </NativeSelectOption>
-                  ))}
+                  {runsOf(filter.options).map((run, index) =>
+                    run.group === undefined ? (
+                      renderOptions(run.options)
+                    ) : (
+                      <NativeSelectOptGroup
+                        key={`${run.group}-${String(index)}`}
+                        label={run.group}
+                      >
+                        {renderOptions(run.options)}
+                      </NativeSelectOptGroup>
+                    ),
+                  )}
                 </NativeSelect>
               ) : (
                 <Input {...input} {...fieldProps(filter)} type={filter.type} />
@@ -188,9 +240,11 @@ export function FilterBar({
           {applyLabel ?? t("apply")}
         </span>
         <div className="flex gap-2">
-          <Button type="submit">{applyLabel ?? t("apply")}</Button>
+          <Button type="submit" aria-disabled={applyBlocked || undefined}>
+            {applyLabel ?? t("apply")}
+          </Button>
           <Button type="button" variant="outline" onClick={reset}>
-            {t("reset")}
+            {resetLabel ?? t("reset")}
           </Button>
         </div>
       </div>

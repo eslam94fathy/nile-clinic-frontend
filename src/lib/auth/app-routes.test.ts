@@ -37,6 +37,21 @@ describe("clinical screens", () => {
   });
 });
 
+describe("the audit log", () => {
+  it("is built, and for administrators only", () => {
+    const route = findRoute("audit");
+    expect(route?.built).toBe(true);
+    if (!route) return;
+    expect(canOpen("administrator", route)).toBe(true);
+    expect(canOpen("receptionist", route)).toBe(false);
+    expect(canOpen("doctor", route)).toBe(false);
+  });
+
+  it("leaves no route still waiting for its phase", () => {
+    expect(APP_ROUTES.filter((route) => !route.built)).toEqual([]);
+  });
+});
+
 // The table in docs/frontend-blueprint.md, in its order.
 describe("each role's navigation matches the blueprint", () => {
   it("administrator", () => {

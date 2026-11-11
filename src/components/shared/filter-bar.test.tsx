@@ -291,3 +291,93 @@ describe("a bar with only private filters", () => {
     expect(onApply).toHaveBeenCalled();
   });
 });
+
+describe("option groups", () => {
+  const grouped: FilterDefinition[] = [
+    {
+      name: "action",
+      label: "Action",
+      type: "select",
+      inAddress: false,
+      options: [
+        { value: "", label: "Any" },
+        { value: "a.one", label: "One", group: "First" },
+        { value: "a.two", label: "Two", group: "First" },
+        { value: "b.one", label: "Three", group: "Second" },
+      ],
+    },
+  ];
+
+  it("puts consecutive options of a group in one optgroup, and leaves others alone", () => {
+    renderWithIntl(<FilterBar filters={grouped} />);
+    const select = screen.getByLabelText("Action");
+    const groups = select.querySelectorAll("optgroup");
+
+    expect([...groups].map((group) => group.label)).toEqual([
+      "First",
+      "Second",
+    ]);
+    expect(groups[0]?.querySelectorAll("option")).toHaveLength(2);
+    expect(select.querySelector(":scope > option")?.textContent).toBe("Any");
+  });
+
+  it("sends a grouped option's value", () => {
+    const onApply = vi.fn();
+    renderWithIntl(<FilterBar filters={grouped} onApply={onApply} />);
+    type("Action", "a.two");
+    apply();
+
+    expect(onApply).toHaveBeenCalledWith({ action: "a.two" });
+  });
+});
+
+describe("labels", () => {
+  it("can name its buttons for the screen", () => {
+    renderWithIntl(
+      <FilterBar
+        filters={[{ name: "q", label: "Q", type: "text", inAddress: false }]}
+        applyLabel="Search"
+        resetLabel="Clear"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Search" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Clear" })).toBeTruthy();
+  });
+});
+
+describe("watching and blocking", () => {
+  it("reports every value, trimmed, on each change, without applying", () => {
+    const onChange = vi.fn();
+    const onApply = vi.fn();
+    renderWithIntl(
+      <FilterBar filters={filters} onChange={onChange} onApply={onApply} />,
+    );
+    type("Search", " 0100 ");
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "seen" },
+    });
+
+    expect(onChange).toHaveBeenLastCalledWith({
+      date: "",
+      status: "seen",
+      search: "0100",
+    });
+    expect(onApply).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("says applying is unavailable while blocked, and ignores a press", () => {
+    const onApply = vi.fn();
+    renderWithIntl(
+      <FilterBar filters={filters} onApply={onApply} applyBlocked />,
+    );
+    type("Date", "2026-11-05");
+    apply();
+
+    const button = screen.getByRole("button", { name: text.apply });
+    expect(button.getAttribute("aria-disabled")).toBe("true");
+    expect(button).toHaveProperty("disabled", false);
+    expect(onApply).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+});

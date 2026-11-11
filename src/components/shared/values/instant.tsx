@@ -5,10 +5,12 @@ import { NoValue } from "./no-value";
 export function Instant({
   value,
   timeZone,
+  seconds = false,
 }: {
   value: string | null | undefined;
   /** The clinic's time zone. It's server configuration, so it's passed in rather than guessed. */
   timeZone: string;
+  seconds?: boolean;
 }) {
   const locale = useLocale();
   const instant = parseInstant(value);
@@ -17,7 +19,7 @@ export function Instant({
   return (
     <bdi>
       <time dateTime={instant.toISOString()}>
-        {formatInstant(instant, locale, timeZone)}
+        {formatInstant(instant, locale, timeZone, { seconds })}
       </time>
     </bdi>
   );

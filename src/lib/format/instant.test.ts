@@ -23,6 +23,32 @@ describe("formatInstant", () => {
   });
 });
 
+describe("formatInstant with seconds", () => {
+  const precise = new Date("2026-11-05T22:30:07Z");
+
+  it("shows the seconds, in the clinic's time zone", () => {
+    const cairo = formatInstant(precise, "en", "Africa/Cairo", {
+      seconds: true,
+    });
+
+    expect(cairo).toContain("Nov 6");
+    expect(cairo).toMatch(/12:30:07/);
+  });
+
+  it("leaves them out by default", () => {
+    expect(formatInstant(precise, "en", "Africa/Cairo")).not.toMatch(/:07/);
+  });
+
+  it("shows them in Arabic too", () => {
+    const arabic = formatInstant(precise, "ar", "Africa/Cairo", {
+      seconds: true,
+    });
+
+    expect(arabic).toMatch(/[؀-ۿ]/);
+    expect(arabic).toMatch(/07/);
+  });
+});
+
 describe("parseInstant", () => {
   it("reads the backend's two spellings as the same moment", () => {
     const offset = parseInstant("2026-11-05T14:22:31+00:00");

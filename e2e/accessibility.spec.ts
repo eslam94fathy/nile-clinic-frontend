@@ -105,11 +105,37 @@ for (const locale of ["ar", "en"] as const) {
         expect(await seriousIssues(page)).toEqual([]);
       });
 
-      test("placeholder", async ({ page }) => {
+      test("audit log", async ({ page }) => {
         await signIn(page, "administrator", locale);
         await page.goto(`/${locale}/audit`);
-        await expect(page.getByText(t.shell.placeholderHeading)).toBeVisible();
+        await expect(
+          page.getByText(t.audit.states.beforeSearchTitle),
+        ).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
 
+        // Results: refusals, changes with kept values, and a search's filters among them.
+        await page
+          .getByRole("button", { name: t.audit.filters.search, exact: true })
+          .click();
+        await expect(page.locator("article").first()).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await page
+          .getByLabel(t.audit.filters.patient, { exact: true })
+          .fill("999");
+        await page
+          .getByRole("button", { name: t.audit.filters.search, exact: true })
+          .click();
+        await expect(page.getByText(t.audit.states.emptyTitle)).toBeVisible();
+        expect(await seriousIssues(page)).toEqual([]);
+
+        await script("audit-entries", 500);
+        await page
+          .getByRole("button", { name: t.audit.filters.search, exact: true })
+          .click();
+        await expect(
+          page.getByText(t.shared.states.errorHeading),
+        ).toBeVisible();
         expect(await seriousIssues(page)).toEqual([]);
       });
 

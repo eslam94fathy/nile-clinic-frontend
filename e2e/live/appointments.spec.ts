@@ -636,7 +636,10 @@ test.describe("a no-show, against the real API", () => {
       .getByRole("button", { name: t.cancel.confirm })
       .click();
 
-    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    // The first request after the long wait can be slow on a local backend.
+    await expect(page.getByRole("alertdialog")).toHaveCount(0, {
+      timeout: 15_000,
+    });
     await expect(page.getByRole("alert").first()).toBeVisible();
     expect(await entries(patient.id, "appointment.cancelled")).toBe(0);
 

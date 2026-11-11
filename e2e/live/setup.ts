@@ -14,7 +14,7 @@ export default async function setup() {
 
   async function createStaff(
     label: string,
-    role: "receptionist" | "doctor",
+    role: "administrator" | "receptionist" | "doctor",
   ): Promise<LiveAccount> {
     const email = `synthetic.live.${label}.${stamp}@example.test`;
     const password = `Synthetic-${randomBytes(12).toString("hex")}`;
@@ -68,6 +68,7 @@ export default async function setup() {
       "doctor",
     ),
     billingDoctor: await createStaff(`billingdoctor${stamp}`, "doctor"),
+    auditAdmin: await createStaff("auditadmin", "administrator"),
   };
 
   async function createDoctor(account: LiveAccount): Promise<number> {
