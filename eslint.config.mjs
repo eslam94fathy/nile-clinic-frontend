@@ -9,6 +9,8 @@ export default defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/ban-ts-comment": "error",
+      // Raw HTML would bypass React's escaping, which the security policy relies on (ADR 0021).
+      "react/no-danger": "error",
     },
   },
   {

@@ -126,6 +126,63 @@ test("no file sent to browsers holds the session secret or backend setting", () 
   expect(holding).toEqual([]);
 });
 
+test("unlocking a locked record reaches the browser with no token or password (FR-014)", async ({
+  page,
+  context,
+}) => {
+  const received: string[] = [];
+  const addresses: string[] = [];
+  page.on("request", (request) => addresses.push(request.url()));
+  page.on("response", async (response) => {
+    const headers = await response.allHeaders().catch(() => ({}));
+    received.push(JSON.stringify(headers));
+    received.push(await response.text().catch(() => ""));
+  });
+  const lock = messages.en.auth.lock;
+  const { id } = (await control("clinic/encounter?content=%7B%7D")) as {
+    id: number;
+  };
+
+  await page.clock.install();
+  await signIn(page, "doctor");
+  await page.goto(`/en/my/encounters/${String(id)}`);
+  // The page counts from when it's shown, so it must be there before the clock moves.
+  await expect(
+    page
+      .getByLabel(messages.en.encounters.form.diagnosis, { exact: true })
+      .locator("visible=true"),
+  ).toBeVisible();
+  await page.clock.fastForward("05:01");
+  const dialog = page.getByRole("dialog", { name: lock.heading });
+  await expect(dialog).toBeVisible();
+
+  for (const password of ["synthetic-wrong-password", PASSWORD]) {
+    await dialog.getByLabel(lock.password, { exact: false }).fill(password);
+    await dialog.getByRole("button", { name: lock.unlock }).click();
+  }
+  await expect(dialog).toBeHidden();
+
+  const stored = await page.evaluate(async () =>
+    JSON.stringify({
+      cookie: document.cookie,
+      local: { ...localStorage },
+      session: { ...sessionStorage },
+      databases: await indexedDB.databases(),
+    }),
+  );
+  const session = (await context.cookies()).find(
+    ({ name }) => name === "nile_session",
+  );
+  expect(session?.httpOnly).toBe(true);
+  expect(session?.value).not.toContain(TOKEN_SENTINEL);
+
+  const everything = [...received, ...addresses, stored].join("\n");
+  expect(everything).not.toContain(TOKEN_SENTINEL);
+  expect(received.join("\n")).not.toContain(PASSWORD);
+  expect(received.join("\n")).not.toContain("synthetic-wrong-password");
+  expect(addresses.join("\n")).not.toContain(PASSWORD);
+});
+
 test("sign-in's response holds only the user", async ({ page }) => {
   await page.goto("/en/sign-in");
 

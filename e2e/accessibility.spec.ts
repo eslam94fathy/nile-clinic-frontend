@@ -4,6 +4,10 @@ import { control, resetBackend, script, signIn } from "./support/auth";
 import { messages } from "./support/messages";
 import { backendControlUrl } from "./support/ports";
 
+// WCAG 2.2 AA (SC-006): any violation of these rules fails, whatever axe calls its impact.
+const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+
+/** Serious or critical issues of any rule, and every WCAG A or AA violation (Phase 13). */
 async function seriousIssues(page: Page) {
   // A form's submit fades in once hydrated. Measured mid-fade, its contrast reads lower than it is.
   for (const submit of await page.locator('button[type="submit"]').all()) {
@@ -12,7 +16,12 @@ async function seriousIssues(page: Page) {
 
   const { violations } = await new AxeBuilder({ page }).analyze();
   return violations
-    .filter(({ impact }) => impact === "serious" || impact === "critical")
+    .filter(
+      ({ impact, tags }) =>
+        impact === "serious" ||
+        impact === "critical" ||
+        tags.some((tag) => WCAG_AA.includes(tag)),
+    )
     .map(({ id, nodes }) => `${id}: ${nodes.map((n) => n.html).join(", ")}`);
 }
 

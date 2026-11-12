@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { CursorPager } from "@/components/shared/cursor-pager";
+import { CursorPager } from "./cursor-pager";
 import { FilterBar, type FilterValues } from "@/components/shared/filter-bar";
 import { FormError } from "@/components/shared/form/form-error";
 import { EmptyState } from "@/components/shared/states/empty-state";

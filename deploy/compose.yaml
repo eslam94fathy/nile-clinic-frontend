@@ -1,0 +1,38 @@
+# An example of running the frontend beside the backend's Docker Compose (ADR 0022). See docs/deployment.md.
+# Start the backend first, so that its network `nile-clinic_default` exists, then, from this folder:
+#   docker compose up -d
+name: nile-clinic-frontend
+
+services:
+  frontend:
+    image: nile-clinic-frontend:${FRONTEND_VERSION:-dev}
+    env_file: frontend.env
+    restart: unless-stopped
+    # No published port, so browsers reach it only through the proxy. The backend's own containers on this network could
+    # still reach it directly and set their own client address: only trusted containers may join it (docs/deployment.md).
+    networks: [backend]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  proxy:
+    image: caddy:2.11.2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [frontend]
+    networks: [backend]
+
+networks:
+  backend:
+    name: nile-clinic_default
+    external: true
+
+volumes:
+  caddy-data:
+  caddy-config:

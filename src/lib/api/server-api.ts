@@ -1,4 +1,6 @@
 import "server-only";
+import { headers as requestHeaders } from "next/headers";
+import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import { readSessionToken } from "@/lib/auth/session";
 import { getEnv } from "@/lib/config/env";
@@ -16,6 +18,22 @@ type BackendRequest = {
 };
 
 /**
+ * The client's address, exactly as the reverse proxy set it, which must replace rather than append (ADR 0022).
+ * The backend uses it only once it trusts this application's address (hazard H2). Read here alone, never in a
+ * page or layout, so that nothing outside request-time work reads the request.
+ */
+async function forwardedFor(): Promise<string | null> {
+  try {
+    return (await requestHeaders()).get("x-forwarded-for");
+  } catch (error) {
+    // Next.js's own signals, such as a prerender meeting request data, must reach Next.js (ADR 0006).
+    unstable_rethrow(error);
+    // No request to read, so nothing to pass on.
+    return null;
+  }
+}
+
+/**
  * The one place the server reaches the API, so that a change such as forwarding the client's address
  * (hazard H2) has one home. Returns null when no answer arrived.
  */
@@ -27,6 +45,8 @@ export async function callBackend(
   if (locale) headers.set("Accept-Language", locale);
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (contentType) headers.set("Content-Type", contentType);
+  const clientAddress = await forwardedFor();
+  if (clientAddress) headers.set("X-Forwarded-For", clientAddress);
 
   try {
     return await fetch(`${getEnv().BACKEND_API_URL}/${path}`, {

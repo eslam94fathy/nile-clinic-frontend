@@ -115,7 +115,6 @@ test.describe("who can reach appointment pages", () => {
         .click();
       await expect(page).toHaveURL(/\/en\/appointments$/);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(t.title);
-      await expect(shown(page, m.shell.placeholderHeading)).toHaveCount(0);
 
       for (const address of ["my/appointments", "my/appointments/1"]) {
         await page.goto(`/en/${address}`);

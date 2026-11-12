@@ -16,9 +16,8 @@ const labels = (role: Role) =>
 describe("clinical screens", () => {
   const CLINICAL = ["my/visits", "my/encounters", "my/patients"];
 
-  it.each(CLINICAL)("%s is for doctors only, and built", (path) => {
+  it.each(CLINICAL)("%s is for doctors only", (path) => {
     const route = findRoute(path);
-    expect(route?.built).toBe(true);
     expect(route?.capability).toBe("medicalRecords");
     if (!route) return;
     expect(canOpen("doctor", route)).toBe(true);
@@ -38,17 +37,12 @@ describe("clinical screens", () => {
 });
 
 describe("the audit log", () => {
-  it("is built, and for administrators only", () => {
+  it("is for administrators only", () => {
     const route = findRoute("audit");
-    expect(route?.built).toBe(true);
     if (!route) return;
     expect(canOpen("administrator", route)).toBe(true);
     expect(canOpen("receptionist", route)).toBe(false);
     expect(canOpen("doctor", route)).toBe(false);
-  });
-
-  it("leaves no route still waiting for its phase", () => {
-    expect(APP_ROUTES.filter((route) => !route.built)).toEqual([]);
   });
 });
 

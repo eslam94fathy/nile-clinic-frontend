@@ -1,0 +1,30 @@
+# The reverse proxy's duties, each numbered as in docs/deployment.md (ADR 0022).
+# Replace `clinic.example` with the clinic's own name. Caddy then gets and renews a certificate itself.
+{
+	# For a test on one machine only: use Caddy's own certificate authority.
+	# local_certs
+}
+
+# 1. HTTPS, and plain HTTP redirected to it (Caddy does both for a named site).
+clinic.example {
+	# For a local test, use `localhost` as the site name above and uncomment:
+	# tls internal
+
+	header {
+		# 2. Browsers keep to HTTPS. The application sets every other security header itself.
+		Strict-Transport-Security "max-age=31536000"
+		# Says nothing about the software in use. Caddy names itself in `Via` as well as `Server`.
+		-Server
+		-Via
+		# 6. No Content-Security-Policy here: the application sends its own, and two would combine.
+	}
+
+	reverse_proxy frontend:3000 {
+		# 3. The connecting address replaces anything the browser sent; never appended.
+		header_up X-Forwarded-For {remote_host}
+		# 4. The application compares Host with Origin, so it passes unchanged.
+		header_up Host {host}
+		# 5. Pages stream, so nothing is held back.
+		flush_interval -1
+	}
+}

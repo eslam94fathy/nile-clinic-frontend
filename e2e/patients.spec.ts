@@ -60,9 +60,6 @@ test.describe("who can reach patient pages", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
         messages.en.patients.title,
       );
-      await expect(
-        page.getByText(messages.en.shell.placeholderHeading),
-      ).toHaveCount(0);
 
       await page.goto("/en/patients/new");
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(

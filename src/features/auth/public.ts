@@ -1,5 +1,6 @@
 // The parts of this feature that other features may use in client or server code.
 export { ApiFailureState } from "./components/api-failure-state";
+export { InactivityLock } from "./components/inactivity-lock";
 export { RoleProvider, useRole } from "./components/role-context";
 export { RetryButton } from "./components/retry-button";
 export { SessionEndRedirect } from "./components/session-end-redirect";

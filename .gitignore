@@ -14,9 +14,10 @@
 /out/
 /build
 
-# environment: only the placeholder example is shared
+# environment: only the placeholder examples are shared
 .env*
 !.env.example
+deploy/frontend.env
 
 # typescript
 *.tsbuildinfo
