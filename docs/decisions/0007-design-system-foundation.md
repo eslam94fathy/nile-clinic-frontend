@@ -37,6 +37,8 @@ Neither one alone is enough: the proxy alone leaves content on the server's disk
 
 - `radix-ui` installs 60 packages. This is a known cost, under the lockfile and release-age policy.
 - `cn` is what the CLI now generates, and is pre-1.0. It's pinned, and replacing it with `clsx` and `tailwind-merge` is mechanical.
-- A strict Content Security Policy in Phase 13 must allow the theme script by hash or nonce.
+- A strict Content Security Policy in Phase 13 must allow the theme script by hash or nonce. **Amended by
+  [ADR 0021](0021-security-headers.md):** neither can cover the streamed scripts while pages stay prerendered, so the policy allows
+  inline scripts, and keeps everything else strict.
 - After each `shadcn add`, run `pnpm format`, and expect the project's checks to catch what the CLI generates against project rules.
 - Evidence comes from Chromium only. Cross-browser checks belong to Phase 13.

@@ -73,6 +73,18 @@ See [ADR 0013](decisions/0013-live-reads.md).
 |---|---|---|
 | `@tanstack/react-query` | 5.106.1 | The queue's polling: request ordering, cancelling a read after a change, keeping the last list when a read fails, and stopping on hidden tabs and pages. Used only on the queue's pages, and only for reads the backend doesn't audit. Screens that read on the server and then refresh don't need it ([ADR 0011](decisions/0011-server-reads-and-refresh.md)) |
 
+## Deployment images (Phase 13)
+
+Not npm packages: the containers in `Dockerfile` and `deploy/compose.yaml`, each pinned to an exact version. See
+[ADR 0022](decisions/0022-deployment.md) and [docs/deployment.md](deployment.md).
+
+| Image | Version | Why it is needed |
+|---|---|---|
+| `node` | `24.21.0-alpine` | Builds the application and runs its standalone server. The same Node version as development (`engines` asks for 24), on Alpine for a small image |
+| `caddy` | `2.11.2-alpine` | The example reverse proxy: terminates HTTPS with certificates it renews itself, streams without extra settings, and can issue a local certificate for a test. The newest 2.x tag found on 2026-11-11. nginx works as well, and its settings are documented |
+
+No npm package was added in Phase 13: the security headers, the lock, and the speed measurements use the platform and the browser.
+
 ## Planned
 
 Nothing at present. A package is added by the phase that needs it.

@@ -19,7 +19,7 @@ foundations that later work relies on.
 | 10 | Reports | **Done** (accepted 2026-11-10, [spec](../specs/010-reports/spec.md); charting library: none, [ADR 0017](decisions/0017-charts-without-a-library.md)) | 9 | Reports |
 | 11 | Audit log | **Done** (accepted 2026-11-11, [spec](../specs/011-audit-log/spec.md), [ADR 0018](decisions/0018-audit-search-on-press.md)) | 3 | Audit |
 | 12 | Role dashboards | **Done** (accepted 2026-11-11, [spec](../specs/012-role-dashboards/spec.md), [ADR 0019](decisions/0019-dashboards-read-in-panels.md)) | 7, 8, 9, 10 | Composed |
-| 13 | Hardening and production readiness | Not started | all | |
+| 13 | Hardening and production readiness | **Done** (accepted 2026-11-12, [spec](../specs/013-hardening/spec.md), ADRs [0020](decisions/0020-inactivity-lock.md), [0021](decisions/0021-security-headers.md), [0022](decisions/0022-deployment.md)) | all | |
 
 ## Phase details
 
@@ -76,19 +76,13 @@ The project owner approved these defaults on 2026-11-05. Any of them can be revi
 | Q3 | Default language, for visitors with no choice made? | Arabic, as the clinic is in Egypt; English one click away | Phase 1 |
 | Q4 | How fresh must the queue be? | Poll every 15 seconds while visible | Phase 7 |
 | Q5 | Brand and scope? (The API has no print endpoint, though a page can be printed.) | Original neutral clinical look, light and dark, no printing | Phase 2 |
-| Q6 | Where will this be deployed? It decides the proxy setup in Q1. | Still open; decide by Phase 13 | Phase 13 |
+| Q6 | Where will this be deployed? It decides the proxy setup in Q1. | A Docker image running the Node server, behind a reverse proxy that terminates HTTPS, beside the backend's Docker Compose, so the backend trusts one known proxy address (decided 2026-11-11) | Phase 13 |
 | Q7 | May the backend gaps G1 and G2 be raised as backend work? | Work around them in the frontend | Phase 4 |
 
 ## Before production
 
-From the backend's own roadmap and this analysis:
-
-- Configure trusted proxies on the backend, or audit addresses and the sign-in limit are wrong (H2).
-- Keep `CLINIC_TIMEZONE` the same in both applications (H4).
-- Legal review of Egyptian health-data and data-protection obligations, including audit retention and whether
-  network addresses are personal data. The backend has flagged this as outstanding.
-- Session secret generated and stored in a secret manager; HTTPS everywhere.
-- **Build an inactivity lock for clinical pages,** so that a record doesn't stay on an unattended screen, designed so that it can't lose unsaved text. The owner required this in Phase 8's [privacy review](../specs/008-medical-encounters/privacy-review.md), for Phase 13.
-- Raise a version check on saving a draft with the backend (gap G9), as nothing in the frontend can warn before one tab overwrites another's.
-- Manage browser extensions on clinic computers, as an extension can ignore what clinical fields ask of it.
-- Put the questions in Phase 8's privacy review to the legal review.
+Moved in Phase 13 to [docs/deployment.md](deployment.md#before-production), where each item has its owner and status, with the backend's
+part written up as requests in [specs/013-hardening/backend-requests.md](../specs/013-hardening/backend-requests.md). Every item that was
+listed here is there: trusted proxies on the backend (H2), the same `CLINIC_TIMEZONE` in both applications (H4), the legal review with
+Phase 8's privacy review questions, the session secret in a secret store and HTTPS everywhere, the inactivity lock for clinical pages (built
+in Phase 13), the draft version check (G9), and managing browser extensions on clinic computers.

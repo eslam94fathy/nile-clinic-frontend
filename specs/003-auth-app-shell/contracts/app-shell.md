@@ -1,5 +1,8 @@
 # Contract: App Shell
 
+> **Superseded in part by Phase 13 (2026-11-11):** the `built` field and the "not available yet" placeholder were removed once every
+> page existed. An address with no page gives `notFound()`.
+
 What later phases can rely on, and the rules they must follow.
 
 ## Adding a signed-in page

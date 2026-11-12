@@ -146,7 +146,7 @@ The query cache is memory only, is never persisted, and is cleared at sign-out a
 
 **Medical records** follow the same rule, more strictly ([ADR 0014](decisions/0014-writing-medical-records.md)). Clinical content is only ever in a Client Component's state: never read on the server, never in the query cache, sent `no-store`, and gone at sign-out's full page load. A record or a history uses the guarded read, `useAuditedRead` in `lib`, which patients use too. In the panel beside a draft, each read runs directly in a click's handler, so nothing can repeat it. "My visits" holds no clinical content, so it reads on the server like other lists, and "My queue" reads the same list live for record statuses.
 
-**The audit log** reads only inside a person's press ([ADR 0018](decisions/0018-audit-search-on-press.md)). Every request to `GET /audit-entries`, each page included, writes a permanent `audit.searched` entry, so `useAuditSearch` in `features/audit` makes one only from Search, Older, Newer, Try again, or Start again, once per press, with a ref set before the request. No effect reads, nothing is cached, and the page's address never holds a query, so a reload, a link, or the back button can't repeat a search. The results and the filters sent stay in the component's state, so going back from a linked page shows them again without a read. Paging uses the API's cursors through the shared `CursorPager`, sending the filters of the page shown. The staff choice is read on the server, as it isn't audited. A patient's number links only through `PatientLink`.
+**The audit log** reads only inside a person's press ([ADR 0018](decisions/0018-audit-search-on-press.md)). Every request to `GET /audit-entries`, each page included, writes a permanent `audit.searched` entry, so `useAuditSearch` in `features/audit` makes one only from Search, Older, Newer, Try again, or Start again, once per press, with a ref set before the request. No effect reads, nothing is cached, and the page's address never holds a query, so a reload, a link, or the back button can't repeat a search. The results and the filters sent stay in the component's state, so going back from a linked page shows them again without a read. Paging uses the API's cursors through `CursorPager`, which lives in the audit feature as its only user (Phase 13), sending the filters of the page shown. The staff choice is read on the server, as it isn't audited. A patient's number links only through `PatientLink`.
 
 **Text that's only on screen.** A draft exists only in the page until a doctor saves it, as nothing saves by itself and nothing is kept in the browser. So `UnsavedChangesGuard` warns on every way out it can catch: links, in one place, sign-out, closing, and back and forward through the Navigation API. A `401` on a change is answered rather than acted on, a `403` or `404` doesn't re-decide the page, and fields go read-only during a request. A deliberate sign-out in any tab still leaves at once.
 
@@ -175,7 +175,18 @@ the person to sign-in with a safe, same-origin return path. Pages that write an 
 signed-in top bar sits inside the shell's `<Suspense>`.
 
 The cookie is `HttpOnly`, `Secure` in production, `SameSite=Lax`, and sealed. It ends with the browser. Its lifetime is not the
-source of truth: Laravel's idle timeout is.
+source of truth: Laravel's idle timeout is. Since Phase 13 the seal also holds the signed-in person's id and email, read only by unlocking.
+
+**Inactivity lock.** The record page and the patient history page are wrapped in `InactivityLock` (`features/auth`). After 5 minutes
+without keyboard, pointer, wheel, touch, or scroll activity, it opens a native modal dialog appended to the body, and hides everything
+else; the page stays mounted underneath, so nothing typed is lost and nothing is sent. `POST /api/auth/unlock` takes only the password,
+signs in with the sealed email, checks the sealed id, ends the old token, and seals the new one. Signing out from the lock warns first
+([ADR 0020](decisions/0020-inactivity-lock.md)).
+
+**Security headers.** `next.config.ts` sends the headers in `lib/security/headers.ts` on every response: a policy that allows scripts only
+from this site and inline (no hash or nonce can cover the streamed ones while pages stay prerendered), and closes connections, images,
+fonts, forms, framing, and plugins to everything else, with `nosniff`, `same-origin` referrers, and a permissions policy. The reverse proxy
+sets `Strict-Transport-Security` ([ADR 0021](decisions/0021-security-headers.md)).
 
 ## Internationalization and direction
 
@@ -219,7 +230,14 @@ See [ADR 0007](decisions/0007-design-system-foundation.md) and [ADR 0008](decisi
 ## Configuration
 
 Settings are read only on the server (`lib/config/env.ts`, guarded by `server-only`). `instrumentation.ts` validates them when
-the server starts, in `next start` and `next dev`, and exits with a message naming the setting, never its value.
+the server starts, in the standalone server and `next dev`, and exits with a message naming the setting, never its value.
+
+## Deployment
+
+`output: "standalone"`: the Docker image runs `node server.js` behind a reverse proxy that terminates HTTPS, on the backend's Compose
+network, and the tests run the same server. `callBackend` passes the incoming `X-Forwarded-For` on unchanged, for the backend to trust once
+it's configured to (hazard H2). `GET /api/health` reports only that the frontend serves. See [docs/deployment.md](deployment.md) and
+[ADR 0022](decisions/0022-deployment.md).
 
 ## Clinic time
 

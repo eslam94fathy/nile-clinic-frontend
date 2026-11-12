@@ -364,14 +364,17 @@ The backend uses `request()->ip()` for the audit trail's `network_address` and t
 - all staff share one limit of 20 sign-in attempts per minute, so one person can lock out the clinic.
 
 Fixing it requires a backend configuration change. See
-[ADR 0001](decisions/0001-authentication-bff.md).
+[ADR 0001](decisions/0001-authentication-bff.md). **The frontend's part is done** (Phase 13): `callBackend` passes the incoming
+`X-Forwarded-For` on unchanged, and the reverse proxy replaces it with the connecting address ([ADR 0022](decisions/0022-deployment.md)).
+The backend's part is [request B1](../specs/013-hardening/backend-requests.md): trusting the frontend container's address.
 
 ### H3. Polling can defeat the idle timeout
 
 There is no real-time channel (no broadcasting or websockets in the backend), so queue screens must
 poll. Each request restarts the 8-hour idle timer, so a visible queue screen on an unattended computer
 stays signed in indefinitely. Decision Q2 in the [roadmap](roadmap.md) accepts this: polling only runs
-on visible tabs, and there is no inactivity sign-out.
+on visible tabs, and there is no inactivity sign-out. Clinical pages are the exception since Phase 13: the record and history pages
+lock after 5 minutes without activity, whatever polling elsewhere does ([ADR 0020](decisions/0020-inactivity-lock.md)).
 
 ### H4. The clinic time zone is not exposed
 
@@ -408,4 +411,4 @@ Workable today, but worth knowing. Nothing has been changed in the backend.
 | G6 | No clinic details endpoint | Clinic name and logo have no source | Held in the frontend ([ADR 0009](decisions/0009-brand-assets.md)) |
 | G7 | No receipt or print endpoint | No printed receipts or prescriptions | Out of scope: decision Q5 in the [roadmap](roadmap.md) |
 | G8 | Queue routes only reach the clinic's today (from the source) | An entry still waiting or with a doctor at midnight can't be reached or closed afterwards, so it stays open | Nothing in the frontend can fix it. The screens show today only |
-| G9 | Saving a draft has no version check, and finalizing takes no content (confirmed on the running API) | With two tabs on one draft, the last save wins with no warning, and finalizing locks what was last saved, which may be the other tab's | The page says so after finalizing, if what was locked differs from what was on screen. It can't warn before |
+| G9 | Saving a draft has no version check, and finalizing takes no content (confirmed on the running API) | With two tabs on one draft, the last save wins with no warning, and finalizing locks what was last saved, which may be the other tab's | The page says so after finalizing, if what was locked differs from what was on screen. It can't warn before. Raised with the backend as [request B2](../specs/013-hardening/backend-requests.md) |

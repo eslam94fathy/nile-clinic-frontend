@@ -4,8 +4,8 @@ Internal staff application for the Nile Clinic management system, for administra
 and doctors. Arabic and English, RTL and LTR. It is a frontend for the existing
 [Laravel API](https://github.com/eslam94fathy/nile-clinic); there is no patient portal.
 
-> **Status: Phase 8 medical encounters complete.** Staff can sign in and change their password, an administrator can set up staff,
-> specialties, doctors, schedules, time off, and fees, reception can find, register, view, and correct patients, and book, find, move, and cancel their appointments, and doctors can see their own. Reception can check patients in, add walk-ins, and follow a live queue, and doctors can call the next patient and finish. Doctors can write, finalize, and correct medical records, and read a patient's earlier records where allowed. Later phases' menu entries show "not available yet". See the [roadmap](docs/roadmap.md).
+> **Status: Phase 12 complete; Phase 13, hardening and production readiness, in progress.** Staff can sign in and change their password, an administrator can set up staff,
+> specialties, doctors, schedules, time off, and fees, reception can find, register, view, and correct patients, and book, find, move, and cancel their appointments, and doctors can see their own. Reception can check patients in, add walk-ins, and follow a live queue, and doctors can call the next patient and finish. Doctors can write, finalize, and correct medical records, and read a patient's earlier records where allowed; a record locks after 5 minutes without use. Reception and administrators handle billing and payments, administrators read reports and the audit trail, and each role has a dashboard. See the [roadmap](docs/roadmap.md), and [docs/deployment.md](docs/deployment.md) for production.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ A production build marks the cookie `Secure`, so it must be served over HTTPS, o
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Development server |
-| `pnpm build`, `pnpm start` | Production build, and running it |
+| `pnpm build`, `pnpm start` | Production build, and running it as the Docker image does: the standalone server, with `.env.local` |
 | `pnpm check` | **Every quality check.** Run before considering work complete. Doesn't need the backend |
 | `pnpm typecheck`, `pnpm lint` | TypeScript; ESLint, where any warning fails |
 | `pnpm format`, `pnpm format:check` | Prettier: write, or verify |
@@ -85,6 +85,7 @@ Then review the differences. The type checker shows what the change affects.
 | [docs/frontend-blueprint.md](docs/frontend-blueprint.md) | Routes, navigation, dashboards, workflows, design system |
 | [docs/development-guidelines.md](docs/development-guidelines.md) | Coding standards |
 | [docs/roadmap.md](docs/roadmap.md) | Phases and decisions |
+| [docs/deployment.md](docs/deployment.md) | Building, running, and checking it in production; what must be done before go-live |
 | [docs/decisions/](docs/decisions/README.md) | Architecture Decision Records |
 
 ## Workflow
