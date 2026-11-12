@@ -24,6 +24,9 @@ One file per significant decision. **Proposed** means awaiting the project owner
 | [0017](0017-charts-without-a-library.md) | The one chart is drawn without a library; `recharts` rejected | Accepted |
 | [0018](0018-audit-search-on-press.md) | The audit search reads only on a person's press, in memory, with no effect or cache | Accepted |
 | [0019](0019-dashboards-read-in-panels.md) | Dashboards read in panels: live for the desk and doctors, on demand for administrators | Accepted |
+| [0020](0020-inactivity-lock.md) | Medical-record pages lock when idle, and unlock with a fresh sign-in | Accepted |
+| [0021](0021-security-headers.md) | A static security policy that allows inline scripts, strict otherwise; amends 0007 | Accepted |
+| [0022](0022-deployment.md) | A standalone Docker image behind Caddy, beside the backend | Accepted |
 
 To add one, copy the structure of an existing record: Status, Context, Decision, Alternatives,
 Consequences.

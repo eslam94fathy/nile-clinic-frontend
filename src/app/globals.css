@@ -191,3 +191,8 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* While a clinical page is locked, nothing but the lock is painted, portals included (ADR 0020). */
+body[data-locked] > :not([data-inactivity-lock]) {
+  visibility: hidden;
+}

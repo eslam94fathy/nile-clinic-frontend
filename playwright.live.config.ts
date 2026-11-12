@@ -25,8 +25,17 @@ export default defineConfig({
     ...devices["Desktop Chrome"],
   },
   webServer: {
-    command: `node node_modules/next/dist/bin/next start -p ${appPort} > ${serverLog} 2>&1`,
+    // The standalone server the Docker image runs (ADR 0022). It doesn't read `.env.local`, so the settings
+    // loaded above are passed on; HOSTNAME is fixed, as Git Bash sets it to the machine's name.
+    command: `node .next/standalone/server.js > ${serverLog} 2>&1`,
     url: `http://localhost:${appPort}/ar/sign-in`,
+    env: {
+      PORT: String(appPort),
+      HOSTNAME: "127.0.0.1",
+      BACKEND_API_URL: process.env.BACKEND_API_URL ?? "",
+      SESSION_SECRET: process.env.SESSION_SECRET ?? "",
+      CLINIC_TIMEZONE: process.env.CLINIC_TIMEZONE ?? "Africa/Cairo",
+    },
     reuseExistingServer: false,
   },
 });

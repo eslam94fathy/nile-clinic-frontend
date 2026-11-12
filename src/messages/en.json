@@ -44,6 +44,19 @@
       "working": "Signing out…",
       "failure": "Couldn't sign out, because the application can't be reached. Please try again."
     },
+    "lock": {
+      "heading": "This page is locked",
+      "description": "It locked after 5 minutes without use, to keep the record private. Only <name></name> can open it again.",
+      "password": "Your password",
+      "unlock": "Unlock",
+      "working": "Unlocking…",
+      "signOut": "Sign out instead",
+      "signOutWarning": "Any text not saved on this page will be lost. This can't be undone.",
+      "signOutConfirm": "Sign out and lose unsaved text",
+      "keepLocked": "Go back",
+      "cannotUnlock": "This page can't be unlocked here. Sign out, then sign in again.",
+      "otherAccount": "That password belongs to a different account. Only the person shown can unlock this page."
+    },
     "noProfile": {
       "heading": "Your doctor profile isn't set up yet",
       "description": "Ask an administrator to create it. Your account page still works."
@@ -53,7 +66,8 @@
       "unavailable": "The clinic system isn't responding right now. You're still signed in.",
       "refused": "This request came from outside the application, so it was refused.",
       "noSession": "You aren't signed in.",
-      "emailAndPasswordRequired": "Enter your email and password."
+      "emailAndPasswordRequired": "Enter your email and password.",
+      "passwordRequired": "Enter your password."
     }
   },
   "shell": {
@@ -62,8 +76,6 @@
     "account": "My account",
     "welcomeHeading": "Welcome, <name></name>",
     "welcomeDescription": "You're signed in as: {role}. Use the menu to move around.",
-    "placeholderHeading": "Not available yet",
-    "placeholderDescription": "This part of the application is still being built.",
     "nav": {
       "dashboard": "Dashboard",
       "patients": "Patients",

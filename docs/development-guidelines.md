@@ -81,7 +81,7 @@ work from memory or from these docs alone.
 Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.md).
 
 - Wrap **all** of a page's content in `ScreenGate`, inside `<Suspense>`. Anything outside it enters the public static shell.
-- Set `built: true` on the page's row in `lib/auth/app-routes.ts`.
+- Add the page's row to `lib/auth/app-routes.ts`, which is what makes the proxy treat its address as signed-in. Since Phase 13 every row is a built page; there's no placeholder.
 - Reach the API from the server only through `lib/api/server-api.ts`, as it's what keeps prefetching away from the API. From the client, only through `lib/api/browser-api.ts`.
 - A new page that writes an audit entry when opened goes in `lib/auth/return-address.ts`.
 - A page under a route that fewer roles may use passes `capability` to `ScreenGate`, so nothing of it is sent to the others.
@@ -144,7 +144,10 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Log a request body, a query string, or an API response. Log status, route pattern, and duration only.
 - Put patient details in an analytics event, an error report, or a page title.
 - Persist the query cache, or store patient data in `localStorage`.
-- Use `dangerouslySetInnerHTML` on API data.
+- Use `dangerouslySetInnerHTML`. `react/no-danger` is an error; the fixed theme script is the one exception, as the security
+  policy relies on React's escaping ([ADR 0021](decisions/0021-security-headers.md)).
+- Add a header in `src/proxy.ts` or a reverse proxy that the application already sets. Security headers live in
+  `src/lib/security/headers.ts`, and only `Strict-Transport-Security` is the proxy's.
 - Use real patient data in tests, fixtures, screenshots, or examples.
 
 **Always:**
@@ -152,6 +155,10 @@ Follow [the app shell contract](../specs/003-auth-app-shell/contracts/app-shell.
 - Treat a return URL as untrusted: same-origin paths only.
 - Cover `401`, `403`, and `404` on every screen.
 - Add the "no medical details" hint on time-off reason, appointment note, and charge reason fields.
+- Wrap a new page that shows or writes clinical content in `InactivityLock`, from `features/auth`, as the record and history pages
+  are ([ADR 0020](decisions/0020-inactivity-lock.md)).
+- Read the incoming request's headers, such as the client's address, only inside `callBackend`, never in a page or layout,
+  or the page loses its prerendered shell.
 
 ## Testing
 

@@ -10,6 +10,13 @@ import {
 // Fixed and fake: it only seals sessions for the fake backend.
 const SESSION_SECRET = "synthetic-session-secret-for-end-to-end-tests";
 
+// The standalone server the Docker image runs (ADR 0022), not `next start`, which doesn't support that output.
+// Bound to the loopback address, as Git Bash sets HOSTNAME to the machine's name.
+const standalone = (port: number) => ({
+  command: "node .next/standalone/server.js",
+  env: { PORT: String(port), HOSTNAME: "127.0.0.1" },
+});
+
 // Runs against the production build (`pnpm test:e2e` builds first) and the fake backend. Tests
 // run one at a time, because they share the fake backend's mode.
 export default defineConfig({
@@ -34,9 +41,10 @@ export default defineConfig({
     },
     {
       // Written to a file, so a test can check that no secret reaches the server's output.
-      command: `node node_modules/next/dist/bin/next start -p ${appPort} > ${appServerLog} 2>&1`,
+      command: `${standalone(appPort).command} > ${appServerLog} 2>&1`,
       url: `http://localhost:${appPort}/ar`,
       env: {
+        ...standalone(appPort).env,
         BACKEND_API_URL: `http://127.0.0.1:${backendPort}/api/v1`,
         CLINIC_TIMEZONE: "Africa/Cairo",
         SESSION_SECRET,
@@ -46,9 +54,10 @@ export default defineConfig({
     },
     {
       // The same build with the design preview off, to prove it's private.
-      command: `node node_modules/next/dist/bin/next start -p ${previewOffPort}`,
+      command: standalone(previewOffPort).command,
       url: `http://localhost:${previewOffPort}/ar`,
       env: {
+        ...standalone(previewOffPort).env,
         BACKEND_API_URL: `http://127.0.0.1:${backendPort}/api/v1`,
         CLINIC_TIMEZONE: "Africa/Cairo",
         SESSION_SECRET,

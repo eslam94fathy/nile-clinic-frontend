@@ -59,7 +59,11 @@ describe("POST /api/auth/sign-in", () => {
     expect(response.status).toBe(200);
     expect(JSON.parse(text)).toEqual({ data: user });
     expect(text).not.toContain("sentinel");
-    expect(saveSession).toHaveBeenCalledWith(TOKEN);
+    // The id and email are sealed with the token, for unlocking a locked page, and never sent back.
+    expect(saveSession).toHaveBeenCalledWith(TOKEN, {
+      id: 1,
+      email: "synthetic@example.test",
+    });
     expect(response.headers.get("cache-control")).toBe("no-store");
   });
 

@@ -31,7 +31,6 @@ for (const locale of ["ar", "en"] as const) {
       await expect(
         page.getByText(t.auth.noProfile.heading).filter({ visible: true }),
       ).toHaveCount(1);
-      await expect(page.getByText(t.shell.placeholderHeading)).toHaveCount(0);
     });
 
     test("can still use the account page, language, and sign-out", async ({

@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
-import { staffMemberSchema } from "@/features/auth/schemas/staff-member";
-import { callBackend } from "@/lib/api/server-api";
+import { signInToBackend } from "@/features/auth/api/backend-sign-in";
 import { isSameOrigin } from "@/lib/auth/origin-check";
 import { saveSession } from "@/lib/auth/session";
 import { supportedLocale } from "@/lib/i18n/request-locale";
@@ -12,10 +11,6 @@ const NO_STORE = { "Cache-Control": "no-store" };
 const credentialsSchema = z.object({
   email: z.string(),
   password: z.string(),
-});
-
-const signedInSchema = z.object({
-  data: z.object({ token: z.string().min(1), user: staffMemberSchema }),
 });
 
 /**
@@ -48,27 +43,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const response = await callBackend("auth/sign-in", {
-    method: "POST",
-    locale,
-    contentType: "application/json",
-    body: JSON.stringify(credentials.data),
-  });
-  const body: unknown = await response?.json().catch(() => null);
+  const result = await signInToBackend(credentials.data, locale);
 
-  if (response?.status === 200) {
-    const signedIn = signedInSchema.safeParse(body);
-    if (signedIn.success) {
-      await saveSession(signedIn.data.data.token);
-      return Response.json(
-        { data: signedIn.data.data.user },
-        { headers: NO_STORE },
-      );
-    }
+  if (result.kind === "signed-in") {
+    const { token, user } = result;
+    // Who signed in, so that a locked page can only ever sign this account in again (ADR 0020).
+    await saveSession(token, { id: user.id, email: user.email });
+    return Response.json({ data: user }, { headers: NO_STORE });
   }
 
-  if (response?.status === 422) {
-    return Response.json(body, { status: 422, headers: NO_STORE });
+  if (result.kind === "refused") {
+    return Response.json(result.body, { status: 422, headers: NO_STORE });
   }
 
   return Response.json(

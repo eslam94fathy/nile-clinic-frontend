@@ -8,8 +8,6 @@ export type AppRoute = {
   /** Under `shell.nav` in the messages. */
   labelKey: string;
   inNavigation: boolean;
-  /** When false, the catch-all route shows "not available yet". A later phase adds the page and sets this. */
-  built: boolean;
 };
 
 /** Every signed-in destination, in navigation order. See docs/frontend-blueprint.md. */
@@ -19,42 +17,36 @@ export const APP_ROUTES = [
     capability: "ownAccount",
     labelKey: "dashboard",
     inNavigation: true,
-    built: true,
   },
   {
     path: "patients",
     capability: "managePatients",
     labelKey: "patients",
     inNavigation: true,
-    built: true,
   },
   {
     path: "appointments",
     capability: "manageAppointments",
     labelKey: "appointments",
     inNavigation: true,
-    built: true,
   },
   {
     path: "queue",
     capability: "manageQueue",
     labelKey: "queue",
     inNavigation: true,
-    built: true,
   },
   {
     path: "billing",
     capability: "billing",
     labelKey: "billing",
     inNavigation: true,
-    built: true,
   },
   {
     path: "charges",
     capability: "billing",
     labelKey: "charges",
     inNavigation: true,
-    built: true,
   },
   {
     path: "doctors",
@@ -62,77 +54,66 @@ export const APP_ROUTES = [
     onlyRoles: ["administrator", "receptionist"],
     labelKey: "doctors",
     inNavigation: true,
-    built: true,
   },
   {
     path: "specialties",
     capability: "manageDoctors",
     labelKey: "specialties",
     inNavigation: true,
-    built: true,
   },
   {
     path: "fees",
     capability: "readFees",
     labelKey: "fees",
     inNavigation: true,
-    built: true,
   },
   {
     path: "staff",
     capability: "manageStaff",
     labelKey: "staff",
     inNavigation: true,
-    built: true,
   },
   {
     path: "reports",
     capability: "reports",
     labelKey: "reports",
     inNavigation: true,
-    built: true,
   },
   {
     path: "audit",
     capability: "auditTrail",
     labelKey: "audit",
     inNavigation: true,
-    built: true,
   },
   {
     path: "my/queue",
     capability: "ownQueue",
     labelKey: "myQueue",
     inNavigation: true,
-    built: true,
   },
   {
     path: "my/appointments",
     capability: "readOwnAppointments",
     labelKey: "myAppointments",
     inNavigation: true,
-    built: true,
   },
   {
     path: "my/visits",
     capability: "medicalRecords",
     labelKey: "myVisits",
     inNavigation: true,
-    built: true,
   },
   {
     path: "my/encounters",
     capability: "medicalRecords",
     labelKey: "myVisits",
     inNavigation: false,
-    built: true,
   },
   {
     path: "my/patients",
     capability: "medicalRecords",
     labelKey: "myVisits",
     inNavigation: false,
-    built: true,
   },
   {
     path: "my/schedule",
@@ -140,14 +121,12 @@ export const APP_ROUTES = [
     onlyRoles: ["doctor"],
     labelKey: "mySchedule",
     inNavigation: true,
-    built: true,
   },
   {
     path: "account",
     capability: "ownAccount",
     labelKey: "account",
     inNavigation: false,
-    built: true,
   },
 ] as const satisfies readonly AppRoute[];
 

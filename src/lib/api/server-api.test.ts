@@ -7,7 +7,18 @@ const readSessionToken = vi.hoisted(() =>
   vi.fn(async (): Promise<string | null> => "synthetic-token"),
 );
 
+const incoming = vi.hoisted(() => ({ headers: new Headers() }));
+const headersOutsideARequest = vi.hoisted(() => ({ value: false }));
+const headersError = vi.hoisted(() => ({ value: null as Error | null }));
+
 vi.mock("next/server", () => ({ connection }));
+vi.mock("next/headers", () => ({
+  headers: async () => {
+    if (headersError.value) throw headersError.value;
+    if (headersOutsideARequest.value) throw new Error("outside a request");
+    return incoming.headers;
+  },
+}));
 vi.mock("@/lib/auth/session", () => ({ readSessionToken }));
 vi.mock("@/lib/config/env", () => ({
   getEnv: () => ({ BACKEND_API_URL: "http://api.test/api/v1" }),
@@ -26,6 +37,58 @@ beforeEach(() => {
   connection.mockClear();
   readSessionToken.mockResolvedValue("synthetic-token");
   vi.stubGlobal("fetch", fetchMock);
+  incoming.headers = new Headers();
+  headersOutsideARequest.value = false;
+  headersError.value = null;
+});
+
+describe("the client's address (hazard H2, FR-025)", () => {
+  const sent = () => new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+
+  it("passes on exactly what the reverse proxy supplied", async () => {
+    respond(200, { data: 1 });
+    incoming.headers = new Headers({ "x-forwarded-for": "203.0.113.7" });
+
+    await callBackend("auth/sign-in", { method: "POST" });
+
+    expect(sent().get("x-forwarded-for")).toBe("203.0.113.7");
+  });
+
+  it("passes it on for a page's read too", async () => {
+    respond(200, { data: 1 });
+    incoming.headers = new Headers({ "x-forwarded-for": "203.0.113.8" });
+
+    await serverApi("auth/me", { locale: "en" });
+
+    expect(sent().get("x-forwarded-for")).toBe("203.0.113.8");
+  });
+
+  it("sends none when none arrived", async () => {
+    respond(200, { data: 1 });
+
+    await callBackend("auth/me");
+
+    expect(sent().has("x-forwarded-for")).toBe(false);
+  });
+
+  it("still reaches the API when there is no request to read", async () => {
+    respond(200, { data: 1 });
+    headersOutsideARequest.value = true;
+
+    expect(await callBackend("auth/me")).not.toBeNull();
+    expect(sent().has("x-forwarded-for")).toBe(false);
+  });
+
+  it("lets Next.js's own signal through, so a prerender meeting request data isn't hidden", async () => {
+    respond(200, { data: 1 });
+    // What Next.js throws when a prerender reads request data (ADR 0006).
+    headersError.value = Object.assign(new Error("Dynamic server usage"), {
+      digest: "DYNAMIC_SERVER_USAGE",
+    });
+
+    await expect(callBackend("auth/me")).rejects.toBe(headersError.value);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("serverApi", () => {
